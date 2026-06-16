@@ -6,7 +6,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "generate-audio": "node scripts/generate-audio.mjs",
+    "generate-scenarios-sql": "node scripts/generate-scenarios-sql.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

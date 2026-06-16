@@ -23,6 +23,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
@@ -40,6 +41,38 @@ import { useAuth } from '../../../providers/AuthProvider';
 
 const SESSION_LIMIT_MINUTES = 14; // Gemini Live cap ~15 min; auto-end at 14
 
+const VOICES = [
+  { id: 'Puck', desc: 'Vui vẻ' },
+  { id: 'Charon', desc: 'Điềm tĩnh' },
+  { id: 'Kore', desc: 'Rõ ràng' },
+  { id: 'Fenrir', desc: 'Sôi nổi' },
+  { id: 'Aoede', desc: 'Nhẹ nhàng' },
+  { id: 'Leda', desc: 'Trẻ trung' },
+  { id: 'Orus', desc: 'Mạnh mẽ' },
+  { id: 'Zephyr', desc: 'Trầm ấm' },
+  { id: 'Schedar', desc: 'Trung lập' },
+  { id: 'Achernar', desc: 'Linh hoạt' },
+] as const;
+type VoiceId = (typeof VOICES)[number]['id'];
+
+const SPEAKING_STYLES = [
+  { id: 'casual', label: 'Casual', icon: '😊' },
+  { id: 'formal', label: 'Lịch sự', icon: '🤝' },
+  { id: 'workplace', label: 'Công sở', icon: '💼' },
+  { id: 'beginner', label: 'Nói chậm', icon: '🐢' },
+  { id: 'children', label: 'Cho trẻ em', icon: '🧒' },
+] as const;
+type SpeakingStyleId = (typeof SPEAKING_STYLES)[number]['id'];
+
+const CONVERSATION_METHODS = [
+  { id: 'free_talk', label: 'Nói tự do', icon: '💬' },
+  { id: 'consulting', label: 'Tư vấn', icon: '🤔' },
+  { id: 'interview', label: 'Phỏng vấn', icon: '📋' },
+  { id: 'empathetic', label: 'Thấu cảm', icon: '💝' },
+  { id: 'pressure', label: 'Gây áp lực', icon: '🔥' },
+] as const;
+type ConversationMethodId = (typeof CONVERSATION_METHODS)[number]['id'];
+
 type ViewState = 'setup' | 'connecting' | 'live' | 'saving';
 
 export default function LiveScreen() {
@@ -48,6 +81,9 @@ export default function LiveScreen() {
 
   const [view, setView] = useState<ViewState>('setup');
   const [languageId, setLanguageId] = useState<LanguageId>('en');
+  const [voice, setVoice] = useState<VoiceId>('Kore');
+  const [speakingStyle, setSpeakingStyle] = useState<SpeakingStyleId>('casual');
+  const [conversationMethod, setConversationMethod] = useState<ConversationMethodId>('free_talk');
   const [topic, setTopic] = useState('');
   const [liveState, setLiveState] = useState<LiveState>('idle');
   const [turns, setTurns] = useState<LiveTurn[]>([]);
@@ -85,33 +121,47 @@ export default function LiveScreen() {
     };
   }, []);
 
-  // Wire mic streaming + speaker playback when session goes live
+  // Wire mic streaming when session goes live.
+  // AudioContext is created LAZILY on first AI audio chunk to avoid
+  // claiming the audio session before the mic has a chance to start.
   useEffect(() => {
     if (view !== 'live') return;
 
-    const ctx = new AudioContext();
-    audioCtxRef.current = ctx;
-
-    const queue = ctx.createBufferQueueSource();
-    queue.connect(ctx.destination);
-    queue.start();
-    audioQueueRef.current = queue;
-
+    let chunkCount = 0;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sub = audioEmitter.current.addListener('AudioData', async (event: any) => {
+      chunkCount++;
+      if (chunkCount <= 3) console.log('[Live] AudioData chunk', chunkCount, 'encoded:', !!event?.encoded);
       if (event?.encoded) {
         clientRef.current?.sendAudioChunk(event.encoded as string);
       }
     });
 
-    startRecording({ sampleRate: 16000, channels: 1, encoding: 'pcm_16bit', interval: 100 })
+    console.log('[Live] Starting recording...');
+    startRecording({
+      sampleRate: 16000,
+      channels: 1,
+      encoding: 'pcm_16bit',
+      interval: 100,
+      // VoiceChat mode enables hardware AEC on iOS — mic cancels speaker output automatically
+      ios: {
+        audioSession: {
+          category: 'PlayAndRecord',
+          mode: 'VoiceChat',
+          categoryOptions: ['DefaultToSpeaker', 'AllowBluetooth'],
+        },
+      },
+      // Keep communication focus priority on Android so audio routing behaves like a voice call
+      android: { audioFocusStrategy: 'communication' },
+    })
+      .then(() => console.log('[Live] Recording started OK'))
       .catch((e) => console.warn('[Live] startRecording error', e));
 
     return () => {
       sub.remove();
-      stopRecording().catch(() => {});
-      queue.stop();
-      ctx.close();
+      stopRecording().catch(() => { });
+      audioQueueRef.current?.stop();
+      audioCtxRef.current?.close();
       audioCtxRef.current = null;
       audioQueueRef.current = null;
     };
@@ -147,11 +197,20 @@ export default function LiveScreen() {
         }
       },
       onAudioChunk: async (pcm24Base64) => {
-        const queue = audioQueueRef.current;
-        if (!queue) return;
+        // Lazy-init AudioContext on first chunk to avoid audio session
+        // conflict with mic recording that starts before AI responds
+        if (!audioCtxRef.current) {
+          // Must match Gemini Live output rate (24 kHz) — otherwise audio plays at wrong speed
+          const ctx = new AudioContext({ sampleRate: 24000 });
+          audioCtxRef.current = ctx;
+          const queue = ctx.createBufferQueueSource();
+          queue.connect(ctx.destination);
+          queue.start(0, 0);
+          audioQueueRef.current = queue;
+        }
         try {
           const buffer = await decodePCMInBase64(pcm24Base64, 24000, 1);
-          queue.enqueueBuffer(buffer);
+          audioQueueRef.current?.enqueueBuffer(buffer);
         } catch (e) {
           console.warn('[Live] playback enqueue error', e);
         }
@@ -167,7 +226,7 @@ export default function LiveScreen() {
     });
 
     clientRef.current = client;
-    await client.start({ languageId, topic: topic.trim() });
+    await client.start({ languageId, topic: topic.trim(), voice, speakingStyle, conversationMethod });
   }
 
   // ── End session ─────────────────────────────────────────────────────
@@ -202,8 +261,12 @@ export default function LiveScreen() {
         .select('id')
         .single();
 
-      if (convErr || !conv) throw new Error('Không thể tạo phiên hội thoại');
+      if (convErr || !conv) {
+        console.error('[Live] conversation insert error:', convErr?.message, convErr?.code);
+        throw new Error('Không thể tạo phiên hội thoại');
+      }
       const conversationId = conv.id;
+      console.log('[Live] conversation created:', conversationId, 'user:', user.id);
 
       // 2. Save transcript turns as messages
       setSavingMsg('Lưu transcript...');
@@ -287,62 +350,138 @@ export default function LiveScreen() {
   if (view === 'setup') {
     return (
       <SafeAreaView style={styles.safe}>
-        <ScrollView contentContainerStyle={styles.setupContainer}>
-          <View style={styles.iconWrap}>
-            <Ionicons name="radio" size={48} color={Colors.primary} />
-          </View>
-          <Text style={styles.setupTitle}>Hội thoại trực tiếp</Text>
-          <Text style={styles.setupSub}>
-            Nói chuyện tự nhiên với AI partner theo thời gian thực.{'\n'}
-            Nhận xét ngữ pháp & phát âm sẽ hiện sau khi kết thúc phiên.
-          </Text>
-
-          {/* Language selector */}
-          <View style={styles.langRow}>
-            {(['en', 'ja'] as LanguageId[]).map((lang) => (
-              <TouchableOpacity
-                key={lang}
-                style={[styles.langBtn, languageId === lang && styles.langBtnActive]}
-                onPress={() => setLanguageId(lang)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.langBtnText, languageId === lang && styles.langBtnTextActive]}>
-                  {lang === 'en' ? '🇺🇸 English' : '🇯🇵 Japanese'}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Optional topic */}
-          <View style={styles.topicWrap}>
-            <Text style={styles.topicLabel}>Chủ đề (tuỳ chọn)</Text>
-            <TextInput
-              style={styles.topicInput}
-              value={topic}
-              onChangeText={setTopic}
-              placeholder={
-                languageId === 'en'
-                  ? 'e.g. Travel, Food, Daily life…'
-                  : '例: 旅行、食べ物、日常生活…'
-              }
-              placeholderTextColor={Colors.textMuted}
-              maxLength={80}
-            />
-          </View>
-
-          {/* EAS dev build notice */}
-          <View style={styles.notice}>
-            <Ionicons name="information-circle-outline" size={16} color={Colors.warning} />
-            <Text style={styles.noticeText}>
-              Tính năng này cần EAS dev build và native audio lib. Không hoạt động trong Expo Go.
+        {/* History button — top-right */}
+        <TouchableOpacity
+          style={styles.historyBtn}
+          onPress={() => router.push('/(app)/live/history')}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="time-outline" size={18} color={Colors.primary} />
+          <Text style={styles.historyBtnText}>Lịch sử</Text>
+        </TouchableOpacity>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <ScrollView contentContainerStyle={styles.setupContainer}>
+            <View style={styles.iconWrap}>
+              <Ionicons name="radio" size={48} color={Colors.primary} />
+            </View>
+            <Text style={styles.setupTitle}>Hội thoại trực tiếp</Text>
+            <Text style={styles.setupSub}>
+              Nói chuyện tự nhiên với AI partner theo thời gian thực.{'\n'}
+              Nhận xét ngữ pháp & phát âm sẽ hiện sau khi kết thúc phiên.
             </Text>
-          </View>
 
-          <TouchableOpacity style={styles.startBtn} onPress={startSession} activeOpacity={0.85}>
-            <Ionicons name="radio" size={20} color="#fff" />
-            <Text style={styles.startBtnText}>Bắt đầu hội thoại</Text>
-          </TouchableOpacity>
-        </ScrollView>
+            {/* Language selector */}
+            <View style={styles.langRow}>
+              {(['en', 'ja'] as LanguageId[]).map((lang) => (
+                <TouchableOpacity
+                  key={lang}
+                  style={[styles.langBtn, languageId === lang && styles.langBtnActive]}
+                  onPress={() => setLanguageId(lang)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.langBtnText, languageId === lang && styles.langBtnTextActive]}>
+                    {lang === 'en' ? '🇺🇸 English' : '🇯🇵 Japanese'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Voice selector */}
+            <View style={styles.sectionWrap}>
+              <Text style={styles.sectionLabel}>Giọng nói</Text>
+              <View style={styles.voiceGrid}>
+                {VOICES.map((v) => (
+                  <TouchableOpacity
+                    key={v.id}
+                    style={[styles.voiceChip, voice === v.id && styles.voiceChipActive]}
+                    onPress={() => setVoice(v.id)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.voiceChipName, voice === v.id && styles.voiceChipNameActive]}>
+                      {v.id}
+                    </Text>
+                    <Text style={[styles.voiceChipDesc, voice === v.id && styles.voiceChipDescActive]}>
+                      {v.desc}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Speaking style */}
+            <View style={styles.sectionWrap}>
+              <Text style={styles.sectionLabel}>Cách nói chuyện</Text>
+              <View style={styles.optionGrid}>
+                {SPEAKING_STYLES.map((s) => (
+                  <TouchableOpacity
+                    key={s.id}
+                    style={[styles.optionChip, speakingStyle === s.id && styles.optionChipActive]}
+                    onPress={() => setSpeakingStyle(s.id)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.optionChipIcon}>{s.icon}</Text>
+                    <Text style={[styles.optionChipLabel, speakingStyle === s.id && styles.optionChipLabelActive]}>
+                      {s.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Conversation method */}
+            <View style={styles.sectionWrap}>
+              <Text style={styles.sectionLabel}>Phương pháp hội thoại</Text>
+              <View style={styles.optionGrid}>
+                {CONVERSATION_METHODS.map((m) => (
+                  <TouchableOpacity
+                    key={m.id}
+                    style={[styles.optionChip, conversationMethod === m.id && styles.optionChipActive]}
+                    onPress={() => setConversationMethod(m.id)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.optionChipIcon}>{m.icon}</Text>
+                    <Text style={[styles.optionChipLabel, conversationMethod === m.id && styles.optionChipLabelActive]}>
+                      {m.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Optional topic */}
+            <View style={styles.topicWrap}>
+              <Text style={styles.topicLabel}>Chủ đề (tuỳ chọn)</Text>
+              <TextInput
+                style={styles.topicInput}
+                value={topic}
+                onChangeText={setTopic}
+                placeholder={
+                  languageId === 'en'
+                    ? 'e.g. Travel, Food, Daily life…'
+                    : '例: 旅行、食べ物、日常生活…'
+                }
+                placeholderTextColor={Colors.textMuted}
+                maxLength={80}
+              />
+            </View>
+
+            {/* EAS dev build notice */}
+            <View style={styles.notice}>
+              <Ionicons name="information-circle-outline" size={16} color={Colors.warning} />
+              <Text style={styles.noticeText}>
+                Tính năng này cần EAS dev build và native audio lib. Không hoạt động trong Expo Go.
+              </Text>
+            </View>
+
+            <TouchableOpacity style={styles.startBtn} onPress={startSession} activeOpacity={0.85}>
+              <Ionicons name="radio" size={20} color="#fff" />
+              <Text style={styles.startBtnText}>Bắt đầu hội thoại</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     );
   }
@@ -471,6 +610,42 @@ const styles = StyleSheet.create({
     width: '100%', justifyContent: 'center',
   },
   startBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+
+  // Option sections
+  sectionWrap: { alignSelf: 'stretch', gap: 8 },
+  sectionLabel: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+
+  voiceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  voiceChip: {
+    alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8,
+    borderRadius: 12, borderWidth: 2, borderColor: Colors.border,
+    backgroundColor: Colors.surface, width: '23%',
+  },
+  voiceChipActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
+  voiceChipName: { fontSize: 12, fontWeight: '700', color: Colors.textSecondary, textAlign: 'center' },
+  voiceChipNameActive: { color: Colors.primary },
+  voiceChipDesc: { fontSize: 10, color: Colors.textMuted, marginTop: 2, textAlign: 'center' },
+  voiceChipDescActive: { color: Colors.primary },
+
+  optionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  optionChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 12, paddingVertical: 9,
+    borderRadius: 12, borderWidth: 2, borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  optionChipActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
+  optionChipIcon: { fontSize: 14 },
+  optionChipLabel: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  optionChipLabelActive: { color: Colors.primary },
+
+  historyBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    alignSelf: 'flex-end', margin: 16, marginBottom: 0,
+    paddingHorizontal: 12, paddingVertical: 6,
+    borderRadius: 20, backgroundColor: Colors.primaryLight,
+  },
+  historyBtnText: { fontSize: 13, fontWeight: '600', color: Colors.primary },
 
   // Loading / saving
   centerFull: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },

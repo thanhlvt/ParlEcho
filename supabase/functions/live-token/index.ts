@@ -1,8 +1,8 @@
 import { corsHeaders, handleCors } from '../_shared/cors.ts';
 import { verifyUser } from '../_shared/auth.ts';
 
-// Model native-audio cho Live API — update khi Google GA model mới
-const LIVE_MODEL = 'models/gemini-2.5-flash-native-audio-preview-12-2025';
+// Live API model — source: ai.google.dev/gemini-api/docs/live-api/get-started-websocket
+const LIVE_MODEL = 'models/gemini-3.1-flash-live-preview';
 
 // Giọng mặc định per ngôn ngữ (giống tts function)
 const VOICE_BY_LANG: Record<string, string> = {
@@ -25,7 +25,8 @@ Deno.serve(async (req: Request) => {
 
     const now = new Date();
     const expireTime = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
-    const newSessionExpireTime = new Date(now.getTime() + 2 * 60 * 1000).toISOString();
+    // newSessionExpireTime: max lifetime for a live session = 15 min (Gemini Live cap)
+    const newSessionExpireTime = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
 
     const langLabel = language_id === 'ja' ? 'Japanese' : 'English';
     const topicLine = topic
@@ -40,7 +41,8 @@ Deno.serve(async (req: Request) => {
       `Just respond naturally and keep the conversation flowing. ` +
       `If the user speaks Vietnamese, gently encourage them to try in ${langLabel}.`;
 
-    // Mint ephemeral token — locks model + config so the client cannot change them
+    // Mint ephemeral token — minimal request (constraints removed from API)
+    // Model + config sẽ được gửi qua WebSocket setup message phía client
     const tokenResp = await fetch(
       `https://generativelanguage.googleapis.com/v1alpha/auth_tokens?key=${geminiKey}`,
       {
@@ -50,20 +52,6 @@ Deno.serve(async (req: Request) => {
           uses: 1,
           expireTime,
           newSessionExpireTime,
-          liveConnectConstraints: {
-            model: LIVE_MODEL,
-            config: {
-              responseModalities: ['AUDIO'],
-              speechConfig: {
-                voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } },
-              },
-              inputAudioTranscription: {},
-              outputAudioTranscription: {},
-              systemInstruction: {
-                parts: [{ text: systemInstruction }],
-              },
-            },
-          },
         }),
       },
     );
@@ -77,11 +65,17 @@ Deno.serve(async (req: Request) => {
     const tokenName: string = tokenData.name;
     if (!tokenName) throw new Error('No token returned from Gemini');
 
-    // Log for audit (không log token value, chỉ log user + expiry)
     console.log(`[live-token] user=${user.id} lang=${language_id} expire=${expireTime}`);
 
+    // Trả thêm voice + systemInstruction để client dùng trong WebSocket setup
     return Response.json(
-      { token: tokenName, model: LIVE_MODEL, expire_time: expireTime },
+      {
+        token: tokenName,
+        model: LIVE_MODEL,
+        expire_time: expireTime,
+        voice,
+        system_instruction: systemInstruction,
+      },
       { headers: corsHeaders },
     );
   } catch (err) {

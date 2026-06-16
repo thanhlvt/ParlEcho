@@ -57,9 +57,11 @@ async function analyzeGrammar(
   const raw: string = data.content[0]?.text ?? '{}';
 
   try {
-    return JSON.parse(raw);
+    // Strip possible markdown fences (Claude sometimes wraps JSON in ```json ... ```)
+    const cleaned = raw.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '').trim();
+    return JSON.parse(cleaned);
   } catch {
-    return { overall_feedback: raw, fluency_notes: '', corrections: [], vocab_to_learn: [] };
+    return { overall_feedback: '', fluency_notes: '', corrections: [], vocab_to_learn: [] };
   }
 }
 
@@ -120,16 +122,22 @@ Deno.serve(async (req: Request) => {
     const body: ReviewRequest = await req.json();
     const { conversation_id, language_id, transcript, user_segments } = body;
 
-    // Verify conversation belongs to this user
+    console.log(`[session-review] user=${user.id} conv=${conversation_id} turns=${transcript?.length}`);
+
+    // Verify conversation belongs to this user (query by id only to avoid user_id mismatch masking)
     const { data: conv, error: convErr } = await supabase
       .from('conversations')
-      .select('id')
+      .select('id, user_id')
       .eq('id', conversation_id)
-      .eq('user_id', user.id)
       .single();
 
     if (convErr || !conv) {
+      console.error(`[session-review] conv not found by id: convErr=${convErr?.message}`);
       return Response.json({ error: 'Conversation not found' }, { status: 404, headers: corsHeaders });
+    }
+    if (conv.user_id !== user.id) {
+      console.error(`[session-review] user_id mismatch: conv.user_id=${conv.user_id} user.id=${user.id}`);
+      return Response.json({ error: 'Forbidden' }, { status: 403, headers: corsHeaders });
     }
 
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
@@ -161,7 +169,11 @@ Deno.serve(async (req: Request) => {
             }
 
             const audioBuffer = await audioBlob.arrayBuffer();
-            const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+            // Avoid spread operator on large Uint8Array (stack overflow for big audio files)
+            const bytes = new Uint8Array(audioBuffer);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+            const audioBase64 = btoa(binary);
             // Recordings uploaded as WAV (user audio wrapped with WAV header)
             const scores = await scorePronunciation(
               audioBase64,
@@ -217,12 +229,19 @@ Deno.serve(async (req: Request) => {
           )
         : null;
 
+    // Delete audio files — scoring is done, results are in pronunciation_attempts
+    const audioPaths = user_segments.map((s) => s.audio_storage_path);
+    if (audioPaths.length > 0) {
+      await supabase.storage.from('recordings').remove(audioPaths);
+    }
+
     // Persist summary onto the conversation
     await supabase
       .from('conversations')
       .update({
         summary: {
           recurring_errors: grammarResult.corrections?.map((c: { original: string }) => c.original) ?? [],
+          corrections: grammarResult.corrections ?? [],
           words_to_learn: grammarResult.vocab_to_learn ?? [],
           overall_feedback: grammarResult.overall_feedback ?? '',
           fluency_notes: grammarResult.fluency_notes ?? '',

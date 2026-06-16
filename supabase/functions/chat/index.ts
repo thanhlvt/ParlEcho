@@ -70,9 +70,9 @@ Deno.serve(async (req: Request) => {
 
     let parsed: ChatResponse;
     try {
-      parsed = JSON.parse(rawText);
+      const cleaned = rawText.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '').trim();
+      parsed = JSON.parse(cleaned);
     } catch {
-      // Fallback nếu Claude không trả JSON thuần
       parsed = { reply: rawText, translation: '', corrections: [], hints: [] };
     }
 
@@ -106,7 +106,7 @@ Deno.serve(async (req: Request) => {
         furigana: parsed.furigana ?? null,
         romaji: parsed.romaji ?? null,
         corrections: parsed.corrections ?? [],
-        hints: parsed.hints ?? [],
+        hints: [],
       },
     ]);
 
@@ -157,8 +157,7 @@ Always respond with ONLY valid JSON — no markdown, no preamble, no trailing te
   "reply": "your response in ${lang}",
   "translation": "Vietnamese translation of your reply",
   ${jpExtra}
-  "corrections": [{"original": "exact user mistake", "fixed": "correct form", "explanation": "brief explanation in Vietnamese"}],
-  "hints": ["one natural follow-up the user could say (in ${lang})"]
+  "corrections": [{"original": "exact user mistake", "fixed": "correct form", "explanation": "brief explanation in Vietnamese"}]
 }
 
 Rules:

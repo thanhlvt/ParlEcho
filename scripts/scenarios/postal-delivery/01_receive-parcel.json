@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000005",
+    "slug": "postal-delivery",
+    "category": "daily"
+  },
+  "sort_order": 1,
+  "icon": "📦",
+  "level": "beginner",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0005-000000000001",
+      "title": "Receiving a Package",
+      "description": "A courier arrives with a parcel. Practice asking for clarification when you can't hear clearly, confirming your identity, signing for the delivery, and getting your tracking number.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "Delivery! I have a package here for a Mister or Miss Nguyen.",
+          "translation": "Giao hàng! Tôi có một bưu kiện cho anh/chị Nguyễn."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Sorry, the intercom is a bit crackly. Could you say that again, please?",
+          "translation": "Xin lỗi, loa bộ đàm hơi tệ. Bạn có thể nói lại được không?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "No problem! I said I have a parcel for Nguyen Minh. I'll need a signature.",
+          "translation": "Không sao! Tôi nói là tôi có bưu kiện cho Nguyễn Minh. Tôi cần chữ ký."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "That's me! Please come up — third floor, apartment 3B. I'll buzz you in now.",
+          "translation": "Đó là tôi! Mời lên đây — tầng 3, phòng 3B. Tôi mở cửa cho bạn ngay."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "Here's your parcel. Could I get you to sign on this screen, please?",
+          "translation": "Đây là bưu kiện của bạn. Nhờ bạn ký trên màn hình này được không?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "Of course. Is there anywhere in particular I need to sign?",
+          "translation": "Được thôi. Có chỗ nào cụ thể tôi cần ký không?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "Sign on that line there, and then could you also print your full name underneath?",
+          "translation": "Ký vào dòng đó, rồi bạn có thể viết tay tên đầy đủ bên dưới không?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "Sorry, I didn't catch the second part. Could you repeat that?",
+          "translation": "Xin lỗi, tôi không nghe rõ phần sau. Bạn có thể nhắc lại không?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "Sure! After your signature, just write your name in block letters right below it.",
+          "translation": "Được! Sau chữ ký, chỉ cần viết tên bằng chữ in hoa ngay bên dưới."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "Got it. [signs and prints name] Is there anything else I need to do?",
+          "translation": "Hiểu rồi. [ký và viết tên] Còn điều gì tôi cần làm nữa không?"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "That's everything! Your tracking number is Z-X-four-eight-two-nine-one. Have a great day!",
+          "translation": "Xong rồi! Số theo dõi đơn hàng của bạn là ZX-48291. Chúc bạn một ngày tốt lành!"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "Thank you so much. You too!",
+          "translation": "Cảm ơn bạn rất nhiều. Bạn cũng vậy!"
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0005-000000000002",
+      "title": "宅配便を受け取る",
+      "description": "宅配便が届いた場面を練習します。インターホンで聞き取れない時の聞き返し方、本人確認、サインの方法、お問い合わせ番号の確認まで自然に話せるようにします。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "ヤマト運輸です。グエン・ミン様にお荷物をお届けに参りました。",
+          "translation": "Đây là Yamato Unyu. Tôi đến giao hàng cho anh/chị Nguyen Minh.",
+          "furigana": "ヤマトうんゆです。グエン・ミンさまにおにもつをおとどけにまいりました。",
+          "romaji": "Yamato Un'yu desu. Guen Min-sama ni o-nimotsu wo o-todoke ni mairimashita."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "すみません、インターホンの音が悪くて聞き取れませんでした。もう一度おっしゃっていただけますか？",
+          "translation": "Xin lỗi, loa bộ đàm không rõ nên tôi không nghe được. Bạn có thể nói lại một lần nữa không?",
+          "furigana": "すみません、インターホンのおとがわるくてききとれませんでした。もういちどおっしゃっていただけますか？",
+          "romaji": "Sumimasen, intāhon no oto ga warukute kikitoremasen deshita. Mō ichi-do osshatte itadakemasu ka?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "ヤマト運輸でございます。グエン・ミン様宛のお荷物をお持ちしました。",
+          "translation": "Đây là Yamato Unyu. Tôi mang bưu kiện cho anh/chị Nguyen Minh.",
+          "furigana": "ヤマトうんゆでございます。グエン・ミンさまあてのおにもつをおもちしました。",
+          "romaji": "Yamato Un'yu de gozaimasu. Guen Min-sama ate no o-nimotsu wo o-mochi shimashita."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "はい、私です。3階の3Bにいます。今、開けますね。",
+          "translation": "Vâng, đó là tôi. Tôi ở tầng 3 phòng 3B. Tôi mở cửa ngay nhé.",
+          "furigana": "はい、わたしです。さんがいのさんBにいます。いま、あけますね。",
+          "romaji": "Hai, watashi desu. San-kai no san-B ni imasu. Ima, akemasu ne."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "こちらがお荷物です。こちらの端末にサインをいただけますか？",
+          "translation": "Đây là bưu kiện của bạn. Bạn có thể ký vào màn hình này không?",
+          "furigana": "こちらがおにもつです。こちらのたんまつにサインをいただけますか？",
+          "romaji": "Kochira ga o-nimotsu desu. Kochira no tanmatsu ni sain wo itadakemasu ka?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "はい。どこにサインすればいいですか？",
+          "translation": "Vâng. Tôi ký vào chỗ nào?",
+          "furigana": "はい。どこにサインすればいいですか？",
+          "romaji": "Hai. Doko ni sain sureba ii desu ka?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "この枠内にサインをして、その下にお名前をご記入いただけますか？",
+          "translation": "Ký vào khung này, rồi viết tên vào bên dưới được không?",
+          "furigana": "このわくないにサインをして、そのしたにおなまえをごきにゅういただけますか？",
+          "romaji": "Kono waku-nai ni sain wo shite, sono shita ni o-namae wo go-kinyū itadakemasu ka?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "すみません、もう一度言っていただけますか？少し聞き取れなかったです。",
+          "translation": "Xin lỗi, bạn có thể nói lại được không? Tôi nghe không rõ lắm.",
+          "furigana": "すみません、もういちどいっていただけますか？すこしききとれなかったです。",
+          "romaji": "Sumimasen, mō ichi-do itte itadakemasu ka? Sukoshi kikitorenakatta desu."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "はい、失礼しました。まずサイン欄にサインをして、それからサインの下にお名前をお書きください。",
+          "translation": "Vâng, xin lỗi. Trước tiên ký vào ô chữ ký, rồi viết tên ngay bên dưới chữ ký.",
+          "furigana": "はい、しつれいしました。まずサインらんにサインをして、それからサインのしたにおなまえをおかきください。",
+          "romaji": "Hai, shitsurei shimashita. Mazu sain-ran ni sain wo shite, sorekara sain no shita ni o-namae wo o-kaki kudasai."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "わかりました。[サイン・記入する] これでよろしいでしょうか？",
+          "translation": "Hiểu rồi. [ký và viết tên] Như vậy có được không?",
+          "furigana": "わかりました。[サイン・きにゅうする] これでよろしいでしょうか？",
+          "romaji": "Wakarimashita. [sain / kinyū suru] Kore de yoroshii deshō ka?"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "はい、ありがとうございます。お問い合わせ番号はZX-四八二九一でございます。",
+          "translation": "Vâng, cảm ơn bạn. Số theo dõi đơn hàng là ZX-48291.",
+          "furigana": "はい、ありがとうございます。おといあわせばんごうはZX-しはちにきゅういちでございます。",
+          "romaji": "Hai, arigatō gozaimasu. O-toiawase bangō wa ZX-shi-hachi-ni-kyū-ichi de gozaimasu."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "ありがとうございます。気をつけていってらっしゃいませ。",
+          "translation": "Cảm ơn bạn. Hãy cẩn thận trên đường nhé.",
+          "furigana": "ありがとうございます。きをつけていってらっしゃいませ。",
+          "romaji": "Arigatō gozaimasu. Ki wo tsukete itterasshai-mase."
+        }
+      ]
+    }
+  }
+}

@@ -13,6 +13,7 @@ export default function LiveLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="history" options={{ title: 'Lịch sử phiên Live' }} />
       <Stack.Screen name="review/[conversationId]" options={{ title: 'Nhận xét phiên' }} />
     </Stack>
   );

@@ -121,7 +121,10 @@ Deno.serve(async (req: Request) => {
 
     // Encode audio → base64 để gửi inline
     const audioBuffer = await audioBlob.arrayBuffer();
-    const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioBuffer)));
+    const bytes = new Uint8Array(audioBuffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    const audioBase64 = btoa(binary);
 
     const langHint = language_id === 'ja' ? 'Japanese' : 'English';
 
@@ -242,6 +245,9 @@ Deno.serve(async (req: Request) => {
         avg_pronunciation_score: scores.overall_score,
       });
     }
+
+    // Audio has been scored and result persisted — delete the file to free storage
+    await supabase.storage.from('recordings').remove([audio_storage_path]);
 
     return Response.json({ recognized_text, ...scores }, { headers: corsHeaders });
   } catch (err) {

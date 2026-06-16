@@ -77,13 +77,16 @@ Deno.serve(async (req: Request) => {
     const selectedVoice = voice ?? DEFAULT_VOICE;
 
     // Gọi Gemini TTS API
+    // gemini-3.1-flash-tts-preview is the newest TTS model (as of June 2026)
+    // gemini-2.5-flash-preview-tts returns finishReason: "OTHER" (model-side failure)
+    const TTS_MODEL = 'gemini-3.1-flash-tts-preview';
     const geminiResp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${geminiKey}`, // nếu 404: đổi thành gemini-2.5-flash-tts
+      `https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent?key=${geminiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text }] }],
+          contents: [{ role: 'user', parts: [{ text }] }],
           generationConfig: {
             responseModalities: ['AUDIO'],
             speechConfig: {
@@ -101,10 +104,27 @@ Deno.serve(async (req: Request) => {
     }
 
     const geminiData = await geminiResp.json();
-    const pcmBase64: string =
-      geminiData.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data ?? '';
 
-    if (!pcmBase64) throw new Error('Gemini TTS returned no audio data');
+    // Log structure for debugging (truncate data fields to avoid huge logs)
+    const debugData = JSON.stringify(geminiData, (key, val) =>
+      key === 'data' && typeof val === 'string' ? `<base64 ${val.length}chars>` : val
+    );
+    console.log('[tts] Gemini response structure:', debugData.substring(0, 1000));
+
+    // Search all parts for inlineData audio (not just parts[0])
+    const parts: Array<Record<string, unknown>> =
+      geminiData.candidates?.[0]?.content?.parts ?? [];
+    const audioPart = parts.find(
+      (p) => (p.inlineData as Record<string, unknown> | undefined)?.mimeType?.toString().startsWith('audio'),
+    );
+    const pcmBase64: string =
+      (audioPart?.inlineData as Record<string, unknown> | undefined)?.data as string ?? '';
+
+    if (!pcmBase64) {
+      throw new Error(
+        `Gemini TTS returned no audio data. Structure: ${debugData.substring(0, 400)}`,
+      );
+    }
 
     // Decode base64 PCM → Uint8Array
     const binaryStr = atob(pcmBase64);

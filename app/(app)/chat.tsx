@@ -20,7 +20,7 @@ import { supabase } from '../../lib/supabase';
 import { ChatApiResponse, Correction, LanguageId, Message } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 
-type ViewState = 'start' | 'chat';
+type ViewState = 'start' | 'chat' | 'history';
 
 type UIMessage = Pick<
   Message,
@@ -39,6 +39,10 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [loadingInit, setLoadingInit] = useState(true);
+  const [historyConvs, setHistoryConvs] = useState<
+    Array<{ id: string; language_id: LanguageId; started_at: string }>
+  >([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Load active language from profile when screen focuses
   useFocusEffect(
@@ -89,6 +93,51 @@ export default function ChatScreen() {
     setInput('');
     setExpandedIds(new Set());
     setView('start');
+  }
+
+  // ── Load history ────────────────────────────────────────────────────
+  async function loadHistory() {
+    if (!user) return;
+    setView('history');
+    setHistoryLoading(true);
+    const { data } = await supabase
+      .from('conversations')
+      .select('id, language_id, started_at')
+      .eq('user_id', user.id)
+      .eq('mode', 'roleplay')
+      .order('started_at', { ascending: false })
+      .limit(30);
+    setHistoryConvs((data ?? []) as typeof historyConvs);
+    setHistoryLoading(false);
+  }
+
+  // ── Resume conversation ─────────────────────────────────────────────
+  async function resumeConversation(convId: string, lang: LanguageId) {
+    setSending(true);
+    const { data } = await supabase
+      .from('messages')
+      .select('id, role, text, translation, furigana, romaji, corrections, hints')
+      .eq('conversation_id', convId)
+      .order('sort_order');
+
+    setConversationId(convId);
+    setLanguageId(lang);
+    setMessages(
+      (data ?? []).map((m) => ({
+        id: m.id as string,
+        role: m.role as 'user' | 'assistant',
+        text: m.text as string,
+        translation: m.translation as string | null,
+        furigana: m.furigana as string | null,
+        romaji: m.romaji as string | null,
+        corrections: m.corrections as typeof messages[0]['corrections'],
+        hints: m.hints as string[] | null,
+      })),
+    );
+    setExpandedIds(new Set());
+    setView('chat');
+    setSending(false);
+    scrollToEnd(300);
   }
 
   // ── Send message ────────────────────────────────────────────────────
@@ -159,10 +208,6 @@ export default function ChatScreen() {
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), delay);
   }
 
-  function tapHint(hint: string) {
-    setInput(hint);
-  }
-
   function toggleExpanded(id: string) {
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -183,6 +228,10 @@ export default function ChatScreen() {
   if (view === 'start') {
     return (
       <SafeAreaView style={styles.safe}>
+        <TouchableOpacity style={styles.historyBtn} onPress={loadHistory} activeOpacity={0.7}>
+          <Ionicons name="time-outline" size={18} color={Colors.primary} />
+          <Text style={styles.historyBtnText}>Lịch sử</Text>
+        </TouchableOpacity>
         <View style={styles.startContainer}>
           <View style={styles.iconWrap}>
             <Ionicons name="chatbubbles" size={48} color={Colors.primary} />
@@ -228,6 +277,66 @@ export default function ChatScreen() {
     );
   }
 
+  // ── Render history screen ───────────────────────────────────────────
+  if (view === 'history') {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.historyHeader}>
+          <TouchableOpacity onPress={() => setView('start')} hitSlop={8}>
+            <Ionicons name="arrow-back" size={22} color={Colors.textPrimary} />
+          </TouchableOpacity>
+          <Text style={styles.historyTitle}>Lịch sử hội thoại</Text>
+          <View style={{ width: 22 }} />
+        </View>
+
+        {historyLoading ? (
+          <ActivityIndicator style={{ flex: 1 }} color={Colors.primary} />
+        ) : historyConvs.length === 0 ? (
+          <View style={styles.historyEmpty}>
+            <Ionicons name="chatbubbles-outline" size={40} color={Colors.textMuted} />
+            <Text style={styles.historyEmptyText}>Chưa có phiên nào</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={historyConvs}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.historyList}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.historyCard}
+                activeOpacity={0.75}
+                onPress={() => resumeConversation(item.id, item.language_id)}
+                disabled={sending}
+              >
+                <View style={styles.historyCardLeft}>
+                  <Text style={styles.historyLang}>
+                    {item.language_id === 'en' ? '🇺🇸' : '🇯🇵'}
+                  </Text>
+                  <View>
+                    <Text style={styles.historyDate}>
+                      {new Date(item.started_at).toLocaleDateString('vi-VN', {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                      })}
+                    </Text>
+                    <Text style={styles.historyTime}>
+                      {new Date(item.started_at).toLocaleTimeString('vi-VN', {
+                        hour: '2-digit', minute: '2-digit',
+                      })}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.historyResume}>
+                  <Text style={styles.historyResumeText}>Tiếp tục</Text>
+                  <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        )}
+      </SafeAreaView>
+    );
+  }
+
   // ── Render chat screen ──────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
@@ -249,7 +358,7 @@ export default function ChatScreen() {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={0}
       >
         <FlatList
@@ -271,7 +380,6 @@ export default function ChatScreen() {
               languageId={languageId}
               expanded={expandedIds.has(item.id)}
               onToggleExpand={() => toggleExpanded(item.id)}
-              onTapHint={tapHint}
             />
           )}
         />
@@ -317,13 +425,11 @@ function ChatBubble({
   languageId,
   expanded,
   onToggleExpand,
-  onTapHint,
 }: {
   message: UIMessage;
   languageId: LanguageId;
   expanded: boolean;
   onToggleExpand: () => void;
-  onTapHint: (hint: string) => void;
 }) {
   const isUser = message.role === 'user';
   const [showTranslation, setShowTranslation] = useState(false);
@@ -389,21 +495,6 @@ function ChatBubble({
           </View>
         ) : null}
 
-        {/* Hints */}
-        {!isUser && message.hints?.length ? (
-          <View style={styles.hintsRow}>
-            {message.hints.map((hint, i) => (
-              <TouchableOpacity
-                key={i}
-                style={styles.hintChip}
-                onPress={() => onTapHint(hint)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.hintText} numberOfLines={2}>{hint}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        ) : null}
       </View>
     </View>
   );
@@ -577,22 +668,6 @@ const styles = StyleSheet.create({
   corrFixed: { fontSize: 13, color: Colors.success, fontWeight: '600' },
   corrExplain: { fontSize: 12, color: Colors.textMuted, marginTop: 2, fontStyle: 'italic' },
 
-  // ── Hints
-  hintsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 2,
-  },
-  hintChip: {
-    backgroundColor: Colors.primaryLight,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    maxWidth: 240,
-  },
-  hintText: { fontSize: 12, color: Colors.primary, fontWeight: '600' },
-
   // ── Input bar
   inputBar: {
     flexDirection: 'row',
@@ -625,4 +700,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sendBtnDisabled: { backgroundColor: Colors.border },
+
+  // ── History
+  historyBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    alignSelf: 'flex-end', margin: 16, marginBottom: 0,
+    paddingHorizontal: 12, paddingVertical: 6,
+    borderRadius: 20, backgroundColor: Colors.primaryLight,
+  },
+  historyBtnText: { fontSize: 13, fontWeight: '600', color: Colors.primary },
+  historyHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 12,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border,
+  },
+  historyTitle: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
+  historyList: { padding: 16, gap: 10 },
+  historyEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  historyEmptyText: { fontSize: 14, color: Colors.textMuted },
+  historyCard: {
+    backgroundColor: Colors.surface, borderRadius: 14, padding: 14,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.border,
+  },
+  historyCardLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  historyLang: { fontSize: 24 },
+  historyDate: { fontSize: 13, fontWeight: '600', color: Colors.textPrimary },
+  historyTime: { fontSize: 12, color: Colors.textMuted },
+  historyResume: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  historyResumeText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
 });

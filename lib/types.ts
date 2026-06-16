@@ -62,6 +62,7 @@ export type Profile = {
 
 export type ConversationSummary = {
   recurring_errors?: string[];
+  corrections?: Correction[];
   words_to_learn?: string[];
   /** Điểm phát âm trung bình của phiên (live) */
   avg_pronunciation?: number | null;
@@ -183,9 +184,11 @@ export type PronounceApiResponse = {
 // ── Live conversation (Gemini Live API) ───────────────────────────────
 
 export type LiveTokenApiResponse = {
-  token: string;       // ephemeral token name (dạng "auth_tokens/xxx")
-  model: string;       // model đã lock vào token
-  expire_time: string; // ISO timestamp
+  token: string;            // ephemeral token name (dạng "auth_tokens/xxx")
+  model: string;            // model để gửi trong WebSocket setup
+  expire_time: string;      // ISO timestamp
+  voice: string;            // voice name để gửi trong setup
+  system_instruction: string; // system instruction để gửi trong setup
 };
 
 export type LiveTurn = {

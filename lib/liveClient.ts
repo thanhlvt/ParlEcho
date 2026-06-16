@@ -76,8 +76,10 @@ export interface LiveSessionResult {
   userSegments: LiveAudioSegment[];
 }
 
+// Ephemeral token endpoint requires BidiGenerateContentConstrained (not BidiGenerateContent)
+// source: ai.google.dev/gemini-api/docs/live-api/get-started-websocket
 const WSS_BASE =
-  'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent';
+  'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContentConstrained';
 
 export class LiveClient {
   private ws: WebSocket | null = null;
@@ -95,6 +97,9 @@ export class LiveClient {
 
   // Barge-in flag — khi AI bị ngắt, buffer hiện tại bị hủy
   private aiSpeaking = false;
+  // Track audio buffer to calculate how long to keep mic muted after generationComplete
+  private aiAudioStartTime = 0;
+  private aiAudioByteCount = 0;
 
   constructor(cb: LiveClientCallbacks) {
     this.cb = cb;
@@ -102,12 +107,24 @@ export class LiveClient {
 
   // ── Public API ────────────────────────────────────────────────────────
 
-  async start(opts: { languageId: string; topic?: string }) {
+  async start(opts: {
+    languageId: string;
+    topic?: string;
+    voice?: string;
+    speakingStyle?: string;
+    conversationMethod?: string;
+  }) {
     this.cb.onStateChange('connecting');
 
     // 1. Lấy ephemeral token từ Edge Function
     const { data, error } = await supabase.functions.invoke<LiveTokenApiResponse>('live-token', {
-      body: { language_id: opts.languageId, topic: opts.topic ?? '' },
+      body: {
+        language_id: opts.languageId,
+        topic: opts.topic ?? '',
+        voice_id: opts.voice,
+        speaking_style: opts.speakingStyle,
+        conversation_method: opts.conversationMethod,
+      },
     });
 
     if (error || !data) {
@@ -119,15 +136,51 @@ export class LiveClient {
     // 2. Mở WebSocket với access_token (ephemeral token)
     const url = `${WSS_BASE}?access_token=${encodeURIComponent(data.token)}`;
     this.ws = new WebSocket(url);
+    // Gemini Live sends JSON as binary WebSocket frames — request ArrayBuffer for easy decoding
+    (this.ws as WebSocket & { binaryType: string }).binaryType = 'arraybuffer';
 
     this.ws.onopen = () => {
-      // Setup message đã được lock vào token (model, voice, transcription, systemInstruction)
-      // Chỉ cần gửi setup trống để bắt đầu session
-      this._send({ setup: {} });
+      console.log('[LiveClient] WS opened, sending setup. model=', data.model, 'voice=', data.voice);
+      this._send({
+        setup: {
+          model: data.model,
+          generationConfig: {
+            responseModalities: ['AUDIO'],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: data.voice },
+              },
+            },
+          },
+          systemInstruction: {
+            parts: [{ text: data.system_instruction }],
+          },
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
+        },
+      });
       this.cb.onStateChange('live');
     };
 
-    this.ws.onmessage = (ev) => this._handleMessage(ev.data);
+    this.ws.onmessage = (ev) => {
+      let text: string;
+      if (typeof ev.data === 'string') {
+        text = ev.data;
+      } else if (ev.data instanceof ArrayBuffer) {
+        // Gemini sends JSON inside binary WebSocket frames — decode as UTF-8
+        try {
+          text = new TextDecoder('utf-8').decode(ev.data);
+        } catch (e) {
+          console.warn('[LiveClient] Failed to decode ArrayBuffer frame:', e);
+          return;
+        }
+      } else {
+        console.warn('[LiveClient] Unknown frame type:', typeof ev.data, Object.prototype.toString.call(ev.data));
+        return;
+      }
+      console.log('[LiveClient] Message text:', text.substring(0, 200));
+      this._handleMessage(text);
+    };
 
     this.ws.onerror = (ev) => {
       console.error('[LiveClient] WebSocket error', ev);
@@ -136,9 +189,17 @@ export class LiveClient {
     };
 
     this.ws.onclose = (ev) => {
-      if (ev.code !== 1000) {
-        this.cb.onStateChange('error');
-        this.cb.onError(`Connection closed unexpectedly (code ${ev.code})`);
+      console.log(`[LiveClient] WS closed code=${ev.code} reason="${ev.reason}"`);
+      // Only act if ws is still set (user calling stop() nulls it out first)
+      if (this.ws !== null) {
+        if (ev.code === 1000) {
+          // Normal session end from Gemini — don't show error; let audio finish playing
+          // The UI stays on the live screen so the user can press End when ready
+          this.cb.onStateChange('ended');
+        } else {
+          this.cb.onStateChange('error');
+          this.cb.onError(`Kết nối đóng (code ${ev.code}${ev.reason ? ': ' + ev.reason : ''})`);
+        }
       }
     };
   }
@@ -149,6 +210,10 @@ export class LiveClient {
    */
   sendAudioChunk(pcm16Base64: string) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    // Gate mic while AI audio is still playing to prevent speaker echo being fed back to
+    // Gemini (hardware AEC alone is not reliable on all devices / Android).
+    // The gate is cleared by: drain timer, inputTranscription arrival, or empty serverContent.
+    if (this.aiSpeaking) return;
 
     // Buffer để review cuối phiên
     const bytes = Uint8Array.from(atob(pcm16Base64), (c) => c.charCodeAt(0));
@@ -167,7 +232,10 @@ export class LiveClient {
    */
   stop(): { turns: LiveTurn[]; rawUserSegments: Array<{ pcm: Uint8Array; text: string; order: number }> } {
     if (this.ws) {
-      this.ws.close(1000, 'Session ended by user');
+      // Only close if still open — server may have already closed with code=1000
+      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+        this.ws.close(1000, 'Session ended by user');
+      }
       this.ws = null;
     }
     this._flushCurrentUserTurn();
@@ -188,12 +256,22 @@ export class LiveClient {
       return;
     }
 
+    // setupComplete confirms the session is ready
+    if (msg.setupComplete !== undefined) {
+      console.log('[LiveClient] setupComplete received — session ready');
+      return;
+    }
+
     const sc = msg.serverContent as Record<string, unknown> | undefined;
-    if (!sc) return;
+    if (!sc) {
+      console.log('[LiveClient] Non-serverContent message keys:', Object.keys(msg).join(','));
+      return;
+    }
 
     // Barge-in: AI bị ngắt → discard current AI audio
     if (sc.interrupted) {
       this.aiSpeaking = false;
+      this.aiAudioByteCount = 0;
       this.currentAiText = '';
       this.cb.onInterrupted?.();
     }
@@ -204,7 +282,13 @@ export class LiveClient {
         // Audio PCM24 → UI play
         const inlineData = part.inlineData as { mimeType?: string; data?: string } | undefined;
         if (inlineData?.data) {
-          this.aiSpeaking = true;
+          if (!this.aiSpeaking) {
+            this.aiSpeaking = true;
+            this.aiAudioStartTime = Date.now();
+            this.aiAudioByteCount = 0;
+          }
+          // base64 → PCM byte count (Gemini outputs 24 kHz 16-bit mono = 48000 B/s)
+          this.aiAudioByteCount += Math.ceil(inlineData.data.length * 3 / 4);
           this.cb.onAudioChunk(inlineData.data);
         }
       }
@@ -214,6 +298,18 @@ export class LiveClient {
     const inputTx = sc.inputTranscription as { text?: string } | undefined;
     if (inputTx?.text) {
       this.currentUserText += inputTx.text;
+      // Gemini confirmed it's receiving user audio — cancel any stale aiSpeaking flag
+      if (this.aiSpeaking) {
+        this.aiSpeaking = false;
+        this.aiAudioByteCount = 0;
+      }
+      // Emit live preview immediately so the user bubble appears before the AI responds.
+      // _flushCurrentUserTurn() will later add this as a permanent turn; the UI sees a
+      // seamless update because the text is the same.
+      this.cb.onTranscriptUpdate([
+        ...this.turns,
+        { role: 'user', text: this.currentUserText, sort_order: this.turnOrder },
+      ]);
     }
 
     // Output transcription (AI reply text)
@@ -222,8 +318,19 @@ export class LiveClient {
       this.currentAiText += outputTx.text;
     }
 
-    // Turn complete → commit both sides
-    if (sc.turnComplete) {
+    // Empty serverContent {} = Gemini acknowledged receipt but produced no content.
+    // This happens when the AI decides not to respond for a turn, or as a session keepalive.
+    // Clear any stale aiSpeaking flag so the next user turn is not blocked.
+    if (!sc.interrupted && !sc.modelTurn && !sc.inputTranscription &&
+        !sc.outputTranscription && !sc.turnComplete && !sc.generationComplete) {
+      if (this.aiSpeaking) {
+        this.aiSpeaking = false;
+        this.aiAudioByteCount = 0;
+      }
+    }
+
+    // turnComplete OR generationComplete = AI finished its turn, ready for next input
+    if (sc.turnComplete || sc.generationComplete) {
       this._flushCurrentUserTurn();
       if (this.currentAiText.trim()) {
         this.turns.push({
@@ -232,8 +339,17 @@ export class LiveClient {
           sort_order: this.turnOrder++,
         });
         this.currentAiText = '';
-        this.aiSpeaking = false;
       }
+      // Delay re-enabling mic until buffered audio finishes playing.
+      // totalAudioMs = byte count / 48000 B/s (24 kHz 16-bit mono).
+      // elapsedMs = time since first chunk arrived — already-played portion.
+      // +200 ms safety buffer for playback queue flush; no artificial minimum
+      // so the gate closes immediately if audio was short or already done.
+      const totalAudioMs = (this.aiAudioByteCount / 48000) * 1000;
+      const elapsedMs = Date.now() - this.aiAudioStartTime;
+      const remainingMs = Math.max(0, totalAudioMs - elapsedMs + 200);
+      this.aiAudioByteCount = 0;
+      setTimeout(() => { this.aiSpeaking = false; }, remainingMs);
       this.cb.onTranscriptUpdate([...this.turns]);
     }
   }

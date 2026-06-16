@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000003",
+    "slug": "daily-life",
+    "category": "daily"
+  },
+  "sort_order": 2,
+  "icon": "🚕",
+  "level": "intermediate",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0003-000000000003",
+      "title": "Calling a Taxi / Ride",
+      "description": "Call a taxi dispatcher, give your pickup address and destination, and pass on special instructions — don't use the back gate, waiting under the building, in a hurry for a flight.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "City Cab, how can I help you?",
+          "translation": "Taxi City Cab đây, tôi có thể giúp gì cho bạn?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Hi, I'd like to book a taxi, please. I need one as soon as possible.",
+          "translation": "Xin chào, tôi muốn đặt taxi, nhanh nhất có thể."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "Sure! Where are you being picked up from?",
+          "translation": "Được! Bạn đang ở địa chỉ đón nào?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "I'm at 123 Nguyen Hue Street, District 1. I'm waiting under the building, at the ground-floor drop-off area.",
+          "translation": "Tôi đang ở 123 Nguyễn Huệ, Quận 1. Tôi đang đứng dưới tòa nhà, khu vực đón xe tầng trệt."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "Got it. And where are you heading?",
+          "translation": "Hiểu rồi. Bạn muốn đến đâu?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "To Tan Son Nhat Airport, please. I have a flight at two-thirty, so I'm in a bit of a rush.",
+          "translation": "Đến sân bay Tân Sơn Nhất. Tôi có chuyến bay lúc 2 rưỡi nên hơi vội."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "No problem. Any special instructions for the driver?",
+          "translation": "Không vấn đề. Có yêu cầu gì đặc biệt cho tài xế không?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "Yes — please tell the driver not to come through the back gate, it's locked. The main entrance is on Nguyen Hue Street.",
+          "translation": "Có — nhờ bạn nhắn tài xế đừng vào cổng sau, cổng đó bị khóa. Lối vào chính ở phía đường Nguyễn Huệ."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "Understood. I'll pass that on. May I have your name?",
+          "translation": "Hiểu rồi. Tôi sẽ thông báo cho tài xế. Cho tôi xin tên bạn?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "It's Minh. And my number is zero-nine-zero, one-two-three-four, five-six-seven-eight.",
+          "translation": "Tên tôi là Minh. Số điện thoại là 090-1234-5678."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "Thank you, Minh. Your driver will arrive in about eight minutes. It's a white Toyota Vios, license plate fifty-one A, one-two-three-four.",
+          "translation": "Cảm ơn anh/chị Minh. Tài xế sẽ đến trong khoảng 8 phút. Xe Toyota Vios trắng, biển số 51A-1234."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "Perfect, thank you. I'll keep an eye out for it.",
+          "translation": "Tuyệt, cảm ơn. Tôi sẽ chú ý."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0003-000000000004",
+      "title": "電話でタクシーを呼ぶ",
+      "description": "タクシー会社に電話して、乗車場所・目的地を伝え、裏口不可・建物前で待機などの特別な要望も練習します。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "はい、シティタクシーでございます。",
+          "translation": "Vâng, đây là City Taxi.",
+          "furigana": "はい、シティタクシーでございます。",
+          "romaji": "Hai, Shiti-Takushī de gozaimasu."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "すみません、タクシーをお願いしたいのですが、できるだけ早く来ていただけますか？",
+          "translation": "Xin lỗi, tôi muốn đặt taxi, có thể đến sớm nhất không?",
+          "furigana": "すみません、タクシーをおねがいしたいのですが、できるだけはやくきていただけますか？",
+          "romaji": "Sumimasen, takushī wo onegai shitai no desu ga, dekiru dake hayaku kite itadakemasu ka?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "かしこまりました。ご乗車場所をお知らせいただけますか？",
+          "translation": "Vâng. Xin cho biết địa điểm đón?",
+          "furigana": "かしこまりました。ごじょうしゃばしょをおしらせいただけますか？",
+          "romaji": "Kashikomarimashita. Go-jōsha-basho wo o-shirase itadakemasu ka?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "渋谷区神南一丁目、ABCタワーの前です。建物の一階、車寄せの下で待っています。",
+          "translation": "Số 1 Jinnan, Shibuya, trước tòa nhà ABC Tower. Tôi đang đứng dưới mái che khu đón xe tầng 1.",
+          "furigana": "しぶやくじんなんいちちょうめ、ABCタワーのまえです。たてもののいっかい、くるまよせのしたでまっています。",
+          "romaji": "Shibuya-ku Jinnan ichi-chōme, ABC Tawā no mae desu. Tatemono no ikkai, kurumayose no shita de matte imasu."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "ありがとうございます。行き先はどちらでしょうか？",
+          "translation": "Cảm ơn. Bạn muốn đến đâu?",
+          "furigana": "ありがとうございます。いきさきはどちらでしょうか？",
+          "romaji": "Arigatō gozaimasu. Ikisaki wa dochira deshō ka?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "羽田空港までお願いします。14時のフライトなので、少し急いでいます。",
+          "translation": "Đến sân bay Haneda. Tôi có chuyến bay lúc 14 giờ nên hơi vội.",
+          "furigana": "はねだくうこうまでおねがいします。じゅうよじのフライトなので、すこしいそいでいます。",
+          "romaji": "Haneda Kūkō made onegai shimasu. Jū-yo-ji no furaito nanode, sukoshi isoide imasu."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "かしこまりました。何かご要望はございますか？",
+          "translation": "Vâng. Bạn có yêu cầu gì đặc biệt không?",
+          "furigana": "かしこまりました。なにかごようぼうはございますか？",
+          "romaji": "Kashikomarimashita. Nanika go-yōbō wa gozaimasu ka?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "はい、裏口からは入らないでください。正面玄関はABCタワーの神南通り側にあります。",
+          "translation": "Vâng, xin đừng vào cổng sau. Lối vào chính của tòa ABC Tower nằm ở phía đường Jinnan.",
+          "furigana": "はい、うらぐちからははいらないでください。しょうめんげんかんはABCタワーのじんなんどおりがわにあります。",
+          "romaji": "Hai, uraguchi kara wa hairanaide kudasai. Shōmen-genkan wa ABC Tawā no Jinnan-dōri gawa ni arimasu."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "承知いたしました。お名前とご連絡先をお聞かせいただけますか？",
+          "translation": "Vâng, tôi hiểu. Cho tôi xin tên và số điện thoại liên lạc?",
+          "furigana": "しょうちいたしました。おなまえとごれんらくさきをおきかせいただけますか？",
+          "romaji": "Shōchi itashimashita. O-namae to go-renrakusaki wo o-kikase itadakemasu ka?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "グエン・ミンと申します。電話番号は○九○の一二三四の五六七八です。",
+          "translation": "Tôi là Nguyen Minh. Số điện thoại là 090-1234-5678.",
+          "furigana": "グエン・ミンともうします。でんわばんごうはまるきゅうまるのいちにさんしのごろくしちはちです。",
+          "romaji": "Guen Min to mōshimasu. Denwa-bangō wa maru-kyū-maru no ichi-ni-san-shi no go-roku-shichi-hachi desu."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "ありがとうございます。10分ほどでお迎えに参ります。白いプリウスで、ナンバーは品川500あ1234でございます。",
+          "translation": "Cảm ơn. Tài xế sẽ đến trong khoảng 10 phút. Xe Prius màu trắng, biển số Shinagawa 500-A-1234.",
+          "furigana": "ありがとうございます。じゅっぷんほどでおむかえにまいります。しろいプリウスで、ナンバーはしながわごひゃくあいちにさんよんでございます。",
+          "romaji": "Arigatō gozaimasu. Juppun hodo de o-mukae ni mairimasu. Shiroi Priusu de, nanbā wa Shinagawa go-hyaku a ichi-ni-san-yon de gozaimasu."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "わかりました。ありがとうございます。よろしくお願いします。",
+          "translation": "Hiểu rồi. Cảm ơn bạn. Nhờ bạn nhé.",
+          "furigana": "わかりました。ありがとうございます。よろしくおねがいします。",
+          "romaji": "Wakarimashita. Arigatō gozaimasu. Yoroshiku onegai shimasu."
+        }
+      ]
+    }
+  }
+}

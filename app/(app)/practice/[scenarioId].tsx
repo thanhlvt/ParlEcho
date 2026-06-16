@@ -30,15 +30,19 @@ export default function ShadowingScreen() {
   const [recordingLineId, setRecordingLineId] = useState<string | null>(null);
   const [processingLineId, setProcessingLineId] = useState<string | null>(null);
   const [playingLineId, setPlayingLineId] = useState<string | null>(null);
+  const [playingUserLineId, setPlayingUserLineId] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, PronounceApiResponse>>({});
+  const [recordedUris, setRecordedUris] = useState<Record<string, string>>({});
 
   const recordingRef = useRef<Audio.Recording | null>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
+  const userSoundRef = useRef<Audio.Sound | null>(null);
 
   useEffect(() => {
     fetchData();
     return () => {
       soundRef.current?.unloadAsync();
+      userSoundRef.current?.unloadAsync();
     };
   }, [scenarioId]);
 
@@ -69,33 +73,16 @@ export default function ShadowingScreen() {
     }
 
     setPlayingLineId(line.id);
-    let audioUrl = line.audio_url;
+    const audioUrl = line.audio_url;
 
-    // Generate TTS on-demand if not cached
     if (!audioUrl) {
-      try {
-        const { data, error } = await supabase.functions.invoke('tts', {
-          body: {
-            text: line.text,
-            language_id: line.language_id,
-            scenario_line_id: line.id,
-          },
-        });
-        if (error) throw new Error(error.message);
-        audioUrl = (data as { audio_url: string }).audio_url;
-        // Cache locally so next tap is instant
-        setLines((prev) =>
-          prev.map((l) => (l.id === line.id ? { ...l, audio_url: audioUrl } : l)),
-        );
-      } catch (err) {
-        Alert.alert('Lỗi TTS', err instanceof Error ? err.message : 'Không thể tạo audio');
-        setPlayingLineId(null);
-        return;
-      }
+      Alert.alert('Chưa có audio', 'File audio chưa được tạo cho câu này.');
+      setPlayingLineId(null);
+      return;
     }
 
     try {
-      const { sound } = await Audio.Sound.createAsync({ uri: audioUrl! });
+      const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
       soundRef.current = sound;
       sound.setOnPlaybackStatusUpdate((status) => {
         if (status.isLoaded && status.didJustFinish) {
@@ -155,6 +142,9 @@ export default function ShadowingScreen() {
       const uri = rec.getURI();
       if (!uri) throw new Error('Không lấy được file ghi âm');
 
+      // Save URI so user can replay their recording
+      setRecordedUris((prev) => ({ ...prev, [line.id]: uri }));
+
       // Upload → Storage "recordings" bucket
       const storagePath = await uploadRecording(uri);
 
@@ -205,6 +195,34 @@ export default function ShadowingScreen() {
     return fileName;
   }
 
+  // ── User recording playback ─────────────────────────────────────────
+  async function handlePlayUserRecording(lineId: string, uri: string) {
+    if (userSoundRef.current) {
+      await userSoundRef.current.unloadAsync();
+      userSoundRef.current = null;
+    }
+    if (playingUserLineId === lineId) {
+      setPlayingUserLineId(null);
+      return;
+    }
+    setPlayingUserLineId(lineId);
+    try {
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+      const { sound } = await Audio.Sound.createAsync({ uri });
+      userSoundRef.current = sound;
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          sound.unloadAsync();
+          userSoundRef.current = null;
+          setPlayingUserLineId(null);
+        }
+      });
+      await sound.playAsync();
+    } catch {
+      setPlayingUserLineId(null);
+    }
+  }
+
   // ── Render ──────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -243,10 +261,16 @@ export default function ShadowingScreen() {
             isPlaying={playingLineId === line.id}
             isRecording={recordingLineId === line.id}
             isProcessing={processingLineId === line.id}
+            isPlayingUser={playingUserLineId === line.id}
             result={results[line.id] ?? null}
+            recordedUri={recordedUris[line.id] ?? null}
             onPlay={() => handlePlay(line)}
             onRecord={() => handleStartRecord(line.id)}
             onStopRecord={() => handleStopRecord(line)}
+            onPlayUser={() => {
+              const uri = recordedUris[line.id];
+              if (uri) handlePlayUserRecording(line.id, uri);
+            }}
           />
         ))}
         <View style={{ height: 24 }} />
@@ -262,20 +286,26 @@ function LineCard({
   isPlaying,
   isRecording,
   isProcessing,
+  isPlayingUser,
   result,
+  recordedUri,
   onPlay,
   onRecord,
   onStopRecord,
+  onPlayUser,
 }: {
   line: ScenarioLine;
   index: number;
   isPlaying: boolean;
   isRecording: boolean;
   isProcessing: boolean;
+  isPlayingUser: boolean;
   result: PronounceApiResponse | null;
+  recordedUri: string | null;
   onPlay: () => void;
   onRecord: () => void;
   onStopRecord: () => void;
+  onPlayUser: () => void;
 }) {
   const isPartner = line.speaker === 'partner';
 
@@ -345,6 +375,24 @@ function LineCard({
               >
                 <Ionicons name="mic" size={18} color="#fff" />
                 <Text style={styles.recordBtnText}>{result ? 'Thử lại' : 'Ghi âm'}</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Replay own recording */}
+            {recordedUri && !isRecording && !isProcessing && (
+              <TouchableOpacity
+                style={[styles.playBtn, isPlayingUser && styles.replayBtnActive]}
+                onPress={onPlayUser}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={isPlayingUser ? 'pause-circle' : 'ear'}
+                  size={18}
+                  color={isPlayingUser ? Colors.surface : Colors.primary}
+                />
+                <Text style={[styles.playBtnText, isPlayingUser && { color: Colors.surface }]}>
+                  {isPlayingUser ? 'Đang phát' : 'Nghe lại'}
+                </Text>
               </TouchableOpacity>
             )}
           </>
@@ -503,6 +551,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   playBtnText: { fontSize: 13, color: Colors.primary, fontWeight: '600' },
+  replayBtnActive: { backgroundColor: Colors.primary },
   recordBtn: {
     flexDirection: 'row',
     alignItems: 'center',

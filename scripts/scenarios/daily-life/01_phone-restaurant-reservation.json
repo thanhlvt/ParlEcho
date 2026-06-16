@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000003",
+    "slug": "daily-life",
+    "category": "daily"
+  },
+  "sort_order": 1,
+  "icon": "📞",
+  "level": "intermediate",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0003-000000000001",
+      "title": "Restaurant Reservation by Phone",
+      "description": "Call a restaurant to book a table. Handle fully-booked slots, suggest an alternative time, and make special requests for a birthday dinner.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "Thank you for calling Bella Italia. How can I help you today?",
+          "translation": "Cảm ơn bạn đã gọi đến Bella Italia. Tôi có thể giúp gì cho bạn?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Hi, I'd like to make a reservation for this Saturday evening, please.",
+          "translation": "Xin chào, tôi muốn đặt bàn cho tối thứ Bảy tuần này."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "Of course! How many people will be dining, and what time were you thinking?",
+          "translation": "Tất nhiên! Sẽ có bao nhiêu người và bạn muốn đặt lúc mấy giờ?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "There'll be four of us. Do you have anything available around seven o'clock?",
+          "translation": "Sẽ có bốn người. Khoảng bảy giờ còn bàn không?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "Let me check... I'm sorry, seven o'clock is fully booked. We do have availability at seven thirty — would that work for you?",
+          "translation": "Để tôi xem... Xin lỗi, bảy giờ đã hết bàn. Nhưng còn bàn lúc bảy giờ rưỡi — bạn có thể không?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "Seven thirty is fine. It's actually a birthday dinner, so could we have a quiet table if possible?",
+          "translation": "Bảy rưỡi được. Thật ra đây là bữa tối sinh nhật, nếu có thể cho chúng tôi bàn yên tĩnh được không?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "How lovely! I'll make a note of that. May I take your name, please?",
+          "translation": "Thật đặc biệt! Tôi sẽ ghi chú lại. Cho tôi xin tên bạn?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "It's Minh Nguyen. That's N-G-U-Y-E-N.",
+          "translation": "Tên tôi là Minh Nguyễn. Đánh vần là N-G-U-Y-E-N."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "Thank you, Mr. Nguyen. Could I also get a contact number in case we need to reach you?",
+          "translation": "Cảm ơn anh Nguyễn. Cho tôi xin số điện thoại liên lạc?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "Sure. It's zero-nine-zero, one-two-three-four, five-six-seven-eight.",
+          "translation": "Được. Số của tôi là 090-1234-5678."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "Perfect. To confirm: a table for four at seven thirty this Saturday, under Nguyen, for a birthday. Your reservation number is B-2947.",
+          "translation": "Tuyệt. Xác nhận: bàn cho bốn người lúc bảy rưỡi tối thứ Bảy, tên Nguyễn, dịp sinh nhật. Mã đặt bàn là B-2947."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "Great, thank you so much. See you on Saturday!",
+          "translation": "Tuyệt, cảm ơn bạn rất nhiều. Hẹn gặp lại thứ Bảy!"
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0003-000000000002",
+      "title": "電話でレストランを予約する",
+      "description": "電話でレストランの席を予約します。満席の場合の対応、代替時間の調整、誕生日などの特別リクエストも練習できます。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "はい、ベラ・イタリアでございます。",
+          "translation": "Vâng, đây là nhà hàng Bella Italia.",
+          "furigana": "はい、ベラ・イタリアでございます。",
+          "romaji": "Hai, Bera-Itaria de gozaimasu."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "あの、今週の土曜日の夜に予約したいのですが。",
+          "translation": "Xin lỗi, tôi muốn đặt bàn cho tối thứ Bảy tuần này ạ.",
+          "furigana": "あの、こんしゅうのどようびのよるによやくしたいのですが。",
+          "romaji": "Ano, konshū no doyōbi no yoru ni yoyaku shitai no desu ga."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "ありがとうございます。何名様で、何時頃をご希望でしょうか？",
+          "translation": "Cảm ơn bạn. Bao nhiêu người và mấy giờ thì bạn muốn?",
+          "furigana": "ありがとうございます。なんめいさまで、なんじごろをごきぼうでしょうか？",
+          "romaji": "Arigatō gozaimasu. Nan-mei-sama de, nan-ji goro wo go-kibō deshō ka?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "四名です。夜の七時頃は空いていますか？",
+          "translation": "Bốn người ạ. Khoảng 7 giờ tối còn bàn không?",
+          "furigana": "よんめいです。よるのしちじごろはあいていますか？",
+          "romaji": "Yon-mei desu. Yoru no shichi-ji goro wa aite imasu ka?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "申し訳ございません。七時は満席でございます。七時半でしたらご用意できますが、いかがでしょうか？",
+          "translation": "Xin lỗi, 7 giờ đã kín bàn rồi. Còn 7 giờ 30 thì được, bạn thấy thế nào?",
+          "furigana": "もうしわけございません。しちじはまんせきでございます。しちじはんでしたらごよういできますが、いかがでしょうか？",
+          "romaji": "Mōshiwake gozaimasu. Shichi-ji wa manseki de gozaimasu. Shichi-ji-han deshitara go-yōi dekimasu ga, ikaga deshō ka?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "七時半で大丈夫です。実は誕生日のお祝いなので、できれば静かな席をお願いできますか？",
+          "translation": "7 giờ 30 được ạ. Thật ra đây là bữa tiệc sinh nhật, nếu có thể xin cho chỗ yên tĩnh được không?",
+          "furigana": "しちじはんでだいじょうぶです。じつはたんじょうびのおいわいなので、できればしずかなせきをおねがいできますか？",
+          "romaji": "Shichi-ji-han de daijōbu desu. Jitsu wa tanjōbi no o-iwai nanode, dekireba shizuka na seki wo onegai dekimasu ka?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "かしこまりました。お誕生日のお祝い、おめでとうございます！お名前をいただけますか？",
+          "translation": "Vâng, tôi hiểu. Xin chúc mừng sinh nhật! Cho tôi xin tên của bạn?",
+          "furigana": "かしこまりました。おたんじょうびのおいわい、おめでとうございます！おなまえをいただけますか？",
+          "romaji": "Kashikomarimashita. O-tanjōbi no o-iwai, o-medeto gozaimasu! O-namae wo itadakemasu ka?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "グエン・ミンと申します。",
+          "translation": "Tên tôi là Nguyen Minh ạ.",
+          "furigana": "グエン・ミンともうします。",
+          "romaji": "Guen Min to mōshimasu."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "グエン・ミン様、ありがとうございます。ご連絡先の電話番号をお聞かせいただけますか？",
+          "translation": "Cảm ơn anh/chị Nguyen Minh. Cho tôi xin số điện thoại liên lạc được không?",
+          "furigana": "グエン・ミンさま、ありがとうございます。ごれんらくさきのでんわばんごうをおきかせいただけますか？",
+          "romaji": "Guen Min-sama, arigatō gozaimasu. Go-renrakusaki no denwa-bangō wo o-kikase itadakemasu ka?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "はい、○九○の一二三四の五六七八です。",
+          "translation": "Vâng, số là 090-1234-5678 ạ.",
+          "furigana": "はい、まるきゅうまるのいちにさんしのごろくしちはちです。",
+          "romaji": "Hai, maru-kyū-maru no ichi-ni-san-shi no go-roku-shichi-hachi desu."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "ありがとうございます。土曜日の19時半、グエン・ミン様で4名様、誕生日のお祝いにてご予約を承りました。予約番号はB-2947でございます。",
+          "translation": "Cảm ơn bạn. Tôi xác nhận: thứ Bảy 19:30, tên Nguyen Minh, 4 người, dịp sinh nhật. Mã đặt bàn là B-2947.",
+          "furigana": "ありがとうございます。どようびのじゅうくじはん、グエン・ミンさまでよんめいさま、たんじょうびのおいわいにてごよやくをうけたまわりました。よやくばんごうはB-2947でございます。",
+          "romaji": "Arigatō gozaimasu. Doyōbi no jū-ku-ji-han, Guen Min-sama de yon-mei-sama, tanjōbi no o-iwai nite go-yoyaku wo uketamawarimashita. Yoyaku-bangō wa B-2947 de gozaimasu."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "ありがとうございます。土曜日によろしくお願いします。失礼します。",
+          "translation": "Cảm ơn bạn. Hẹn gặp lại thứ Bảy. Tạm biệt.",
+          "furigana": "ありがとうございます。どようびによろしくおねがいします。しつれいします。",
+          "romaji": "Arigatō gozaimasu. Doyōbi ni yoroshiku onegai shimasu. Shitsurei shimasu."
+        }
+      ]
+    }
+  }
+}
