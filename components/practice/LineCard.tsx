@@ -19,6 +19,9 @@ interface LineCardProps {
   onRecord: () => void;
   onStopRecord: () => void;
   onPlayUser: () => void;
+  isSaved?: boolean;
+  onSave?: () => void;
+  onWordPress?: (word: string, isMispronounced: boolean) => void;
 }
 
 export function LineCard({
@@ -34,6 +37,9 @@ export function LineCard({
   onRecord,
   onStopRecord,
   onPlayUser,
+  isSaved = false,
+  onSave,
+  onWordPress,
 }: LineCardProps) {
   const isPartner = line.speaker === 'partner';
 
@@ -42,12 +48,23 @@ export function LineCard({
       {/* Speaker label */}
       <View style={styles.speakerRow}>
         <Text style={styles.speakerLabel}>{isPartner ? '🤝 Partner' : '👤 Bạn'}</Text>
-        <Text style={styles.lineNum}>#{index + 1}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={styles.lineNum}>#{index + 1}</Text>
+          {onSave && (
+            <TouchableOpacity onPress={onSave} style={{ padding: 2 }} hitSlop={8}>
+              <Ionicons
+                name={isSaved ? 'bookmark' : 'bookmark-outline'}
+                size={16}
+                color={isSaved ? Colors.primary : Colors.textMuted}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Text — highlighted after scoring */}
       {result ? (
-        <WordHighlight text={line.text} wordScores={result.word_scores} />
+        <WordHighlight text={line.text} wordScores={result.word_scores} onWordPress={onWordPress} />
       ) : (
         <Text style={styles.lineText}>{line.text}</Text>
       )}

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,10 +7,14 @@ import { Colors } from '../../constants/Colors';
 import { supabase } from '../../lib/supabase';
 import { Profile } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
+import { useSidebar } from './_layout';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
+  const router = useRouter();
+  const { toggleSidebar } = useSidebar();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [totalLines, setTotalLines] = useState<number>(0);
 
   useEffect(() => {
     if (!user) return;
@@ -19,12 +24,30 @@ export default function ProfileScreen() {
       .eq('id', user.id)
       .single()
       .then(({ data }) => setProfile(data));
+
+    supabase
+      .from('daily_activity')
+      .select('lines_practiced')
+      .eq('user_id', user.id)
+      .then(({ data }) => {
+        if (data) {
+          const sum = data.reduce((acc, curr) => acc + curr.lines_practiced, 0);
+          setTotalLines(sum);
+        }
+      });
   }, [user]);
 
   const initial = (profile?.name ?? user?.email ?? '?')[0].toUpperCase();
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
+          <Ionicons name="menu" size={28} color={Colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Hồ sơ</Text>
+        <View style={{ width: 32 }} />
+      </View>
       <View style={styles.content}>
         {/* Avatar */}
         <View style={styles.avatar}>
@@ -40,7 +63,21 @@ export default function ProfileScreen() {
             label="Ngôn ngữ đang học"
             value={profile?.active_language_id === 'ja' ? '🇯🇵 Tiếng Nhật' : '🇺🇸 Tiếng Anh'}
           />
-          <SettingRow icon="trophy-outline" label="Tổng số câu đã luyện" value="—" />
+          <SettingRow 
+            icon="trophy-outline" 
+            label="Tổng số câu đã luyện" 
+            value={totalLines.toString()} 
+          />
+          <SettingRow
+            icon="book-outline"
+            label="Sổ tay cá nhân"
+            onPress={() => router.push('/(app)/notebook')}
+          />
+          <SettingRow
+            icon="stats-chart-outline"
+            label="Thống kê tiến độ"
+            onPress={() => router.push('/(app)/analytics')}
+          />
           <SettingRow icon="information-circle-outline" label="Phiên bản" value="1.0.0" />
         </View>
 
@@ -57,22 +94,39 @@ function SettingRow({
   icon,
   label,
   value,
+  onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
-  value: string;
+  value?: string;
+  onPress?: () => void;
 }) {
+  const Container = onPress ? TouchableOpacity : View;
   return (
-    <View style={styles.settingRow}>
+    <Container style={styles.settingRow} onPress={onPress} activeOpacity={0.7}>
       <Ionicons name={icon} size={20} color={Colors.textMuted} style={styles.settingIcon} />
       <Text style={styles.settingLabel}>{label}</Text>
-      <Text style={styles.settingValue}>{value}</Text>
-    </View>
+      {value ? <Text style={styles.settingValue}>{value}</Text> : null}
+      {onPress && <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />}
+    </Container>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
   content: { padding: 24, alignItems: 'center' },
   avatar: {
     width: 80,

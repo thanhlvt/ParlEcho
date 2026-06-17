@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../../constants/Colors';
 import { LanguageId, Message } from '../../lib/types';
 import { CorrectionRow } from './CorrectionRow';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../providers/AuthProvider';
 
 export type UIMessage = Pick<
   Message,
@@ -24,7 +26,53 @@ export function ChatBubble({
   onToggleExpand,
 }: ChatBubbleProps) {
   const isUser = message.role === 'user';
+  const { user } = useAuth();
   const [showTranslation, setShowTranslation] = useState(false);
+  const [savedPhrase, setSavedPhrase] = useState(false);
+  const [savedCorrections, setSavedCorrections] = useState<Record<number, boolean>>({});
+
+  async function handleSavePhrase() {
+    if (!user) return;
+    try {
+      const isOptimistic = message.id.startsWith('opt-') || message.id.startsWith('ai-');
+      const { error } = await supabase.from('saved_items').insert({
+        user_id: user.id,
+        language_id: languageId,
+        type: 'phrase',
+        content: message.text,
+        translation: message.translation,
+        source_message_id: isOptimistic ? null : message.id,
+      });
+      if (error) throw error;
+      setSavedPhrase(true);
+      Alert.alert('Thành công', 'Đã lưu mẫu câu vào Sổ tay.');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Lỗi', 'Không thể lưu mẫu câu.');
+    }
+  }
+
+  async function handleSaveCorrection(c: { original: string; fixed: string; explanation: string }, index: number) {
+    if (!user) return;
+    try {
+      const isOptimistic = message.id.startsWith('opt-') || message.id.startsWith('ai-');
+      const { error } = await supabase.from('saved_items').insert({
+        user_id: user.id,
+        language_id: languageId,
+        type: 'mistake',
+        content: c.original,
+        translation: c.fixed,
+        note: c.explanation,
+        source_message_id: isOptimistic ? null : message.id,
+      });
+      if (error) throw error;
+      setSavedCorrections(prev => ({ ...prev, [index]: true }));
+      Alert.alert('Thành công', 'Đã lưu lỗi sai vào Sổ tay.');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Lỗi', 'Không thể lưu lỗi sai.');
+    }
+  }
 
   return (
     <View style={[styles.bubbleRow, isUser && styles.bubbleRowUser]}>
@@ -49,19 +97,31 @@ export function ChatBubble({
             <Text style={styles.romaji}>{message.romaji}</Text>
           ) : null}
 
-          {/* Translation toggle */}
-          {!isUser && message.translation ? (
-            <>
-              <Pressable onPress={() => setShowTranslation((v) => !v)} style={styles.transBtn}>
-                <Text style={styles.transBtnText}>
-                  {showTranslation ? 'Ẩn dịch ▲' : 'Xem dịch ▼'}
-                </Text>
-              </Pressable>
-              {showTranslation && (
-                <Text style={styles.translationText}>{message.translation}</Text>
-              )}
-            </>
+          {/* Translation text */}
+          {!isUser && showTranslation && message.translation ? (
+            <Text style={styles.translationText}>{message.translation}</Text>
           ) : null}
+
+          {/* Translation toggle & Save bookmark */}
+          {!isUser && (
+            <View style={styles.bubbleActions}>
+              {message.translation ? (
+                <Pressable onPress={() => setShowTranslation((v) => !v)} style={styles.transBtn}>
+                  <Text style={styles.transBtnText}>
+                    {showTranslation ? 'Ẩn dịch ▲' : 'Xem dịch ▼'}
+                  </Text>
+                </Pressable>
+              ) : <View />}
+              
+              <Pressable onPress={handleSavePhrase} disabled={savedPhrase} style={styles.saveBubbleBtn} hitSlop={8}>
+                <Ionicons 
+                  name={savedPhrase ? 'bookmark' : 'bookmark-outline'} 
+                  size={15} 
+                  color={savedPhrase ? Colors.primary : Colors.textMuted} 
+                />
+              </Pressable>
+            </View>
+          )}
         </View>
 
         {/* Corrections chip */}
@@ -82,7 +142,12 @@ export function ChatBubble({
         {!isUser && expanded && message.corrections?.length ? (
           <View style={styles.corrPanel}>
             {message.corrections.map((c, i) => (
-              <CorrectionRow key={i} correction={c} />
+              <CorrectionRow 
+                key={i} 
+                correction={c} 
+                onSave={() => handleSaveCorrection(c, i)}
+                isSaved={!!savedCorrections[i]}
+              />
             ))}
           </View>
         ) : null}
@@ -141,9 +206,20 @@ const styles = StyleSheet.create({
   bubbleTextUser: { color: '#fff' },
   furigana: { fontSize: 12, color: Colors.textMuted, marginTop: 6 },
   romaji: { fontSize: 12, color: Colors.textMuted, fontStyle: 'italic', marginTop: 2 },
-  transBtn: { marginTop: 8 },
+  transBtn: {},
   transBtnText: { fontSize: 12, color: Colors.primary, fontWeight: '600' },
   translationText: { fontSize: 13, color: Colors.textSecondary, marginTop: 4, fontStyle: 'italic' },
+  bubbleActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    gap: 8,
+    minWidth: 100,
+  },
+  saveBubbleBtn: {
+    padding: 4,
+  },
 
   // ── Corrections
   corrChip: {

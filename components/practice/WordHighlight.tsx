@@ -6,14 +6,16 @@ import { WordScore } from '../../lib/types';
 interface WordHighlightProps {
   text: string;
   wordScores: WordScore[];
+  onWordPress?: (word: string, isMispronounced: boolean) => void;
 }
 
-export function WordHighlight({ text, wordScores }: WordHighlightProps) {
+export function WordHighlight({ text, wordScores, onWordPress }: WordHighlightProps) {
   const words = text.trim().split(/\s+/);
   return (
     <Text style={styles.lineText}>
       {words.map((word, i) => {
         const ws = wordScores[i];
+        const isMispronounced = !ws || ws.error_type === 'Omission' || ws.score < 60;
         const color =
           !ws || ws.error_type === 'Omission'
             ? Colors.error
@@ -23,7 +25,11 @@ export function WordHighlight({ text, wordScores }: WordHighlightProps) {
             ? Colors.warning
             : Colors.error;
         return (
-          <Text key={i} style={{ color, fontWeight: '700' }}>
+          <Text
+            key={i}
+            style={{ color, fontWeight: '700' }}
+            onPress={onWordPress ? () => onWordPress(word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, ""), isMispronounced) : undefined}
+          >
             {word}
             {i < words.length - 1 ? ' ' : ''}
           </Text>

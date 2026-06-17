@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
+  Dimensions,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +14,9 @@ import { Colors } from '../../constants/Colors';
 import { supabase } from '../../lib/supabase';
 import { DailyActivity, LanguageId, Profile } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
+import { useSidebar } from './_layout';
+
+const { width } = Dimensions.get('window');
 
 // ── helpers ────────────────────────────────────────────────────────────
 const DAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
@@ -60,6 +64,7 @@ function greeting() {
 export default function HomeScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const { toggleSidebar } = useSidebar();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [activities, setActivities] = useState<DailyActivity[]>([]);
   const [activeLang, setActiveLang] = useState<LanguageId>('en');
@@ -112,9 +117,14 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>{greeting()},</Text>
-            <Text style={styles.userName}>{displayName}! 👋</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
+              <Ionicons name="menu" size={28} color={Colors.textPrimary} />
+            </TouchableOpacity>
+            <View>
+              <Text style={styles.greeting}>{greeting()},</Text>
+              <Text style={styles.userName}>{displayName}! 👋</Text>
+            </View>
           </View>
           <View style={styles.langToggle}>
             {(['en', 'ja'] as LanguageId[]).map((lang) => (
@@ -153,7 +163,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Weekly chart */}
-        <WeeklyChart data={weekData} />
+        <WeeklyChart data={weekData} onPressDetails={() => router.push('/(app)/analytics')} />
 
         {/* Quick actions */}
         <Text style={styles.sectionTitle}>Bắt đầu luyện tập</Text>
@@ -179,19 +189,22 @@ export default function HomeScreen() {
             color="#F59E0B"
             onPress={() => router.push('/(app)/live')}
           />
+          <ActionCard
+            icon="book"
+            title="Sổ tay ôn tập"
+            subtitle={'Từ vựng & Mẫu câu\nLuyện Flashcard'}
+            color="#8B5CF6"
+            onPress={() => router.push('/(app)/notebook')}
+          />
+          <ActionCard
+            icon="stats-chart"
+            title="Thống kê tiến độ"
+            subtitle={'Lịch sử điểm số\nChuỗi học tập'}
+            color="#EC4899"
+            onPress={() => router.push('/(app)/analytics')}
+          />
         </View>
 
-        {/* Coming soon */}
-        <View style={styles.comingSoon}>
-          <Text style={styles.comingSoonTitle}>Sắp ra mắt</Text>
-          {[
-            '🃏 Flashcard câu giao tiếp',
-            '🔄 Minimal pairs luyện phân biệt âm',
-            '📊 Lịch sử chi tiết điểm phát âm',
-          ].map((item) => (
-            <Text key={item} style={styles.comingSoonItem}>{item}</Text>
-          ))}
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -200,14 +213,21 @@ export default function HomeScreen() {
 // ── Weekly chart ────────────────────────────────────────────────────────
 function WeeklyChart({
   data,
+  onPressDetails,
 }: {
   data: { label: string; lines: number; isToday: boolean }[];
+  onPressDetails: () => void;
 }) {
   const maxLines = Math.max(...data.map((d) => d.lines), 1);
 
   return (
     <View style={styles.chartCard}>
-      <Text style={styles.chartTitle}>7 ngày gần đây</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <Text style={styles.chartTitle}>7 ngày gần đây</Text>
+        <TouchableOpacity onPress={onPressDetails} activeOpacity={0.7}>
+          <Text style={{ fontSize: 12, color: Colors.primary, fontWeight: '600' }}>Xem chi tiết →</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.chartBars}>
         {data.map((d, i) => {
           const heightPct = d.lines / maxLines;
@@ -346,7 +366,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 17, fontWeight: '700', color: Colors.textPrimary, marginBottom: 12 },
   actions: { flexDirection: 'row', gap: 12, marginBottom: 20, flexWrap: 'wrap' },
   actionCard: {
-    flex: 1,
+    width: (width - 40 - 12) / 2,
     backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 18,

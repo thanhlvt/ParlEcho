@@ -38,6 +38,7 @@ import { LiveClient, LiveState, uploadLiveSegment } from '../../../lib/liveClien
 import { supabase } from '../../../lib/supabase';
 import { LanguageId, LiveAudioSegment, LiveTurn } from '../../../lib/types';
 import { useAuth } from '../../../providers/AuthProvider';
+import { useSidebar } from '../_layout';
 
 const SESSION_LIMIT_MINUTES = 14; // Gemini Live cap ~15 min; auto-end at 14
 
@@ -78,6 +79,7 @@ type ViewState = 'setup' | 'connecting' | 'live' | 'saving';
 export default function LiveScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const { toggleSidebar } = useSidebar();
 
   const [view, setView] = useState<ViewState>('setup');
   const [languageId, setLanguageId] = useState<LanguageId>('en');
@@ -350,15 +352,20 @@ export default function LiveScreen() {
   if (view === 'setup') {
     return (
       <SafeAreaView style={styles.safe}>
-        {/* History button — top-right */}
-        <TouchableOpacity
-          style={styles.historyBtn}
-          onPress={() => router.push('/(app)/live/history')}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="time-outline" size={18} color={Colors.primary} />
-          <Text style={styles.historyBtnText}>Lịch sử</Text>
-        </TouchableOpacity>
+        {/* Topbar with Drawer trigger and History link */}
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
+            <Ionicons name="menu" size={28} color={Colors.textPrimary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.historyBtn}
+            onPress={() => router.push('/(app)/live/history')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="time-outline" size={18} color={Colors.primary} />
+            <Text style={styles.historyBtnText}>Lịch sử</Text>
+          </TouchableOpacity>
+        </View>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -639,9 +646,15 @@ const styles = StyleSheet.create({
   optionChipLabel: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
   optionChipLabelActive: { color: Colors.primary },
 
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
   historyBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    alignSelf: 'flex-end', margin: 16, marginBottom: 0,
     paddingHorizontal: 12, paddingVertical: 6,
     borderRadius: 20, backgroundColor: Colors.primaryLight,
   },

@@ -26,6 +26,7 @@ export default function ShadowingScreen() {
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [lines, setLines] = useState<ScenarioLine[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savedItems, setSavedItems] = useState<{ id: string; content: string; type: 'word' | 'phrase' | 'mistake' }[]>([]);
 
   // Recording state — only one line recorded at a time
   const [recordingLineId, setRecordingLineId] = useState<string | null>(null);
@@ -48,17 +49,94 @@ export default function ShadowingScreen() {
   }, [scenarioId]);
 
   async function fetchData() {
-    const [scenRes, linesRes] = await Promise.all([
+    const [scenRes, linesRes, savedRes] = await Promise.all([
       supabase.from('scenarios').select('*').eq('id', scenarioId).single(),
       supabase
         .from('scenario_lines')
         .select('*')
         .eq('scenario_id', scenarioId)
         .order('sort_order'),
+      user ? supabase.from('saved_items').select('id, content, type').eq('user_id', user.id) : Promise.resolve({ data: [] }),
     ]);
     setScenario(scenRes.data);
     setLines(linesRes.data ?? []);
+    setSavedItems(savedRes.data ?? []);
     setLoading(false);
+  }
+
+  async function handleToggleSaveLine(line: ScenarioLine) {
+    if (!user || !scenario) return;
+    const existing = savedItems.find(item => item.content === line.text && item.type === 'phrase');
+    if (existing) {
+      try {
+        const { error } = await supabase.from('saved_items').delete().eq('id', existing.id);
+        if (error) throw error;
+        setSavedItems(prev => prev.filter(item => item.id !== existing.id));
+      } catch (err) {
+        console.error(err);
+        Alert.alert('Lỗi', 'Không thể bỏ lưu.');
+      }
+    } else {
+      try {
+        const { data, error } = await supabase.from('saved_items').insert({
+          user_id: user.id,
+          language_id: scenario.language_id,
+          type: 'phrase',
+          content: line.text,
+          translation: line.translation,
+        }).select('id, content, type').single();
+        if (error) throw error;
+        if (data) {
+          setSavedItems(prev => [...prev, data]);
+          Alert.alert('Thành công', 'Đã lưu mẫu câu vào Sổ tay.');
+        }
+      } catch (err) {
+        console.error(err);
+        Alert.alert('Lỗi', 'Không thể lưu mẫu câu.');
+      }
+    }
+  }
+
+  async function handleSaveWord(word: string, isMispronounced: boolean) {
+    if (!user || !scenario) return;
+    const cleanWord = word.trim();
+    if (!cleanWord) return;
+
+    const existing = savedItems.find(item => item.content.toLowerCase() === cleanWord.toLowerCase() && item.type === 'word');
+    if (existing) {
+      Alert.alert('Thông tin', `Từ "${cleanWord}" đã có trong Sổ tay.`);
+      return;
+    }
+
+    Alert.alert(
+      isMispronounced ? 'Từ phát âm chưa chuẩn' : 'Lưu từ vựng',
+      `Bạn có muốn lưu từ "${cleanWord}" vào Sổ tay ôn tập không?`,
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Lưu',
+          onPress: async () => {
+            try {
+              const { data, error } = await supabase.from('saved_items').insert({
+                user_id: user.id,
+                language_id: scenario.language_id,
+                type: 'word',
+                content: cleanWord,
+                note: isMispronounced ? 'Luyện phát âm lại (từ bị phát âm sai)' : undefined,
+              }).select('id, content, type').single();
+              if (error) throw error;
+              if (data) {
+                setSavedItems(prev => [...prev, data]);
+                Alert.alert('Thành công', `Đã lưu từ "${cleanWord}" vào Sổ tay.`);
+              }
+            } catch (err) {
+              console.error(err);
+              Alert.alert('Lỗi', 'Không thể lưu từ vựng.');
+            }
+          }
+        }
+      ]
+    );
   }
 
   // ── TTS playback ────────────────────────────────────────────────────
@@ -272,6 +350,9 @@ export default function ShadowingScreen() {
               const uri = recordedUris[line.id];
               if (uri) handlePlayUserRecording(line.id, uri);
             }}
+            isSaved={savedItems.some(item => item.content === line.text && item.type === 'phrase')}
+            onSave={() => handleToggleSaveLine(line)}
+            onWordPress={handleSaveWord}
           />
         ))}
         <View style={{ height: 24 }} />

@@ -14,6 +14,7 @@ import { Colors } from '../../../constants/Colors';
 import { supabase } from '../../../lib/supabase';
 import { LanguageId, Scenario, UserProgress } from '../../../lib/types';
 import { useAuth } from '../../../providers/AuthProvider';
+import { useSidebar } from '../_layout';
 
 type ScenarioWithProgress = Scenario & {
   progress: UserProgress | null;
@@ -28,6 +29,7 @@ const LEVEL_COLOR = {
 export default function PracticeIndexScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const { toggleSidebar } = useSidebar();
   const [activeLang, setActiveLang] = useState<LanguageId>('en');
   const [scenarios, setScenarios] = useState<ScenarioWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,7 +81,12 @@ export default function PracticeIndexScreen() {
     <SafeAreaView style={styles.safe}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Luyện phát âm</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
+            <Ionicons name="menu" size={28} color={Colors.textPrimary} />
+          </TouchableOpacity>
+          <Text style={styles.title}>Luyện phát âm</Text>
+        </View>
         <View style={styles.langBadge}>
           <Text style={styles.langText}>{activeLang === 'en' ? '🇺🇸 EN' : '🇯🇵 JP'}</Text>
         </View>

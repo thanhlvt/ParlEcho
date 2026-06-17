@@ -20,11 +20,13 @@ import { supabase } from '../../lib/supabase';
 import { ChatApiResponse, LanguageId, Message } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { ChatBubble, UIMessage } from '../../components/chat/ChatBubble';
+import { useSidebar } from './_layout';
 
 type ViewState = 'start' | 'chat' | 'history';
 
 export default function ChatScreen() {
   const { user } = useAuth();
+  const { toggleSidebar } = useSidebar();
   const flatListRef = useRef<FlatList>(null);
 
   const [view, setView] = useState<ViewState>('start');
@@ -224,10 +226,15 @@ export default function ChatScreen() {
   if (view === 'start') {
     return (
       <SafeAreaView style={styles.safe}>
-        <TouchableOpacity style={styles.historyBtn} onPress={loadHistory} activeOpacity={0.7}>
-          <Ionicons name="time-outline" size={18} color={Colors.primary} />
-          <Text style={styles.historyBtnText}>Lịch sử</Text>
-        </TouchableOpacity>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
+            <Ionicons name="menu" size={28} color={Colors.textPrimary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.historyBtn} onPress={loadHistory} activeOpacity={0.7}>
+            <Ionicons name="time-outline" size={18} color={Colors.primary} />
+            <Text style={styles.historyBtnText}>Lịch sử</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.startContainer}>
           <View style={styles.iconWrap}>
             <Ionicons name="chatbubbles" size={48} color={Colors.primary} />
@@ -335,7 +342,7 @@ export default function ChatScreen() {
 
   // ── Render chat screen ──────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
+    <SafeAreaView style={styles.safe}>
       {/* Header */}
       <View style={styles.chatHeader}>
         <TouchableOpacity onPress={newChat} hitSlop={8}>
@@ -524,9 +531,15 @@ const styles = StyleSheet.create({
   sendBtnDisabled: { backgroundColor: Colors.border },
 
   // ── History
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
   historyBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    alignSelf: 'flex-end', margin: 16, marginBottom: 0,
     paddingHorizontal: 12, paddingVertical: 6,
     borderRadius: 20, backgroundColor: Colors.primaryLight,
   },

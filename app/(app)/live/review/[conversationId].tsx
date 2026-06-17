@@ -246,8 +246,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: Colors.primaryLight, borderRadius: 10,
     paddingHorizontal: 12, paddingVertical: 8,
+    maxWidth: '100%',
   },
-  vocabText: { fontSize: 13, color: Colors.primary, fontWeight: '600' },
+  vocabText: { fontSize: 13, color: Colors.primary, fontWeight: '600', flexShrink: 1 },
   vocabHint: { fontSize: 11, color: Colors.textMuted },
 
   transcriptPanel: {
