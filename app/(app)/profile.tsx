@@ -1,13 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
 import { supabase } from '../../lib/supabase';
 import { Profile } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { useSidebar } from './_layout';
+import { clearAllAudioCache, getAudioCacheSize } from '../../lib/audioCache';
+
+const formatSize = (bytes: number) => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
 
 export default function ProfileScreen() {
   const { colors, themeMode, setThemeMode } = useTheme();
@@ -17,6 +26,7 @@ export default function ProfileScreen() {
   const { toggleSidebar } = useSidebar();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [totalLines, setTotalLines] = useState<number>(0);
+  const [audioCacheSize, setAudioCacheSize] = useState<number>(0);
 
   useEffect(() => {
     if (!user) return;
@@ -37,7 +47,25 @@ export default function ProfileScreen() {
           setTotalLines(sum);
         }
       });
+      
+    getAudioCacheSize().then(setAudioCacheSize);
   }, [user]);
+
+  const handleClearCache = () => {
+    Alert.alert('Xoá dữ liệu ghi âm', 'Bạn có chắc chắn muốn xoá toàn bộ dữ liệu ghi âm của các phiên Live đã lưu trên máy không?', [
+      { text: 'Huỷ', style: 'cancel' },
+      { 
+        text: 'Xoá', 
+        style: 'destructive', 
+        onPress: async () => {
+          await clearAllAudioCache();
+          const newSize = await getAudioCacheSize();
+          setAudioCacheSize(newSize);
+          Alert.alert('Đã xoá', 'Toàn bộ dữ liệu ghi âm đã được xoá.');
+        }
+      },
+    ]);
+  };
 
   const initial = (profile?.name ?? user?.email ?? '?')[0].toUpperCase();
 
@@ -79,6 +107,12 @@ export default function ProfileScreen() {
             icon="stats-chart-outline"
             label="Thống kê tiến độ"
             onPress={() => router.push('/(app)/analytics')}
+          />
+          <SettingRow
+            icon="trash-bin-outline"
+            label="Xóa bộ nhớ ghi âm"
+            value={formatSize(audioCacheSize)}
+            onPress={handleClearCache}
           />
           <SettingRow icon="information-circle-outline" label="Phiên bản" value="1.0.0" />
         </View>

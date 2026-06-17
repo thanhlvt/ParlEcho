@@ -18,11 +18,9 @@
 import { supabase } from './supabase';
 import { LiveAudioSegment, LiveTokenApiResponse, LiveTurn } from './types';
 
-// WAV header 16kHz mono 16-bit (dùng cho user audio segment khi lưu)
-function buildWavHeader(pcmByteLength: number): Uint8Array {
-  const sampleRate = 16000;
+// WAV header mono 16-bit
+export function buildWavHeader(pcmByteLength: number, sampleRate = 16000, bitDepth = 16): Uint8Array {
   const numChannels = 1;
-  const bitDepth = 16;
   const byteRate = sampleRate * numChannels * (bitDepth / 8);
   const blockAlign = numChannels * (bitDepth / 8);
 
@@ -40,12 +38,25 @@ function buildWavHeader(pcmByteLength: number): Uint8Array {
   return new Uint8Array(header);
 }
 
-function pcmToWav(pcm: Uint8Array): Uint8Array {
-  const header = buildWavHeader(pcm.length);
+export function pcmToWav(pcm: Uint8Array, sampleRate = 16000, bitDepth = 16): Uint8Array {
+  const header = buildWavHeader(pcm.length, sampleRate, bitDepth);
   const wav = new Uint8Array(44 + pcm.length);
   wav.set(header, 0);
   wav.set(pcm, 44);
   return wav;
+}
+
+// Convert Uint8Array to Base64 (safe for large arrays in React Native)
+export function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const len = bytes.byteLength;
+  const CHUNK_SIZE = 8192;
+  for (let i = 0; i < len; i += CHUNK_SIZE) {
+    const chunk = bytes.subarray(i, i + CHUNK_SIZE);
+    // @ts-ignore
+    binary += String.fromCharCode.apply(null, chunk);
+  }
+  return btoa(binary);
 }
 
 // Ghép nhiều Uint8Array thành một
@@ -94,6 +105,10 @@ export class LiveClient {
   // Audio capture buffers per user turn
   private userPcmChunks: Uint8Array[] = [];
   private userAudioSegments: Array<{ pcm: Uint8Array; text: string; order: number }> = [];
+
+  // Audio capture buffers per AI turn
+  private aiPcmChunks: Uint8Array[] = [];
+  private aiAudioSegments: Array<{ pcm: Uint8Array; text: string; order: number }> = [];
 
   // Barge-in flag — khi AI bị ngắt, buffer hiện tại bị hủy
   private aiSpeaking = false;
@@ -232,7 +247,7 @@ export class LiveClient {
    * Dừng phiên. Trả về data để UI persist + gọi /session-review.
    * Upload audio segments cần được thực hiện bởi UI sau khi nhận result.
    */
-  stop(): { turns: LiveTurn[]; rawUserSegments: Array<{ pcm: Uint8Array; text: string; order: number }> } {
+  stop(): { turns: LiveTurn[]; rawUserSegments: Array<{ pcm: Uint8Array; text: string; order: number }>; rawAiSegments: Array<{ pcm: Uint8Array; text: string; order: number }> } {
     if (this.ws) {
       // Only close if still open — server may have already closed with code=1000
       if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
@@ -241,10 +256,12 @@ export class LiveClient {
       this.ws = null;
     }
     this._flushCurrentUserTurn();
+    this._flushCurrentAiTurn();
     this.cb.onStateChange('ended');
     return {
       turns: [...this.turns],
       rawUserSegments: [...this.userAudioSegments],
+      rawAiSegments: [...this.aiAudioSegments],
     };
   }
 
@@ -290,6 +307,8 @@ export class LiveClient {
             this.aiAudioByteCount = 0;
           }
           // base64 → PCM byte count (Gemini outputs 24 kHz 16-bit mono = 48000 B/s)
+          const bytes = Uint8Array.from(atob(inlineData.data), (c) => c.charCodeAt(0));
+          this.aiPcmChunks.push(bytes);
           this.aiAudioByteCount += Math.ceil(inlineData.data.length * 3 / 4);
           this.cb.onAudioChunk(inlineData.data);
         }
@@ -334,14 +353,7 @@ export class LiveClient {
     // turnComplete OR generationComplete = AI finished its turn, ready for next input
     if (sc.turnComplete || sc.generationComplete) {
       this._flushCurrentUserTurn();
-      if (this.currentAiText.trim()) {
-        this.turns.push({
-          role: 'assistant',
-          text: this.currentAiText.trim(),
-          sort_order: this.turnOrder++,
-        });
-        this.currentAiText = '';
-      }
+      this._flushCurrentAiTurn();
       // Delay re-enabling mic until buffered audio finishes playing.
       // totalAudioMs = byte count / 48000 B/s (24 kHz 16-bit mono).
       // elapsedMs = time since first chunk arrived — already-played portion.
@@ -370,6 +382,23 @@ export class LiveClient {
     }
   }
 
+  private _flushCurrentAiTurn() {
+    const text = this.currentAiText.trim();
+    if (text || this.aiPcmChunks.length > 0) {
+      const pcm = concat(this.aiPcmChunks);
+      this.aiAudioSegments.push({ pcm, text, order: this.turnOrder });
+      if (text) {
+        this.turns.push({
+          role: 'assistant',
+          text: text,
+          sort_order: this.turnOrder++,
+        });
+      }
+      this.currentAiText = '';
+      this.aiPcmChunks = [];
+    }
+  }
+
   private _send(payload: unknown) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(payload));
@@ -389,7 +418,7 @@ export async function uploadLiveSegment(
   order: number,
   pcm: Uint8Array,
 ): Promise<string> {
-  const wav = pcmToWav(pcm);
+  const wav = pcmToWav(pcm, 16000, 16);
   const path = `${userId}/live/${conversationId}/${order}.wav`;
 
   // Upload qua XHR (cách duy nhất đáng tin cậy trên React Native cho ArrayBuffer)

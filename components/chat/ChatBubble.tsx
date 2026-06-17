@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Audio } from 'expo-av';
 import { useTheme } from '../../providers/ThemeProvider';
 import { LanguageId, Message } from '../../lib/types';
 import { CorrectionRow } from './CorrectionRow';
@@ -9,7 +10,7 @@ import { useAuth } from '../../providers/AuthProvider';
 
 export type UIMessage = Pick<
   Message,
-  'id' | 'role' | 'text' | 'translation' | 'furigana' | 'romaji' | 'corrections' | 'hints'
+  'id' | 'role' | 'text' | 'translation' | 'furigana' | 'romaji' | 'corrections' | 'hints' | 'audio_url'
 > & { pending?: boolean };
 
 interface ChatBubbleProps {
@@ -32,6 +33,25 @@ export function ChatBubble({
   const [showTranslation, setShowTranslation] = useState(false);
   const [savedPhrase, setSavedPhrase] = useState(false);
   const [savedCorrections, setSavedCorrections] = useState<Record<number, boolean>>({});
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  async function handlePlayAudio() {
+    if (!message.audio_url || isPlaying) return;
+    try {
+      setIsPlaying(true);
+      const { sound } = await Audio.Sound.createAsync({ uri: message.audio_url });
+      await sound.playAsync();
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          setIsPlaying(false);
+          sound.unloadAsync();
+        }
+      });
+    } catch (err) {
+      console.error('Play audio error:', err);
+      setIsPlaying(false);
+    }
+  }
 
   async function handleSavePhrase() {
     if (!user) return;
@@ -121,6 +141,14 @@ export function ChatBubble({
             {message.text}
           </Text>
 
+          {/* User Play Audio */}
+          {isUser && message.audio_url ? (
+            <Pressable onPress={handlePlayAudio} style={{ marginTop: 8, alignSelf: 'flex-end', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Nghe lại</Text>
+              <Ionicons name={isPlaying ? "volume-high" : "volume-medium"} size={16} color="rgba(255,255,255,0.8)" />
+            </Pressable>
+          ) : null}
+
           {/* Japanese reading aids */}
           {!isUser && languageId === 'ja' && message.furigana ? (
             <Text style={styles.furigana}>{message.furigana}</Text>
@@ -134,16 +162,23 @@ export function ChatBubble({
             <Text style={styles.translationText}>{message.translation}</Text>
           ) : null}
 
-          {/* Translation toggle & Save bookmark */}
+          {/* Translation toggle & Save bookmark & Play audio */}
           {!isUser && (
             <View style={styles.bubbleActions}>
-              {message.translation ? (
-                <Pressable onPress={() => setShowTranslation((v) => !v)} style={styles.transBtn}>
-                  <Text style={styles.transBtnText}>
-                    {showTranslation ? 'Ẩn dịch ▲' : 'Xem dịch ▼'}
-                  </Text>
-                </Pressable>
-              ) : <View />}
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                {message.audio_url ? (
+                  <Pressable onPress={handlePlayAudio} style={styles.transBtn} hitSlop={8}>
+                    <Ionicons name={isPlaying ? "volume-high" : "volume-medium"} size={18} color={colors.primary} />
+                  </Pressable>
+                ) : null}
+                {message.translation ? (
+                  <Pressable onPress={() => setShowTranslation((v) => !v)} style={styles.transBtn}>
+                    <Text style={styles.transBtnText}>
+                      {showTranslation ? 'Ẩn dịch ▲' : 'Xem dịch ▼'}
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
               
               <Pressable onPress={handleSavePhrase} disabled={savedPhrase} style={styles.saveBubbleBtn} hitSlop={8}>
                 <Ionicons 

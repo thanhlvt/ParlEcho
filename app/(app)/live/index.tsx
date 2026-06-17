@@ -33,8 +33,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useTheme } from '../../../providers/ThemeProvider';
-import { LiveClient, LiveState, uploadLiveSegment } from '../../../lib/liveClient';
+import { bytesToBase64, LiveClient, LiveState, pcmToWav, uploadLiveSegment } from '../../../lib/liveClient';
 import { supabase } from '../../../lib/supabase';
 import { LanguageId, LiveAudioSegment, LiveTurn } from '../../../lib/types';
 import { useAuth } from '../../../providers/AuthProvider';
@@ -243,7 +244,7 @@ export default function LiveScreen() {
     setView('saving');
     setSavingMsg('Đang lưu phiên...');
 
-    const { turns: finalTurns, rawUserSegments } = client.stop();
+    const { turns: finalTurns, rawUserSegments, rawAiSegments } = client.stop();
     clientRef.current = null;
 
     if (finalTurns.length === 0) {
@@ -273,6 +274,31 @@ export default function LiveScreen() {
       const conversationId = conv.id;
       console.log('[Live] conversation created:', conversationId, 'user:', user.id);
 
+      // 1.5. Save local audio files
+      setSavingMsg('Lưu file âm thanh cục bộ...');
+      const localAudioDir = `${FileSystem.documentDirectory}live/${conversationId}/`;
+      await FileSystem.makeDirectoryAsync(localAudioDir, { intermediates: true });
+
+      const userAudioMap = new Map<number, string>();
+      for (const seg of rawUserSegments) {
+        if (seg.pcm.length === 0) continue;
+        const wavBytes = pcmToWav(seg.pcm, 16000, 16);
+        const base64Wav = bytesToBase64(wavBytes);
+        const localUri = `${localAudioDir}${seg.order}_user.wav`;
+        await FileSystem.writeAsStringAsync(localUri, base64Wav, { encoding: FileSystem.EncodingType.Base64 });
+        userAudioMap.set(seg.order, localUri);
+      }
+
+      const aiAudioMap = new Map<number, string>();
+      for (const seg of rawAiSegments) {
+        if (seg.pcm.length === 0) continue;
+        const wavBytes = pcmToWav(seg.pcm, 24000, 16);
+        const base64Wav = bytesToBase64(wavBytes);
+        const localUri = `${localAudioDir}${seg.order}_ai.wav`;
+        await FileSystem.writeAsStringAsync(localUri, base64Wav, { encoding: FileSystem.EncodingType.Base64 });
+        aiAudioMap.set(seg.order, localUri);
+      }
+
       // 2. Save transcript turns as messages
       setSavingMsg('Lưu transcript...');
       const { data: savedMessages } = await supabase
@@ -284,6 +310,7 @@ export default function LiveScreen() {
             role: t.role,
             sort_order: t.sort_order,
             text: t.text,
+            audio_url: t.role === 'user' ? userAudioMap.get(t.sort_order) : aiAudioMap.get(t.sort_order),
           })),
         )
         .select('id, sort_order, role');
@@ -505,14 +532,6 @@ export default function LiveScreen() {
               />
             </View>
 
-            {/* EAS dev build notice */}
-            <View style={styles.notice}>
-              <Ionicons name="information-circle-outline" size={16} color={colors.warning} />
-              <Text style={styles.noticeText}>
-                Tính năng này cần EAS dev build và native audio lib. Không hoạt động trong Expo Go.
-              </Text>
-            </View>
-
             <TouchableOpacity style={styles.startBtn} onPress={startSession} activeOpacity={0.85}>
               <Ionicons name="radio" size={20} color="#fff" />
               <Text style={styles.startBtnText}>Bắt đầu hội thoại</Text>
@@ -549,7 +568,7 @@ export default function LiveScreen() {
   const isListening = liveState === 'live';
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
+    <SafeAreaView style={styles.safe}>
       {/* Header */}
       <View style={styles.liveHeader}>
         <View style={styles.liveIndicatorWrap}>
