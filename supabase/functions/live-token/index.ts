@@ -10,6 +10,22 @@ const VOICE_BY_LANG: Record<string, string> = {
   ja: 'Kore',
 };
 
+const STYLE_PROMPTS: Record<string, string> = {
+  casual: 'Speak in a friendly, informal, and relaxed tone.',
+  formal: 'Speak in a polite, formal tone using standard grammar and honorifics where appropriate.',
+  workplace: 'Use professional business language, industry terms, and a polite corporate tone.',
+  beginner: 'Speak very slowly, clearly, and use simple vocabulary suitable for a beginner language learner.',
+  children: 'Speak in an enthusiastic, warm, encouraging, and highly simplified tone suitable for children.',
+};
+
+const METHOD_PROMPTS: Record<string, string> = {
+  free_talk: 'Maintain a natural, friendly, free-flowing conversation on various everyday topics.',
+  consulting: 'Act as an empathetic advisor. Ask thoughtful questions, listen actively, and help the user think through their problems.',
+  interview: 'Act as a professional interviewer. Ask structured questions one by one about the user\'s background, skills, and experience.',
+  empathetic: 'Be exceptionally supportive, warm, and understanding. Focus on validating the user\'s feelings and thoughts.',
+  pressure: 'Act as a tough challenger. Ask challenging follow-up questions, probe the user\'s arguments, and put moderate conversational pressure on them.',
+};
+
 Deno.serve(async (req: Request) => {
   const corsResp = handleCors(req);
   if (corsResp) return corsResp;
@@ -17,8 +33,14 @@ Deno.serve(async (req: Request) => {
   try {
     const { user } = await verifyUser(req);
 
-    const { language_id = 'en', topic = '' } = await req.json().catch(() => ({}));
-    const voice = VOICE_BY_LANG[language_id] ?? 'Kore';
+    const {
+      language_id = 'en',
+      topic = '',
+      voice_id,
+      speaking_style = 'casual',
+      conversation_method = 'free_talk',
+    } = await req.json().catch(() => ({}));
+    const voice = voice_id ?? VOICE_BY_LANG[language_id] ?? 'Kore';
 
     const geminiKey = Deno.env.get('GOOGLE_GENAI_API_KEY');
     if (!geminiKey) throw new Error('GOOGLE_GENAI_API_KEY not configured');
@@ -33,8 +55,13 @@ Deno.serve(async (req: Request) => {
       ? `The topic of conversation is: ${topic}.`
       : 'You may talk about any everyday topic.';
 
+    const stylePrompt = STYLE_PROMPTS[speaking_style] || STYLE_PROMPTS.casual;
+    const methodPrompt = METHOD_PROMPTS[conversation_method] || METHOD_PROMPTS.free_talk;
+
     const systemInstruction =
       `You are a friendly ${langLabel} conversation partner helping a Vietnamese learner practice spoken ${langLabel}. ` +
+      `Your speaking style: ${stylePrompt} ` +
+      `Your conversational approach: ${methodPrompt} ` +
       `${topicLine} ` +
       `Speak naturally as a real person would — keep sentences short and conversational. ` +
       `Do NOT correct grammar or pronunciation mistakes during the conversation. ` +
