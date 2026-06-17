@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000008",
+    "slug": "social-connection",
+    "category": "social"
+  },
+  "sort_order": 3,
+  "icon": "📅",
+  "level": "beginner",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0006-000000000013",
+      "title": "Inviting, Declining, and Rescheduling",
+      "description": "Invite someone to eat, politely decline an invitation you can't make, and suggest an alternative — keeping the relationship warm even when you can't say yes.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "Hey, a few of us are grabbing dinner on Friday — would you like to join?",
+          "translation": "Này, một vài người trong chúng tôi sẽ đi ăn tối thứ Sáu — bạn có muốn cùng không?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "That sounds great! Where are you thinking?",
+          "translation": "Nghe hay đó! Bạn đang nghĩ đến đâu vậy?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "We're thinking of that new ramen place on the high street. Around seven.",
+          "translation": "Chúng tôi đang nghĩ đến tiệm ramen mới trên phố chính. Khoảng bảy giờ."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "Oh, I've been wanting to try that! Count me in.",
+          "translation": "Ồ, tôi đã muốn thử chỗ đó! Tính tôi vào nhé."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "Great. I'll let the group know. Oh — by the way, are you free Sunday afternoon?",
+          "translation": "Tuyệt. Tôi sẽ báo nhóm biết. À — nhân tiện, bạn có rảnh chiều Chủ nhật không?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "Sunday? I'm afraid I can't — I've got a family thing.",
+          "translation": "Chủ nhật? Tôi e là không được — tôi có việc gia đình."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "No worries at all. What about the following weekend?",
+          "translation": "Không sao cả. Vậy cuối tuần sau thì sao?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "The following Saturday should work for me. What did you have in mind?",
+          "translation": "Thứ Bảy sau tôi có thể. Bạn đang nghĩ đến gì vậy?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "There's a food market in the park — thought it might be fun to check out.",
+          "translation": "Có chợ ẩm thực trong công viên — tôi nghĩ có thể vui để ghé thăm."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "Oh that sounds lovely. Let's do it.",
+          "translation": "Ồ nghe thật tuyệt. Hãy làm vậy đi."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "Brilliant. Say, eleven? We can grab brunch there too.",
+          "translation": "Tuyệt. Khoảng mười một giờ nhé? Chúng ta có thể ăn brunch ở đó luôn."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "Perfect. I'll put it in my calendar now so I don't forget.",
+          "translation": "Hoàn hảo. Tôi sẽ ghi vào lịch ngay để không quên."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0006-000000000014",
+      "title": "誘う・断る・日程を変更する",
+      "description": "食事に誘う、丁寧に断る、別の日程を提案するという一連の社交的なやり取りを練習します。断る際も関係を壊さないようなフレーズを身につけます。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "金曜日に何人かで夕食に行くんですけど、一緒に来ませんか？",
+          "translation": "Thứ Sáu một vài người trong chúng tôi sẽ đi ăn tối, bạn có muốn cùng không?",
+          "furigana": "きんようびになんにんかでゆうしょくにいくんですけど、いっしょにきませんか？",
+          "romaji": "Kin'yōbi ni nan-nin ka de yūshoku ni iku n desu kedo, issho ni kimasen ka?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "いいですね！どこを考えていますか？",
+          "translation": "Nghe hay đó! Bạn đang nghĩ đến đâu vậy?",
+          "furigana": "いいですね！どこをかんがえていますか？",
+          "romaji": "Ii desu ne! Doko wo kangaete imasu ka?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "大通りの新しいラーメン屋さんを考えています。7時ごろです。",
+          "translation": "Chúng tôi đang nghĩ đến tiệm ramen mới trên phố chính. Khoảng bảy giờ.",
+          "furigana": "おおどおりのあたらしいラーメンやさんをかんがえています。しちじごろです。",
+          "romaji": "Ōdōri no atarashii rāmen-ya-san wo kangaete imasu. Shichi-ji goro desu."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "行ってみたかったお店です！ぜひ参加します。",
+          "translation": "Tiệm tôi đã muốn thử! Tôi sẽ tham gia.",
+          "furigana": "いってみたかったおみせです！ぜひさんかします。",
+          "romaji": "Itte mitakatta o-mise desu! Zehi sanka shimasu."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "よかった。グループに伝えますね。ところで、日曜日の午後は空いていますか？",
+          "translation": "Tốt quá. Tôi sẽ báo nhóm. Nhân tiện, chiều Chủ nhật bạn có rảnh không?",
+          "furigana": "よかった。グループにつたえますね。ところで、にちようびのごごはあいていますか？",
+          "romaji": "Yokatta. Gurūpu ni tsutaemasu ne. Tokoro de, Nichiyōbi no gogo wa aite imasu ka?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "日曜日ですか。申し訳ないんですが、家族の用事があって…。",
+          "translation": "Chủ nhật à. Thật xin lỗi nhưng tôi có việc gia đình...",
+          "furigana": "にちようびですか。もうしわけないんですが、かぞくのようじがあって…。",
+          "romaji": "Nichiyōbi desu ka. Mōshiwake nai n desu ga, kazoku no yōji ga atte..."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "大丈夫ですよ。その次の週末はどうですか？",
+          "translation": "Không sao đâu. Vậy cuối tuần sau thì sao?",
+          "furigana": "だいじょうぶですよ。そのつぎのしゅうまつはどうですか？",
+          "romaji": "Daijōbu desu yo. Sono tsugi no shūmatsu wa dō desu ka?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "次の土曜日なら大丈夫そうです。何を考えていましたか？",
+          "translation": "Thứ Bảy sau có vẻ được. Bạn đang nghĩ gì vậy?",
+          "furigana": "つぎのどようびならだいじょうぶそうです。なにをかんがえていましたか？",
+          "romaji": "Tsugi no Doyōbi nara daijōbu sō desu. Nani wo kangaete imashita ka?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "公園でフードマーケットがあるんですよ。面白そうかと思って。",
+          "translation": "Có chợ ẩm thực trong công viên đó. Tôi nghĩ có vẻ thú vị.",
+          "furigana": "こうえんでフードマーケットがあるんですよ。おもしろそうかとおもって。",
+          "romaji": "Kōen de fūdo mākketto ga aru n desu yo. Omoshiro-sō ka to omotte."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "それは楽しそうですね。ぜひ行きましょう。",
+          "translation": "Nghe vui đó. Hãy đi thôi.",
+          "furigana": "それはたのしそうですね。ぜひいきましょう。",
+          "romaji": "Sore wa tanoshisō desu ne. Zehi ikimashō."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "よかった！11時ごろはどうですか？ブランチも食べられますよ。",
+          "translation": "Tốt quá! Khoảng 11 giờ thế nào? Chúng ta có thể ăn brunch ở đó luôn.",
+          "furigana": "よかった！じゅういちじごろはどうですか？ブランチもたべられますよ。",
+          "romaji": "Yokatta! Jū-ichi-ji goro wa dō desu ka? Buranchi mo taberaremasu yo."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "いいですね。忘れないよう今すぐカレンダーに入れます。",
+          "translation": "Tuyệt. Tôi sẽ ghi vào lịch ngay để không quên.",
+          "furigana": "いいですね。わすれないようにいますぐカレンダーにいれます。",
+          "romaji": "Ii desu ne. Wasurenai yō ni imasugu karendā ni iremasu."
+        }
+      ]
+    }
+  }
+}

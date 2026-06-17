@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000010",
+    "slug": "english-specific",
+    "category": "culture"
+  },
+  "sort_order": 3,
+  "icon": "🎬",
+  "level": "beginner",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0010-000000000005",
+      "title": "Talking About Films and Music",
+      "description": "Share personal opinions on films and music naturally — recommending, disagreeing politely, and using expressive informal language to talk about what you enjoy.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "Have you seen anything good recently?",
+          "translation": "Gần đây bạn có xem gì hay không?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Yes! I finally watched Past Lives — have you seen it? It completely wrecked me.",
+          "translation": "Có! Tôi vừa xem Past Lives — bạn xem chưa? Nó làm tôi xúc động hoàn toàn."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "I have! I cried at the end. What did you think of the ending?",
+          "translation": "Tôi xem rồi! Tôi khóc ở cuối phim. Bạn nghĩ gì về phần kết?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "I thought it was perfect — bittersweet but hopeful. It didn't try to wrap everything up neatly.",
+          "translation": "Tôi nghĩ nó hoàn hảo — đắng cay nhưng đầy hy vọng. Nó không cố gắng gói gọn mọi thứ."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "Agreed. The music was beautiful too. Are you into film soundtracks generally?",
+          "translation": "Đồng ý. Nhạc phim cũng rất đẹp. Bạn có thích nhạc phim nói chung không?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "Definitely — I've been obsessed with the Oppenheimer score lately. Ludwig Göransson is incredible.",
+          "translation": "Chắc chắn rồi — tôi đang mê nhạc phim Oppenheimer dạo này. Ludwig Göransson thật xuất sắc."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "Yes! His stuff is so atmospheric. Do you listen to much non-film music?",
+          "translation": "Đúng vậy! Âm nhạc của anh ấy rất gợi không khí. Bạn có nghe nhiều nhạc ngoài phim không?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "A lot of indie and jazz. Right now I'm really into this Japanese jazz pianist — Hiromi Uehara.",
+          "translation": "Nhiều indie và jazz. Hiện tại tôi đang rất thích nghệ sĩ piano jazz Nhật Bản này — Hiromi Uehara."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "Oh I don't know her. Is she on Spotify?",
+          "translation": "Ồ tôi không biết cô ấy. Cô ấy có trên Spotify không?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "She is! Start with 'Place to Be' — it's upbeat and a bit funky. I think you'd love it.",
+          "translation": "Có! Bắt đầu với 'Place to Be' — nó sôi động và hơi funky. Tôi nghĩ bạn sẽ thích."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "I'll check it out. Do you have a favourite genre overall?",
+          "translation": "Tôi sẽ thử nghe. Bạn có thể loại nhạc yêu thích nhất không?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "Honestly it changes with my mood. But if I had to pick one — jazz. It never gets old for me.",
+          "translation": "Thành thật mà nói thì thay đổi theo tâm trạng. Nhưng nếu phải chọn một — jazz. Với tôi nó không bao giờ nhàm."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0010-000000000006",
+      "title": "映画や音楽について英語で話す",
+      "description": "映画や音楽の感想を自然な英語で伝える練習をします。おすすめを紹介したり、丁寧に異なる意見を言ったり、気持ちを表現するインフォーマルな言い回しを身につけます。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "最近、何か面白いもの見ましたか？",
+          "translation": "Gần đây bạn có xem gì hay không?",
+          "furigana": "さいきん、なにかおもしろいものみましたか？",
+          "romaji": "Saikin, nani ka omoshiroi mono mimashita ka?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "はい！「Past Lives」をやっと観ました。観ましたか？すごく感動しました。",
+          "translation": "Có! Tôi vừa xem 'Past Lives'. Bạn xem chưa? Tôi xúc động lắm.",
+          "furigana": "はい！「Past Lives」をやっとみました。みましたか？すごくかんどうしました。",
+          "romaji": "Hai! 'Past Lives' wo yatto mimashita. Mimashita ka? Sugoku kandō shimashita."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "観ましたよ！最後は泣きました。結末についてどう思いましたか？",
+          "translation": "Tôi xem rồi! Tôi khóc ở phần kết. Bạn nghĩ gì về kết phim?",
+          "furigana": "みましたよ！さいごはなきました。けつまつについてどうおもいましたか？",
+          "romaji": "Mimashita yo! Saigo wa nakimashita. Ketsumatu ni tsuite dō omoimashita ka?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "完璧だと思いました。切ないけど希望を感じる終わり方で、無理に綺麗にまとめていないのがよかったです。",
+          "translation": "Tôi nghĩ nó hoàn hảo. Kết thúc đắng cay nhưng đầy hy vọng, không cố gắng gói gọn mọi thứ.",
+          "furigana": "かんぺきだとおもいました。せつないけどきぼうをかんじるおわりかたで、むりにきれいにまとめていないのがよかったです。",
+          "romaji": "Kanpeki da to omoimashita. Setsunai kedo kibō wo kanjiru owari-kata de, muri ni kirei ni matomete inai no ga yokatta desu."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "同感です。音楽も素晴らしかった。映画のサウンドトラックが好きですか？",
+          "translation": "Đồng ý. Nhạc phim cũng đẹp. Bạn có thích nhạc phim không?",
+          "furigana": "どうかんです。おんがくもすばらしかった。えいがのサウンドトラックがすきですか？",
+          "romaji": "Dōkan desu. Ongaku mo subarashikatta. Eiga no saundotorakku ga suki desu ka?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "はい！最近「オッペンハイマー」のサウンドトラックにはまっています。ルードヴィヒ・ゴランソンは本当に素晴らしいです。",
+          "translation": "Có! Tôi đang mê nhạc phim Oppenheimer dạo này. Ludwig Göransson thật xuất sắc.",
+          "furigana": "はい！さいきん「オッペンハイマー」のサウンドトラックにはまっています。ルードヴィヒ・ゴランソンはほんとうにすばらしいです。",
+          "romaji": "Hai! Saikin 'Oppenheimer' no saundotorakku ni hamatte imasu. Rūdovihi Goranson wa hontō ni subarashii desu."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "そうですよね！雰囲気が出ますよね。映画以外の音楽はよく聴きますか？",
+          "translation": "Đúng vậy! Rất gợi không khí. Bạn có nghe nhiều nhạc ngoài phim không?",
+          "furigana": "そうですよね！ふんいきがでますよね。えいがいがいのおんがくはよくきますか？",
+          "romaji": "Sō desu yo ne! Fun'iki ga demasu yo ne. Eiga igai no ongaku wa yoku kikimasu ka?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "インディーズとジャズをよく聴きます。今は上原ひろみさんにはまっています。",
+          "translation": "Tôi nghe nhiều indie và jazz. Hiện tôi đang rất thích Hiromi Uehara.",
+          "furigana": "インディーズとジャズをよくきます。いまはうえはらひろみさんにはまっています。",
+          "romaji": "Indīzu to jazu wo yoku kikimasu. Ima wa Uehara Hiromi-san ni hamatte imasu."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "知りませんでした。Spotifyにありますか？",
+          "translation": "Tôi chưa biết cô ấy. Có trên Spotify không?",
+          "furigana": "しりませんでした。Spotifyにありますか？",
+          "romaji": "Shirimasen deshita. Spotify ni arimasu ka?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "あります！まず「Place to Be」から聴いてみてください。明るくてファンキーな曲です。きっと気に入ると思います。",
+          "translation": "Có! Hãy thử nghe 'Place to Be' trước. Nó sôi động và hơi funky. Tôi nghĩ bạn sẽ thích.",
+          "furigana": "あります！まず「Place to Be」からきいてみてください。あかるくてファンキーなきょくです。きっときにいるとおもいます。",
+          "romaji": "Arimasu! Mazu 'Place to Be' kara kiite mite kudasai. Akarukute fankī na kyoku desu. Kitto ki ni iru to omoimasu."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "聴いてみます！全体的に一番好きなジャンルはありますか？",
+          "translation": "Tôi sẽ thử nghe! Nhìn chung bạn thích thể loại nào nhất?",
+          "furigana": "きいてみます！ぜんたいてきにいちばんすきなジャンルはありますか？",
+          "romaji": "Kiite mimasu! Zentaiteki ni ichiban suki na janru wa arimasu ka?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "正直、気分によって変わりますね。でも一つ選ぶなら——ジャズです。私には決して飽きないジャンルです。",
+          "translation": "Thành thật mà nói thì thay đổi theo tâm trạng. Nhưng nếu chọn một — jazz. Với tôi nó không bao giờ nhàm.",
+          "furigana": "しょうじき、きぶんによってかわりますね。でもひとつえらぶなら——ジャズです。わたしにはけっしてあきないジャンルです。",
+          "romaji": "Shōjiki, kibun ni yotte kawarimasu ne. Demo hitotsu erabu nara — jazu desu. Watashi ni wa kesshite akinai janru desu."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000007",
+    "slug": "stressful-situations",
+    "category": "daily"
+  },
+  "sort_order": 2,
+  "icon": "🤝",
+  "level": "intermediate",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0007-000000000003",
+      "title": "Polite Disagreement: Holding Your Ground",
+      "description": "Disagree respectfully while maintaining your position — useful for negotiations, team debates, and professional discussions.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "I think we should go with the cheaper supplier. It would save us about twenty percent.",
+          "translation": "Tôi nghĩ chúng ta nên chọn nhà cung cấp rẻ hơn. Sẽ tiết kiệm khoảng 20%."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "I see your point, but I'm not sure that's the right call in this case.",
+          "translation": "Tôi hiểu ý bạn, nhưng tôi không chắc đó là quyết định đúng trong trường hợp này."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "Why not? The cost savings are pretty significant.",
+          "translation": "Tại sao không? Tiết kiệm chi phí khá đáng kể đấy."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "You're right about the savings. My concern, though, is quality — their reviews are quite mixed.",
+          "translation": "Bạn đúng về tiết kiệm. Nhưng lo ngại của tôi là chất lượng — đánh giá của họ khá lẫn lộn."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "We can manage quality issues as they come up.",
+          "translation": "Chúng ta có thể xử lý vấn đề chất lượng khi nó xảy ra."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "With respect, I'd rather avoid the problem than manage it. A quality issue could cost us more in the long run.",
+          "translation": "Tôi kính trọng ý kiến, nhưng tôi muốn ngăn ngừa vấn đề hơn là xử lý nó. Vấn đề chất lượng có thể tốn kém hơn về lâu dài."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "That seems overly cautious to me.",
+          "translation": "Với tôi điều đó có vẻ quá thận trọng."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "I understand we see this differently. Could we agree to request samples from both suppliers first?",
+          "translation": "Tôi hiểu chúng ta có quan điểm khác nhau. Chúng ta có thể đồng ý yêu cầu mẫu từ cả hai nhà cung cấp trước không?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "That would take time.",
+          "translation": "Điều đó sẽ mất thời gian."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "It would — about two weeks. But it gives us solid data to base the decision on. I think it's worth it.",
+          "translation": "Đúng — khoảng 2 tuần. Nhưng nó cho chúng ta dữ liệu chắc chắn để ra quyết định. Tôi nghĩ điều đó xứng đáng."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "Fair enough. I can see the logic. Let's do it.",
+          "translation": "Đúng thôi. Tôi thấy logic đó. Hãy làm vậy."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "Great. I'll arrange the sample requests this afternoon. Thanks for hearing me out.",
+          "translation": "Tuyệt. Tôi sẽ sắp xếp yêu cầu mẫu chiều nay. Cảm ơn đã lắng nghe."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0007-000000000004",
+      "title": "丁寧に反論し、自分の立場を守る",
+      "description": "議論や交渉の場で、相手の意見を尊重しながら自分の立場を穏やかに守る練習をします。感情的にならずに話し続けるスキルを養います。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "安い方のサプライヤーを選ぶべきだと思います。コストが約20%削減できます。",
+          "translation": "Tôi nghĩ nên chọn nhà cung cấp rẻ hơn. Chi phí có thể giảm khoảng 20%.",
+          "furigana": "やすいほうのサプライヤーをえらぶべきだとおもいます。コストがやくにじゅっぱーせんとさくげんできます。",
+          "romaji": "Yasui hō no sapuraiyā wo erabu beki da to omoimasu. Kosuto ga yaku ni-jū-pāsento sakugen dekimasu."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "おっしゃることはわかります。ただ、この場合はそれが最善ではないかもしれないと思っています。",
+          "translation": "Tôi hiểu ý bạn. Nhưng tôi nghĩ trong trường hợp này đó có thể không phải là lựa chọn tốt nhất.",
+          "furigana": "おっしゃることはわかります。ただ、このばあいはそれがさいぜんではないかもしれないとおもっています。",
+          "romaji": "Ossharu koto wa wakarimasu. Tada, kono baai wa sore ga saizen de wa nai kamo shirenai to omotte imasu."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "なぜですか？コスト削減は大きいですよ。",
+          "translation": "Tại sao vậy? Tiết kiệm chi phí là đáng kể đấy.",
+          "furigana": "なぜですか？コストさくげんはおおきいですよ。",
+          "romaji": "Naze desu ka? Kosuto sakugen wa ōkii desu yo."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "コスト削減の点はおっしゃる通りです。ただ、私が気になるのは品質です。レビューがまちまちなんです。",
+          "translation": "Điểm tiết kiệm chi phí bạn nói đúng. Nhưng điều tôi lo là chất lượng. Đánh giá của họ khá lẫn lộn.",
+          "furigana": "コストさくげんのてんはおっしゃるとおりです。ただ、わたしがきになるのはひんしつです。レビューがまちまちなんです。",
+          "romaji": "Kosuto sakugen no ten wa ossharu tōri desu. Tada, watashi ga ki ni naru no wa hinshitsu desu. Rebyū ga machimachi nan desu."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "品質の問題が起きたら、そのときに対応すればいいじゃないですか。",
+          "translation": "Nếu xảy ra vấn đề chất lượng thì xử lý lúc đó không sao mà.",
+          "furigana": "ひんしつのもんだいがおきたら、そのときにたいおうすればいいじゃないですか。",
+          "romaji": "Hinshitsu no mondai ga okitara, sono toki ni taiō sureba ii ja nai desu ka."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "お気持ちはわかりますが、問題が起きてから対応するより、最初から防ぐ方がよいと思います。品質問題は長期的に見るとコスト増につながりかねません。",
+          "translation": "Tôi hiểu suy nghĩ của bạn, nhưng tôi nghĩ tốt hơn là ngăn ngừa từ đầu thay vì xử lý sau. Vấn đề chất lượng có thể dẫn đến tăng chi phí về lâu dài.",
+          "furigana": "おきもちはわかりますが、もんだいがおきてからたいおうするより、さいしょからふせぐほうがよいとおもいます。ひんしつもんだいはちょうきてきにみるとコストぞうにつながりかねません。",
+          "romaji": "O-kimochi wa wakarimasu ga, mondai ga okite kara taiō suru yori, saisho kara fusegu hō ga yoi to omoimasu. Hinshitsu mondai wa chōki-teki ni miru to kosuto-zō ni tsunagari kanemasen."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "それは少し慎重すぎるのではないでしょうか。",
+          "translation": "Có lẽ điều đó hơi quá thận trọng không?",
+          "furigana": "それはすこししんちょうすぎるのではないでしょうか。",
+          "romaji": "Sore wa sukoshi shinchō sugiru no de wa nai deshō ka."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "見解が違うことはわかります。ひとまず両方のサプライヤーにサンプルを請求して比較してみるのはいかがでしょうか。",
+          "translation": "Tôi hiểu chúng ta có quan điểm khác nhau. Hay là trước tiên yêu cầu mẫu từ cả hai nhà cung cấp để so sánh?",
+          "furigana": "けんかいがちがうことはわかります。ひとまずりょうほうのサプライヤーにサンプルをせいきゅうしてひかくしてみるのはいかがでしょうか。",
+          "romaji": "Kenkai ga chigau koto wa wakarimasu. Hitomazu ryōhō no sapuraiyā ni sanpuru wo seikyū shite hikaku shite miru no wa ikaga deshō ka."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "それには時間がかかりますね。",
+          "translation": "Điều đó sẽ mất thời gian.",
+          "furigana": "それにはじかんがかかりますね。",
+          "romaji": "Sore ni wa jikan ga kakarimasu ne."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "確かに2週間ほどかかります。ただ、データに基づいて判断できるようになりますので、その価値はあると思います。",
+          "translation": "Đúng, khoảng 2 tuần. Nhưng chúng ta có thể ra quyết định dựa trên dữ liệu, nên tôi nghĩ điều đó xứng đáng.",
+          "furigana": "たしかにふたしゅうかんほどかかります。ただ、データにもとづいてはんだんできるようになりますので、そのかちはあるとおもいます。",
+          "romaji": "Tashika ni futa-shūkan hodo kakarimasu. Tada, dēta ni motozuite handan dekiru yō ni narimasu node, sono kachi wa aru to omoimasu."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "なるほど。理屈はわかりました。そうしましょう。",
+          "translation": "Tôi hiểu rồi. Logic đó có lý. Hãy làm vậy.",
+          "furigana": "なるほど。りくつはわかりました。そうしましょう。",
+          "romaji": "Naruhodo. Rikutsu wa wakarimashita. Sō shimashō."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "ありがとうございます。今日の午後にサンプルを請求します。意見を聞いてくれてありがとうございます。",
+          "translation": "Cảm ơn. Tôi sẽ yêu cầu mẫu chiều nay. Cảm ơn đã lắng nghe.",
+          "furigana": "ありがとうございます。きょうのごごにサンプルをせいきゅうします。いけんをきいてくれてありがとうございます。",
+          "romaji": "Arigatō gozaimasu. Kyō no gogo ni sanpuru wo seikyū shimasu. Iken wo kiite kurete arigatō gozaimasu."
+        }
+      ]
+    }
+  }
+}

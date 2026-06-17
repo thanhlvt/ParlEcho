@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000009",
+    "slug": "japan-specific",
+    "category": "culture"
+  },
+  "sort_order": 2,
+  "icon": "🔢",
+  "level": "intermediate",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0009-000000000003",
+      "title": "Counting in Japanese Contexts",
+      "description": "Practise counting money, floors, dates, and objects using Japanese counters — including 本 (long objects), 枚 (flat things), and 個 (small round items).",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "Could I get three apples, please?",
+          "translation": "Tôi có thể lấy ba quả táo không?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Of course. Three apples — in Japanese that's みっつ or りんご三個.",
+          "translation": "Tất nhiên. Ba quả táo — trong tiếng Nhật là みっつ hoặc りんご三個."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "And if I wanted three pencils?",
+          "translation": "Còn nếu tôi muốn ba cái bút chì?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "Pencils are long, so you use the counter 本 — えんぴつ三本. 本 is for long, thin objects like bottles and umbrellas too.",
+          "translation": "Bút chì là đồ dài, nên dùng đơn vị đếm 本 — えんぴつ三本. 本 dùng cho đồ dài, mỏng như chai và ô cũng vậy."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "What about paper? Or flat things like shirts?",
+          "translation": "Còn giấy thì sao? Hay đồ phẳng như áo sơ mi?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "Flat things use 枚 — かみ一枚 is one sheet of paper, シャツ二枚 is two shirts.",
+          "translation": "Đồ phẳng dùng 枚 — かみ一枚 là một tờ giấy, シャツ二枚 là hai cái áo sơ mi."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "This is tricky! How about floors in a building?",
+          "translation": "Khó quá! Còn tầng trong tòa nhà thì sao?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "Floors use 階 — いっかい is the first floor, にかい is second, さんがい is third. Watch out — 一階 in Japan is the ground floor, not the floor above.",
+          "translation": "Tầng dùng 階 — いっかい là tầng một, にかい là tầng hai, さんがい là tầng ba. Lưu ý — 一階 ở Nhật là tầng trệt, không phải tầng trên."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "And dates — how do you say the fourteenth?",
+          "translation": "Còn ngày tháng — bạn nói ngày 14 thế nào?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "じゅうよっか. Dates one to ten have special readings — ついたち, ふつか, みっか — then from eleven it's more regular, but 14 is じゅうよっか and 20 is はつか.",
+          "translation": "じゅうよっか. Ngày 1 đến 10 có cách đọc đặc biệt — ついたち, ふつか, みっか — rồi từ 11 thì đều đặn hơn, nhưng ngày 14 là じゅうよっか và ngày 20 là はつか."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "And money — how do I say eight hundred and fifty yen?",
+          "translation": "Còn tiền — tôi nói tám trăm năm mươi yên thế nào?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "はっぴゃくごじゅうえん — eight hundred is はっぴゃく, fifty is ごじゅう, and yen is えん. Good news: no cents, so money in Japan is always whole numbers!",
+          "translation": "はっぴゃくごじゅうえん — tám trăm là はっぴゃく, năm mươi là ごじゅう, và yên là えん. Tin vui: không có xu, nên tiền ở Nhật luôn là số nguyên!"
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0009-000000000004",
+      "title": "数え方の練習：お金・階・日付・助数詞",
+      "description": "日本語の数え方を練習します。お金（円）、ビルの階、日付（ついたち・ふつかなど）、そして本・枚・個などの助数詞を使った数え方を身につけます。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "りんごを3つください。",
+          "translation": "Tôi muốn 3 quả táo.",
+          "furigana": "りんごをみっつください。",
+          "romaji": "Ringo wo mittsu kudasai."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "はい。丸いものを数えるときは「個」を使いますね。りんご3個です。",
+          "translation": "Vâng. Đếm đồ tròn thì dùng 「個」. Là りんご3個.",
+          "furigana": "はい。まるいものをかぞえるときは「こ」をつかいますね。りんごさんこです。",
+          "romaji": "Hai. Marui mono wo kazoeru toki wa 'ko' wo tsukaimasu ne. Ringo san-ko desu."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "えんぴつを3本欲しい場合はどう言いますか？",
+          "translation": "Nếu muốn 3 cái bút chì thì nói thế nào?",
+          "furigana": "えんぴつをさんぼんほしいばあいはどういいますか？",
+          "romaji": "Enpitsu wo san-bon hoshii baai wa dō iimasu ka?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "細長いものには「本」を使います。えんぴつ3本ですね。瓶や傘も「本」で数えますよ。",
+          "translation": "Đồ dài mỏng thì dùng 「本」. Là えんぴつ3本. Chai và ô cũng đếm bằng 「本」nhé.",
+          "furigana": "ほそながいものには「ほん」をつかいます。えんぴつさんぼんですね。びんやかさも「ほん」でかぞえますよ。",
+          "romaji": "Hosonagai mono ni wa 'hon' wo tsukaimasu. Enpitsu san-bon desu ne. Bin ya kasa mo 'hon' de kazoemasu yo."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "紙やシャツのような平たいものはどうですか？",
+          "translation": "Còn đồ phẳng như giấy hay áo sơ mi thì sao?",
+          "furigana": "かみやシャツのようなひらたいものはどうですか？",
+          "romaji": "Kami ya shatsu no yō na hiratai mono wa dō desu ka?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "平たいものには「枚」を使います。かみ1枚、シャツ2枚という感じです。",
+          "translation": "Đồ phẳng thì dùng 「枚」. Ví dụ: かみ1枚, シャツ2枚.",
+          "furigana": "ひらたいものには「まい」をつかいます。かみいちまい、シャツにまいというかんじです。",
+          "romaji": "Hiratai mono ni wa 'mai' wo tsukaimasu. Kami ichi-mai, shatsu ni-mai to iu kanji desu."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "難しいですね！建物の階はどうやって言いますか？",
+          "translation": "Khó quá! Tầng của tòa nhà thì nói thế nào?",
+          "furigana": "むずかしいですね！たてもののかいはどうやっていいますか？",
+          "romaji": "Muzukashii desu ne! Tatemono no kai wa dō yatte iimasu ka?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "階には「階」を使います。1階（いっかい）、2階（にかい）、3階（さんがい）です。日本では1階が地上階（グラウンドフロア）ですよ。",
+          "translation": "Tầng thì dùng 「階」. 1階（いっかい）, 2階（にかい）, 3階（さんがい）. Ở Nhật 1階 là tầng trệt nhé.",
+          "furigana": "かいには「かい」をつかいます。いっかい、にかい、さんがいです。にほんではいっかいがちじょうかいです。",
+          "romaji": "Kai ni wa 'kai' wo tsukaimasu. Ikkai, ni-kai, san-gai desu. Nihon de wa ikkai ga chijō-kai desu yo."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "日付はどうですか？14日はどう言いますか？",
+          "translation": "Ngày tháng thì sao? Ngày 14 nói thế nào?",
+          "furigana": "ひづけはどうですか？じゅうよっかはどういいますか？",
+          "romaji": "Hizuke wa dō desu ka? Jū-yokka wa dō iimasu ka?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "14日は「じゅうよっか」です。1日から10日には特別な読み方があります。ついたち・ふつか・みっかなど。20日（はつか）も特別ですよ。",
+          "translation": "Ngày 14 là 「じゅうよっか」. Ngày 1–10 có cách đọc đặc biệt: ついたち・ふつか・みっか v.v. Ngày 20 (はつか) cũng đặc biệt.",
+          "furigana": "じゅうよっかは「じゅうよっか」です。いちにちからとおかにはとくべつなよみかたがあります。ついたち・ふつか・みっかなど。はつかもとくべつですよ。",
+          "romaji": "Jū-yokka wa 'jū-yokka' desu. Tsuitachi kara tōka ni wa tokubetsu na yomikata ga arimasu. Tsuitachi, futsuka, mikka nado. Hatsuka mo tokubetsu desu yo."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "お金はどうですか？850円はどう言いますか？",
+          "translation": "Còn tiền thì sao? 850 yên nói thế nào?",
+          "furigana": "おかねはどうですか？はっぴゃくごじゅうえんはどういいますか？",
+          "romaji": "O-kane wa dō desu ka? Happyaku gojū en wa dō iimasu ka?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "850円は「はっぴゃくごじゅうえん」です。日本では小銭（セント）がないので、お金は常に整数です。計算しやすいですよ！",
+          "translation": "850 yên là 「はっぴゃくごじゅうえん」. Ở Nhật không có xu nên tiền luôn là số nguyên. Dễ tính lắm!",
+          "furigana": "はっぴゃくごじゅうえんは「はっぴゃくごじゅうえん」です。にほんではこぜにがないので、おかねはつねにせいすうです。けいさんしやすいですよ！",
+          "romaji": "Happyaku gojū en wa 'happyaku gojū en' desu. Nihon de wa kozeni ga nai node, o-kane wa tsuneni seisū desu. Keisan shiyasui desu yo!"
+        }
+      ]
+    }
+  }
+}

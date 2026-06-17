@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000010",
+    "slug": "english-specific",
+    "category": "culture"
+  },
+  "sort_order": 1,
+  "icon": "📞",
+  "level": "intermediate",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0010-000000000001",
+      "title": "Customer Service Call: Hold and Transfer",
+      "description": "Navigate a typical English customer service call — explaining your issue, being put on hold, getting transferred, and firmly but politely pushing for a resolution.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "Thank you for calling Horizon Mobile. My name's Jake. How can I help you today?",
+          "translation": "Cảm ơn đã gọi đến Horizon Mobile. Tôi là Jake. Tôi có thể giúp gì cho bạn hôm nay?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Hi Jake. I'm calling about a billing issue — I've been charged twice for this month's plan.",
+          "translation": "Xin chào Jake. Tôi gọi về vấn đề thanh toán — tôi bị tính tiền hai lần cho gói tháng này."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "I'm sorry about that. Could I take your account number to pull up your details?",
+          "translation": "Tôi xin lỗi về điều đó. Tôi có thể lấy số tài khoản của bạn để tra thông tin không?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "Sure, it's seven-seven-four-two-dash-nine-eight-six.",
+          "translation": "Được, là 7742-986."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "Bear with me a moment… I'm going to need to put you on a brief hold while I check this.",
+          "translation": "Chờ tôi một chút... Tôi sẽ cần để bạn giữ máy trong khi tôi kiểm tra."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "No problem. I'll hold.",
+          "translation": "Không sao. Tôi sẽ giữ máy."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "Thanks for waiting. I can see the double charge — I'm going to transfer you to our billing team to process the refund.",
+          "translation": "Cảm ơn đã chờ. Tôi thấy khoản thu hai lần — tôi sẽ chuyển bạn đến nhóm thanh toán để xử lý hoàn tiền."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "Before you transfer me — can you give me a reference number in case I get disconnected?",
+          "translation": "Trước khi chuyển — bạn có thể cho tôi số tham chiếu không phòng khi mất kết nối?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "Of course. Your reference is HM-dash-seven-four-two-one. Hold the line and I'll transfer you now.",
+          "translation": "Tất nhiên. Số tham chiếu là HM-7421. Giữ máy và tôi sẽ chuyển ngay."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "Billing team, this is Priya. I understand you have a duplicate charge?",
+          "translation": "Nhóm thanh toán, tôi là Priya. Tôi hiểu bạn bị tính tiền trùng?"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "That's right. Reference HM-7421. I'd like to confirm the refund amount and timeline before we finish.",
+          "translation": "Đúng vậy. Số tham chiếu HM-7421. Tôi muốn xác nhận số tiền hoàn lại và thời gian trước khi kết thúc."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "Of course. The duplicate charge of thirty-nine ninety-nine will be refunded within three to five business days.",
+          "translation": "Tất nhiên. Khoản thu trùng 39,99 sẽ được hoàn trong 3–5 ngày làm việc."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0010-000000000002",
+      "title": "英語でのカスタマーサービス電話：保留と転送",
+      "description": "英語圏のカスタマーサービスでよく起こる「保留（ホールド）」「部署への転送」「参照番号の確認」などの場面を練習します。冷静に問題を説明し、解決を求める英語表現を身につけます。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "ホライズン・モバイルにお電話いただきありがとうございます。ジェイクと申します。本日はどのようなご用件でしょうか？",
+          "translation": "Cảm ơn đã gọi đến Horizon Mobile. Tôi là Jake. Hôm nay tôi có thể giúp gì cho bạn?",
+          "furigana": "ホライズン・モバイルにおでんわいただきありがとうございます。ジェイクともうします。ほんじつはどのようなごようけんでしょうか？",
+          "romaji": "Horaizun Mobairu ni o-denwa itadaki arigatō gozaimasu. Jeiku to mōshimasu. Honjitsu wa dono yō na go-yōken deshō ka?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "こんにちは、ジェイクさん。請求に関してご連絡しました。今月のプランが2回請求されているようです。",
+          "translation": "Xin chào Jake. Tôi liên hệ về vấn đề thanh toán. Có vẻ tôi bị tính tiền hai lần cho gói tháng này.",
+          "furigana": "こんにちは、ジェイクさん。せいきゅうにかんしてごれんらくしました。こんげつのプランがにかいせいきゅうされているようです。",
+          "romaji": "Konnichiwa, Jeiku-san. Seikyū ni kanshite go-renraku shimashita. Kongetsu no puran ga ni-kai seikyū sarete iru yō desu."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "ご不便をおかけして申し訳ございません。口座番号をお教えいただけますか？",
+          "translation": "Xin lỗi vì sự bất tiện. Bạn có thể cho tôi số tài khoản không?",
+          "furigana": "ごふべんをおかけしてもうしわけございません。こうざばんごうをおしえていただけますか？",
+          "romaji": "Go-fuben wo o-kake shite mōshiwake gozaimasen. Kōza-bangō wo oshiete itadakemasu ka?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "はい。7742-986です。",
+          "translation": "Vâng. Là 7742-986.",
+          "furigana": "はい。ななよんよんにのきゅうはちろくです。",
+          "romaji": "Hai. Nana-yon-yon-ni no kyū-hachi-roku desu."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "少しお待ちください…確認のため、しばらく保留させていただきます。",
+          "translation": "Chờ tôi một chút... Tôi sẽ để bạn giữ máy trong khi kiểm tra.",
+          "furigana": "すこしおまちください…かくにんのため、しばらくほりゅうさせていただきます。",
+          "romaji": "Sukoshi o-machi kudasai... Kakunin no tame, shibaraku horyū sasete itadakimasu."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "はい、お待ちします。",
+          "translation": "Vâng, tôi sẽ chờ.",
+          "furigana": "はい、おまちします。",
+          "romaji": "Hai, o-machi shimasu."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "お待たせいたしました。二重請求を確認できました。返金処理のため、請求チームに転送させていただきます。",
+          "translation": "Cảm ơn đã chờ. Tôi xác nhận khoản thu hai lần. Sẽ chuyển bạn đến nhóm thanh toán để xử lý hoàn tiền.",
+          "furigana": "おまたせいたしました。にじゅうせいきゅうをかくにんできました。へんきんしょりのため、せいきゅうチームにてんそうさせていただきます。",
+          "romaji": "O-matase itashimashita. Nijū seikyū wo kakunin dekimashita. Henkin shori no tame, seikyū chīmu ni tensō sasete itadakimasu."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "転送の前に、電話が切れた場合に備えて参照番号を教えていただけますか？",
+          "translation": "Trước khi chuyển máy, bạn có thể cho tôi số tham chiếu phòng khi bị ngắt không?",
+          "furigana": "てんそうのまえに、でんわがきれたばあいにそなえてさんしょうばんごうをおしえていただけますか？",
+          "romaji": "Tensō no mae ni, denwa ga kireta baai ni sonaete sanshō-bangō wo oshiete itadakemasu ka?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "もちろんです。参照番号はHM-7421です。そのままお待ちください、転送いたします。",
+          "translation": "Tất nhiên. Số tham chiếu là HM-7421. Giữ máy, tôi sẽ chuyển ngay.",
+          "furigana": "もちろんです。さんしょうばんごうはHM-7421です。そのままおまちください、てんそういたします。",
+          "romaji": "Mochiron desu. Sanshō-bangō wa HM-nana-yon-ni-ichi desu. Sono mama o-machi kudasai, tensō itashimasu."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "請求チームのプリヤと申します。二重請求のご件でしょうか？",
+          "translation": "Nhóm thanh toán, tôi là Priya. Bạn gọi về khoản thu trùng phải không?",
+          "furigana": "せいきゅうチームのプリヤともうします。にじゅうせいきゅうのごけんでしょうか？",
+          "romaji": "Seikyū chīmu no Puriya to mōshimasu. Nijū seikyū no go-ken deshō ka?"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "そうです。参照番号はHM-7421です。終わる前に、返金額と期間を確認させていただけますか？",
+          "translation": "Đúng vậy. Số tham chiếu HM-7421. Trước khi kết thúc, tôi muốn xác nhận số tiền và thời gian hoàn.",
+          "furigana": "そうです。さんしょうばんごうはHM-7421です。おわるまえに、へんきんがくとじかんをかくにんさせていただけますか？",
+          "romaji": "Sō desu. Sanshō-bangō wa HM-nana-yon-ni-ichi desu. Owaru mae ni, henkin-gaku to jikan wo kakunin sasete itadakemasu ka?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "はい。39.99ドルの二重請求は、3〜5営業日以内に返金いたします。",
+          "translation": "Vâng. Khoản thu trùng 39,99 đô sẽ được hoàn trong 3–5 ngày làm việc.",
+          "furigana": "はい。さんじゅうきゅうてんきゅうきゅうドルのにじゅうせいきゅうは、さんからごえいぎょうびいないにへんきんいたします。",
+          "romaji": "Hai. Sanjū-kyū-ten-kyū-kyū doru no nijū seikyū wa, san kara go eigyō-bi inai ni henkin itashimasu."
+        }
+      ]
+    }
+  }
+}

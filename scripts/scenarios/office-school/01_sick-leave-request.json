@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000006",
+    "slug": "office-school",
+    "category": "work"
+  },
+  "sort_order": 1,
+  "icon": "🤒",
+  "level": "intermediate",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0006-000000000001",
+      "title": "Calling In Sick / Requesting Leave",
+      "description": "Call your manager to report being unwell. Practice explaining your condition, arranging cover for urgent tasks, and giving a return timeline.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "Good morning, this is Minh. I'm afraid I'm not feeling well today and won't be able to come in.",
+          "translation": "Chào buổi sáng, tôi là Minh. Hôm nay tôi không được khỏe và không thể đến được."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "Oh, I'm sorry to hear that. What's wrong?",
+          "translation": "Ôi, tôi tiếc khi nghe điều đó. Bạn bị sao vậy?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "I came down with a fever and a bad headache overnight. I've barely slept.",
+          "translation": "Tôi bị sốt và đau đầu dữ dội qua đêm. Gần như không ngủ được."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "That sounds rough. Please take the day off and rest up.",
+          "translation": "Nghe có vẻ nặng. Hãy nghỉ và nghỉ ngơi đi."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "Thank you. I'm sorry for the short notice. I have a couple of things to hand over.",
+          "translation": "Cảm ơn. Tôi xin lỗi vì báo gấp. Tôi có vài việc cần bàn giao."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "That's fine. What do you need covered?",
+          "translation": "Không sao. Bạn cần ai lo việc gì?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "I have the Miller report due this afternoon. Could I ask Jen to step in? I'll email her the draft right away.",
+          "translation": "Tôi có báo cáo Miller phải nộp chiều nay. Nhờ Jen thay được không? Tôi sẽ gửi bản nháp cho cô ấy ngay."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "I'll let Jen know. Anything else?",
+          "translation": "Tôi sẽ báo Jen. Còn gì nữa không?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "That should be it. My other meetings aren't until tomorrow, so they'll be fine.",
+          "translation": "Chỉ vậy thôi. Các cuộc họp khác của tôi là ngày mai, không ảnh hưởng."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "All right. Any idea when you'll be back?",
+          "translation": "Được rồi. Bạn có biết khi nào quay lại không?"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "Hopefully tomorrow. I'll message you tonight to let you know.",
+          "translation": "Hy vọng ngày mai. Tôi sẽ nhắn tin tối nay để báo."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "Sounds good. Take care and feel better soon.",
+          "translation": "Được rồi. Chăm sóc bản thân và mau khỏi nhé."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0006-000000000002",
+      "title": "欠勤・体調不良を上司に報告する",
+      "description": "体調不良を上司に電話で伝え、急ぎの引き継ぎを調整し、復帰の見通しを伝える練習をします。ビジネス敬語の基本も身につきます。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "おはようございます。グエン・ミンです。申し訳ありませんが、本日体調が優れず、お休みをいただきたいのですが。",
+          "translation": "Chào buổi sáng. Tôi là Nguyen Minh. Xin lỗi nhưng hôm nay tôi không khỏe, muốn xin nghỉ.",
+          "furigana": "おはようございます。グエン・ミンです。もうしわけありませんが、ほんじつたいちょうがすぐれず、おやすみをいただきたいのですが。",
+          "romaji": "Ohayō gozaimasu. Guen Min desu. Mōshiwake arimasen ga, honjitsu taichō ga sugurenzu, o-yasumi wo itadakitai no desu ga."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "それは大変でしたね。どうされましたか？",
+          "translation": "Vậy à, thật vất vả nhỉ. Bạn bị sao?",
+          "furigana": "それはたいへんでしたね。どうされましたか？",
+          "romaji": "Sore wa taihen deshita ne. Dō saremashita ka?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "昨夜から発熱しておりまして、38度を超えています。頭痛もひどく、ほとんど眠れませんでした。",
+          "translation": "Từ tối qua tôi bị sốt, nhiệt độ trên 38 độ. Đau đầu nặng và hầu như không ngủ được.",
+          "furigana": "ゆうべからはつねつしておりまして、さんじゅうはちどをこえています。ずつうもひどく、ほとんどねむれませんでした。",
+          "romaji": "Yūbe kara hatsunetsu shite orimashite, sanjū-hachi-do wo koete imasu. Zutsū mo hidoku, hotondo nemuremasen deshita."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "それはつらいですね。今日はゆっくり休んでください。",
+          "translation": "Vất vả quá nhỉ. Hôm nay nghỉ ngơi đi.",
+          "furigana": "それはつらいですね。きょうはゆっくりやすんでください。",
+          "romaji": "Sore wa tsurai desu ne. Kyō wa yukkuri yasunde kudasai."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "ありがとうございます。急なご連絡で申し訳ございません。引き継ぎが必要な件があります。",
+          "translation": "Cảm ơn. Xin lỗi vì báo gấp. Có việc cần bàn giao.",
+          "furigana": "ありがとうございます。きゅうなごれんらくでもうしわけございません。ひきつぎがひつようなけんがあります。",
+          "romaji": "Arigatō gozaimasu. Kyū na go-renraku de mōshiwake gozaimasen. Hikitsugi ga hitsuyō na ken ga arimasu."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "わかりました。何をお願いすればいいですか？",
+          "translation": "Hiểu rồi. Cần nhờ ai lo việc gì?",
+          "furigana": "わかりました。なにをおねがいすればいいですか？",
+          "romaji": "Wakarimashita. Nani wo onegai sureba ii desu ka?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "今日の午後にミラー社への報告書の締め切りがあります。田中さんにお願いできれば、今すぐ下書きをメールで送ります。",
+          "translation": "Chiều nay có hạn nộp báo cáo cho công ty Miller. Nếu nhờ được Tanaka-san thì tôi sẽ gửi bản nháp ngay.",
+          "furigana": "きょうのごごにミラーしゃへのほうこくしょのしめきりがあります。たなかさんにおねがいできれば、いますぐしたがきをメールでおくります。",
+          "romaji": "Kyō no gogo ni Mirā-sha e no hōkoku-sho no shimekiri ga arimasu. Tanaka-san ni onegai dekireba, ima sugu shitagaki wo mēru de okurimasu."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "田中さんに伝えておきます。他にありますか？",
+          "translation": "Tôi sẽ báo Tanaka-san. Còn gì nữa không?",
+          "furigana": "たなかさんにつたえておきます。ほかにありますか？",
+          "romaji": "Tanaka-san ni tsutaete okimasu. Hoka ni arimasu ka?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "それだけです。明日以降の会議は大丈夫ですので、ご安心ください。",
+          "translation": "Chỉ vậy thôi. Các cuộc họp từ ngày mai không ảnh hưởng, bạn yên tâm.",
+          "furigana": "それだけです。あしたいこうのかいぎはだいじょうぶですので、ごあんしんください。",
+          "romaji": "Sore dake desu. Ashita ikō no kaigi wa daijōbu desu node, go-anshin kudasai."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "わかりました。明日は出社できそうですか？",
+          "translation": "Hiểu rồi. Ngày mai có thể đi làm được không?",
+          "furigana": "わかりました。あしたはしゅっしゃできそうですか？",
+          "romaji": "Wakarimashita. Ashita wa shussha dekisō desu ka?"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "今夜の体調次第ですが、できればと思っております。夜にメッセージをお送りします。",
+          "translation": "Tùy vào tình trạng tối nay, hy vọng được. Tôi sẽ nhắn tin tối nay.",
+          "furigana": "こんやのたいちょうしだいですが、できればとおもっております。よるにメッセージをおおくりします。",
+          "romaji": "Konya no taichō shidai desu ga, dekireba to omotte orimasu. Yoru ni messēji wo o-okuri shimasu."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "わかりました。無理せずゆっくり休んでください。",
+          "translation": "Hiểu rồi. Đừng cố, nghỉ ngơi cho tốt.",
+          "furigana": "わかりました。むりせずゆっくりやすんでください。",
+          "romaji": "Wakarimashita. Muri sezu yukkuri yasunde kudasai."
+        }
+      ]
+    }
+  }
+}

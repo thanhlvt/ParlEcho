@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000009",
+    "slug": "japan-specific",
+    "category": "culture"
+  },
+  "sort_order": 4,
+  "icon": "♨️",
+  "level": "intermediate",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0009-000000000007",
+      "title": "Onsen and Sentō Etiquette",
+      "description": "Practise the language and customs for visiting a Japanese onsen or sentō — asking about rules, understanding instructions, and using polite expressions in a traditional setting.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "Excuse me — is this my first time at an onsen, and I'm not sure about the rules. Could you help me?",
+          "translation": "Xin lỗi — đây là lần đầu tôi đến onsen và tôi không chắc về quy tắc. Bạn có thể giúp tôi không?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "Of course! First, please wash your body thoroughly at the washing stations before entering the bath.",
+          "translation": "Tất nhiên! Trước tiên, hãy rửa sạch người tại các trạm tắm trước khi vào bồn."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "Do I need to bring my own towel, or is one provided?",
+          "translation": "Tôi có cần mang khăn riêng không, hay có cung cấp sẵn?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "We provide a small towel. Please don't take it into the bath — just leave it at the side or on your head.",
+          "translation": "Chúng tôi cung cấp khăn nhỏ. Xin đừng mang vào bồn — hãy để bên ngoài hoặc đặt trên đầu."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "Got it. Is it alright if I have a tattoo?",
+          "translation": "Hiểu rồi. Nếu tôi có xăm hình thì sao?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "I'm sorry, our facility doesn't allow tattoos in the shared baths. We do have a private bath available if you'd like.",
+          "translation": "Xin lỗi, cơ sở của chúng tôi không cho phép xăm trong bồn tắm chung. Nhưng chúng tôi có bồn riêng nếu bạn muốn."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "I see. How long is it usually recommended to stay in the water?",
+          "translation": "Tôi hiểu. Thông thường nên ngâm trong bao lâu?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "Around ten to fifteen minutes, then take a break, hydrate, and you can go back in. Drink plenty of water.",
+          "translation": "Khoảng 10-15 phút, rồi nghỉ, uống nước, và có thể vào lại. Hãy uống nhiều nước."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "Is it okay to talk quietly inside?",
+          "translation": "Có thể nói chuyện nhỏ bên trong không?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "Soft conversation is fine, but please keep voices low. Many guests come here to relax in quiet.",
+          "translation": "Nói chuyện nhẹ nhàng thì được, nhưng xin giữ giọng nhỏ. Nhiều khách đến đây để thư giãn trong yên tĩnh."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "Of course. And no phones or cameras, I assume?",
+          "translation": "Tất nhiên. Và không điện thoại hay máy ảnh, tôi đoán vậy?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "Exactly — no devices in the bathing area, please. Enjoy your visit, and please let us know if you need anything.",
+          "translation": "Đúng vậy — không thiết bị trong khu vực tắm. Chúc bạn thư giãn vui vẻ, và hãy cho chúng tôi biết nếu cần gì."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0009-000000000008",
+      "title": "温泉・銭湯のマナーと会話",
+      "description": "温泉や銭湯を初めて利用する際に必要な言葉とマナーを練習します。タオルの使い方、入浴時間の目安、タトゥーについての確認など、実際の場面を想定した会話です。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "すみません、温泉は初めてなのですが、マナーがよくわからなくて。教えていただけますか？",
+          "translation": "Xin lỗi, đây là lần đầu tôi đến onsen và tôi không biết nhiều về quy tắc. Bạn có thể chỉ dạy không?",
+          "furigana": "すみません、おんせんははじめてなのですが、マナーがよくわからなくて。おしえていただけますか？",
+          "romaji": "Sumimasen, onsen wa hajimete na no desu ga, manā ga yoku wakaranakute. Oshiete itadakemasu ka?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "もちろんです。まず、浴槽に入る前に洗い場で体をきれいに洗ってください。",
+          "translation": "Tất nhiên. Trước tiên, hãy rửa sạch người tại khu vực tắm trước khi vào bồn.",
+          "furigana": "もちろんです。まず、よくそうにはいるまえにあらいばでからだをきれいにあらってください。",
+          "romaji": "Mochiron desu. Mazu, yokusō ni hairu mae ni araiba de karada wo kirei ni aratte kudasai."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "タオルは持参が必要ですか、それとも貸していただけますか？",
+          "translation": "Tôi cần mang khăn riêng không, hay có cho mượn?",
+          "furigana": "タオルはじさんがひつようですか、それともかしていただけますか？",
+          "romaji": "Taoru wa jisan ga hitsuyō desu ka, soretomo kashite itadakemasu ka?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "小さなタオルをご用意しています。浴槽には入れないでください。洗い場の隅に置くか、頭の上に乗せてください。",
+          "translation": "Chúng tôi có cung cấp khăn nhỏ. Xin đừng mang vào bồn. Để ở góc khu tắm hoặc đặt trên đầu.",
+          "furigana": "ちいさなタオルをごよういしています。よくそうにはいれないでください。あらいばのすみにおくか、あたまのうえにのせてください。",
+          "romaji": "Chiisana taoru wo go-yōi shite imasu. Yokusō ni wa irenaide kudasai. Araiba no sumi ni oku ka, atama no ue ni nosete kudasai."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "タトゥーがあるのですが、大丈夫でしょうか？",
+          "translation": "Tôi có xăm hình, có sao không?",
+          "furigana": "タトゥーがあるのですが、だいじょうぶでしょうか？",
+          "romaji": "Tatū ga aru no desu ga, daijōbu deshō ka?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "申し訳ございませんが、共用浴槽ではタトゥーのある方のご利用をご遠慮いただいています。貸し切り風呂はご利用いただけます。",
+          "translation": "Xin lỗi, chúng tôi yêu cầu khách có xăm hình không sử dụng bồn chung. Bạn có thể sử dụng phòng tắm riêng.",
+          "furigana": "もうしわけございませんが、きょうようよくそうではタトゥーのあるかたのごりようをごえんりょいただいています。かしきりぶろはごりようできます。",
+          "romaji": "Mōshiwake gozaimasen ga, kyōyō yokusō de wa tatū no aru kata no go-riyō wo go-enryo itadaite imasu. Kashikiri buro wa go-riyō itadakemasu."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "わかりました。どのくらい入浴するのがいいですか？",
+          "translation": "Hiểu rồi. Nên ngâm bao lâu là tốt?",
+          "furigana": "わかりました。どのくらいにゅうよくするのがいいですか？",
+          "romaji": "Wakarimashita. Dono kurai nyūyoku suru no ga ii desu ka?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "10〜15分を目安に、その後は休憩して水分補給をしてください。そしてまた入っていただけます。水をたくさん飲んでください。",
+          "translation": "Khoảng 10–15 phút, sau đó nghỉ và bổ sung nước. Rồi có thể vào lại. Hãy uống nhiều nước.",
+          "furigana": "じゅっからじゅうごふんをめやすに、そのごはきゅうけいしてすいぶんほきゅうをしてください。そしてまたはいっていただけます。みずをたくさんのんでください。",
+          "romaji": "Jū kara jūgo-fun wo meyasu ni, sono go wa kyūkei shite suibun hokyū wo shite kudasai. Soshite mata haitte itadakemasu. Mizu wo takusan nonde kudasai."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "中で静かに話してもいいですか？",
+          "translation": "Có thể nói chuyện nhỏ bên trong không?",
+          "furigana": "なかでしずかにはなしてもいいですか？",
+          "romaji": "Naka de shizuka ni hanashite mo ii desu ka?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "小さな声でのご会話はかまいません。ただ、静かにお過ごしになりたいお客様もいらっしゃいますので、お声はお控えください。",
+          "translation": "Nói nhỏ thì được. Nhưng nhiều khách muốn nghỉ ngơi trong yên tĩnh, xin hạ giọng.",
+          "furigana": "ちいさなこえでのごかいわはかまいません。ただ、しずかにおすごしになりたいおきゃくさまもいらっしゃいますので、おこえはおひかえください。",
+          "romaji": "Chiisana koe de no go-kaiwa wa kamaimasen. Tada, shizuka ni o-sugoshi ni naritai o-kyaku-sama mo irasshaimasu node, o-koe wa o-hikae kudasai."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "もちろんです。浴場内では携帯電話やカメラは使えませんよね？",
+          "translation": "Tất nhiên. Trong khu tắm không dùng điện thoại hay máy ảnh đúng không?",
+          "furigana": "もちろんです。よくじょうないではけいたいでんわやカメラはつかえませんよね？",
+          "romaji": "Mochiron desu. Yokujō nai de wa keitai denwa ya kamera wa tsukaemasen yo ne?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "おっしゃる通りです。浴場内での機器のご使用はお断りしております。ごゆっくりお楽しみください。ご不明な点があればいつでもお申し付けください。",
+          "translation": "Đúng vậy. Chúng tôi không cho phép sử dụng thiết bị trong khu tắm. Chúc bạn thư giãn vui vẻ. Có gì cần hãy hỏi chúng tôi.",
+          "furigana": "おっしゃるとおりです。よくじょうないでのききのごしようはおことわりしております。ごゆっくりおたのしみください。ごふめいなてんがあればいつでもおもうしつけください。",
+          "romaji": "Ossharu tōri desu. Yokujō nai de no kiki no go-shiyō wa o-kotowari shite orimasu. Go-yukkuri o-tanoshimi kudasai. Go-fumei na ten ga areba itsu de mo o-mōshitsuke kudasai."
+        }
+      ]
+    }
+  }
+}

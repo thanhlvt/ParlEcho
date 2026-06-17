@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000007",
+    "slug": "stressful-situations",
+    "category": "daily"
+  },
+  "sort_order": 1,
+  "icon": "😤",
+  "level": "intermediate",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0007-000000000001",
+      "title": "Complaining About a Defective Product",
+      "description": "Call customer service to report a faulty product, hold firm on your refund request, and navigate pushback calmly and politely.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "Hi, I'm calling about a kettle I purchased last week. I'm afraid it's defective.",
+          "translation": "Xin chào, tôi gọi về cái ấm đun tôi mua tuần trước. Nó có vẻ bị lỗi."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "I'm sorry to hear that. Can you describe the problem for me?",
+          "translation": "Tôi tiếc khi nghe điều đó. Bạn có thể mô tả vấn đề không?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "The lid doesn't seal properly and hot water leaks when I pour. It's a safety hazard.",
+          "translation": "Nắp không đóng kín và nước nóng bị rò khi rót. Đây là nguy hiểm an toàn."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "I see. Do you have your receipt or order number?",
+          "translation": "Tôi hiểu. Bạn có hóa đơn hoặc số đơn hàng không?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "Yes. The order number is KT-two-zero-two-five-dash-four-four-one.",
+          "translation": "Có. Số đơn hàng là KT-2025-441."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "Thank you. I can offer you a replacement unit.",
+          "translation": "Cảm ơn. Tôi có thể đổi cho bạn một sản phẩm mới."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "I'd prefer a full refund, actually. I've lost confidence in the product and I'd like my money back.",
+          "translation": "Thực ra tôi muốn được hoàn tiền đầy đủ. Tôi đã mất niềm tin vào sản phẩm và muốn lấy lại tiền."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "I understand, but our policy is to offer an exchange for faulty items.",
+          "translation": "Tôi hiểu, nhưng chính sách của chúng tôi là đổi sản phẩm cho hàng lỗi."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "I appreciate that, but a leaking kettle is a safety issue, not just a defect. I'm entitled to a refund under consumer law.",
+          "translation": "Tôi hiểu, nhưng ấm bị rò nước là vấn đề an toàn, không chỉ là lỗi thông thường. Tôi có quyền hoàn tiền theo luật bảo vệ người tiêu dùng."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "Let me speak with my supervisor about this. Could you hold for a moment?",
+          "translation": "Để tôi nói chuyện với cấp trên về việc này. Bạn có thể giữ máy một chút không?"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "Thank you for holding. We'll process a full refund to your original payment method within three to five business days.",
+          "translation": "Cảm ơn đã chờ. Chúng tôi sẽ hoàn tiền đầy đủ về phương thức thanh toán ban đầu trong 3–5 ngày làm việc."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "Thank you. I appreciate you resolving this. I do hope this gets flagged as a quality issue internally.",
+          "translation": "Cảm ơn. Tôi đánh giá cao việc bạn giải quyết vấn đề. Tôi hy vọng điều này được ghi nhận là vấn đề chất lượng nội bộ."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0007-000000000002",
+      "title": "不良品のクレームと返金要求",
+      "description": "購入した製品の不具合を報告し、交換ではなく返金を要求する練習をします。断られた時にも冷静に根拠を示しながら主張を続けるスキルを身につけます。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "先週御社のケトルを購入したのですが、不具合があって連絡させていただきました。",
+          "translation": "Tôi đã mua ấm đun của quý công ty tuần trước, và liên hệ vì nó có vấn đề.",
+          "furigana": "せんしゅうおんしゃのケトルをこうにゅうしたのですが、ふぐあいがあってれんらくさせていただきました。",
+          "romaji": "Senshū on-sha no ketoru wo kōnyū shita no desu ga, fuguai ga atte renraku sasete itadakimashita."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "それは大変失礼いたしました。どのような不具合でしょうか？",
+          "translation": "Thật xin lỗi vì sự bất tiện. Vấn đề cụ thể là gì?",
+          "furigana": "それはたいへんしつれいいたしました。どのようなふぐあいでしょうか？",
+          "romaji": "Sore wa taihen shitsurei itashimashita. Dono yō na fuguai deshō ka?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "ふたがきちんと閉まらず、お湯を注ぐ際に漏れてしまいます。安全上の問題があります。",
+          "translation": "Nắp không đóng kín và nước nóng bị rò khi rót. Có vấn đề về an toàn.",
+          "furigana": "ふたがきちんとしまらず、おゆをそそぐさいにもれてしまいます。あんぜんじょうのもんだいがあります。",
+          "romaji": "Futa ga kichinto shimarazu, o-yu wo sosogu sai ni morete shimaimasu. Anzen-jō no mondai ga arimasu."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "ご確認ありがとうございます。レシートまたはご注文番号はお手元にありますか？",
+          "translation": "Cảm ơn đã cho biết. Bạn có hóa đơn hoặc số đơn hàng không?",
+          "furigana": "ごかくにんありがとうございます。レシートまたはごちゅうもんばんごうはおてもとにありますか？",
+          "romaji": "Go-kakunin arigatō gozaimasu. Reshīto mata wa go-chūmon-bangō wa o-temoto ni arimasu ka?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "はい。注文番号はKT-2025-441です。",
+          "translation": "Có. Số đơn hàng là KT-2025-441.",
+          "furigana": "はい。ちゅうもんばんごうはKT-2025-441です。",
+          "romaji": "Hai. Chūmon-bangō wa KT-nī-zero-nī-go-yon-yon-ichi desu."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "ありがとうございます。新しい商品と交換させていただきます。",
+          "translation": "Cảm ơn. Chúng tôi sẽ đổi sản phẩm mới cho bạn.",
+          "furigana": "ありがとうございます。あたらしいしょうひんとこうかんさせていただきます。",
+          "romaji": "Arigatō gozaimasu. Atarashii shōhin to kōkan sasete itadakimasu."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "できれば返金していただきたいのですが。商品への信頼を失いましたので、購入代金を返していただきたいです。",
+          "translation": "Nếu được tôi muốn hoàn tiền. Tôi đã mất niềm tin vào sản phẩm và muốn lấy lại tiền.",
+          "furigana": "できればへんきんしていただきたいのですが。しょうひんへのしんらいをうしないましたので、こうにゅうだいきんをかえしていただきたいです。",
+          "romaji": "Dekireba henkin shite itadakitai no desu ga. Shōhin e no shinrai wo ushina imashita node, kōnyū daikin wo kaeshite itadakitai desu."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "ご不便をおかけして申し訳ございません。ただ、弊社の規定では不良品の場合は交換対応となっております。",
+          "translation": "Xin lỗi vì sự bất tiện. Tuy nhiên, chính sách của chúng tôi là đổi sản phẩm cho hàng lỗi.",
+          "furigana": "ごふべんをおかけしてもうしわけございません。ただ、へいしゃのきていではふりょうひんのばあいはこうかんたいおうとなっております。",
+          "romaji": "Go-fuben wo o-kake shite mōshiwake gozaimasen. Tada, heisha no kitei de wa furyō-hin no baai wa kōkan taiō to natte orimasu."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "お気持ちはわかります。ただ、お湯が漏れるのは安全上の問題ですので、消費者法に基づき返金を請求する権利があると思います。",
+          "translation": "Tôi hiểu. Nhưng ấm bị rò nước là vấn đề an toàn, nên tôi nghĩ mình có quyền yêu cầu hoàn tiền theo luật bảo vệ người tiêu dùng.",
+          "furigana": "おきもちはわかります。ただ、おゆがもれるのはあんぜんじょうのもんだいですので、しょうひしゃほうにもとづきへんきんをせいきゅうするけんりがあるとおもいます。",
+          "romaji": "O-kimochi wa wakarimasu. Tada, o-yu ga moreru no wa anzen-jō no mondai desu node, shōhisha-hō ni motozuki henkin wo seikyū suru kenri ga aru to omoimasu."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "少々お待ちください。上の者に確認いたします。",
+          "translation": "Xin chờ một chút. Tôi sẽ xác nhận với cấp trên.",
+          "furigana": "しょうしょうおまちください。うえのものにかくにんいたします。",
+          "romaji": "Shōshō o-machi kudasai. Ue no mono ni kakunin itashimasu."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "お待たせいたしました。全額ご返金させていただきます。元のお支払い方法に3〜5営業日以内に返金いたします。",
+          "translation": "Cảm ơn đã chờ. Chúng tôi sẽ hoàn tiền đầy đủ. Tiền sẽ được trả về phương thức thanh toán ban đầu trong 3–5 ngày làm việc.",
+          "furigana": "おまたせいたしました。ぜんがくごへんきんさせていただきます。もとのおしはらいほうほうにさんからごえいぎょうびいないにへんきんいたします。",
+          "romaji": "O-matase itashimashita. Zengaku go-henkin sasete itadakimasu. Moto no o-shiharai hōhō ni san kara go eigyō-bi inai ni henkin itashimasu."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "ありがとうございます。ご対応いただき助かりました。品質の問題として社内でご共有いただければ幸いです。",
+          "translation": "Cảm ơn. Tôi rất biết ơn sự hỗ trợ. Hy vọng vấn đề này được ghi nhận là vấn đề chất lượng nội bộ.",
+          "furigana": "ありがとうございます。ごたいおういただきたすかりました。ひんしつのもんだいとしてしゃないでごきょうゆういただければさいわいです。",
+          "romaji": "Arigatō gozaimasu. Go-taiō itadaki tasukarimashita. Hinshitsu no mondai to shite shanai de go-kyōyū itadakereba saiwai desu."
+        }
+      ]
+    }
+  }
+}

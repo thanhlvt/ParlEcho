@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000007",
+    "slug": "stressful-situations",
+    "category": "daily"
+  },
+  "sort_order": 3,
+  "icon": "✈️",
+  "level": "intermediate",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0007-000000000005",
+      "title": "Reporting Lost Luggage",
+      "description": "Report missing luggage at the airport. Describe the bag, stay calm under frustration, and get an assurance and timeline from the airline.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "Excuse me, I've been waiting at the carousel for forty minutes and my bag hasn't come out.",
+          "translation": "Xin lỗi, tôi đã chờ ở băng chuyền 40 phút và túi của tôi vẫn chưa ra."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "I'm very sorry about that. May I have your flight number and boarding pass?",
+          "translation": "Tôi rất xin lỗi. Tôi có thể xem số chuyến bay và thẻ lên máy bay của bạn không?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "It's VA-four-five-two from Singapore. Here's my boarding pass.",
+          "translation": "Chuyến VA-452 từ Singapore. Đây là thẻ lên máy bay của tôi."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "Thank you. Could you describe your luggage for me?",
+          "translation": "Cảm ơn. Bạn có thể mô tả hành lý của bạn không?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "It's a large hard-shell case, dark navy blue, with a yellow luggage tag on the handle.",
+          "translation": "Một vali cứng lớn, xanh navy đậm, có thẻ hành lý màu vàng trên tay cầm."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "Let me check our system... It looks like your bag may have missed the connecting flight in Singapore.",
+          "translation": "Để tôi kiểm tra hệ thống... Có vẻ như túi của bạn có thể đã bỏ lỡ chuyến bay kết nối ở Singapore."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "It's in Singapore? That's a big problem — I have a meeting tomorrow morning.",
+          "translation": "Nó ở Singapore à? Đó là vấn đề lớn — tôi có cuộc họp sáng mai."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "I sincerely apologize. We'll put your bag on the next available flight. It should arrive by tomorrow evening.",
+          "translation": "Tôi thành thật xin lỗi. Chúng tôi sẽ đưa túi của bạn lên chuyến bay gần nhất có thể. Nó sẽ đến vào tối mai."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "Tomorrow evening? I'll need some essentials for tonight and tomorrow. Can you help with that?",
+          "translation": "Tối mai? Tôi sẽ cần một số đồ thiết yếu cho tối nay và ngày mai. Bạn có thể hỗ trợ không?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "Yes — we can provide a toiletry kit and up to one hundred dollars for emergency clothing purchases.",
+          "translation": "Có — chúng tôi có thể cung cấp túi vệ sinh và đến 100 đô để mua quần áo khẩn cấp."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "Okay. And how will I know when the bag arrives?",
+          "translation": "Được. Tôi sẽ biết khi nào túi đến như thế nào?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "We'll call and text you. Here's your reference number: LH-three-seven-nine-two. I'm sorry again for the inconvenience.",
+          "translation": "Chúng tôi sẽ gọi và nhắn tin cho bạn. Đây là số tham chiếu: LH-3792. Tôi thành thật xin lỗi vì sự bất tiện."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0007-000000000006",
+      "title": "手荷物の紛失を報告する",
+      "description": "空港で手荷物が出てこない場合に、航空会社のスタッフに冷静に状況を説明し、対応を求める練習をします。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "すみません、40分ほど待っているのですが、私の荷物がターンテーブルから出てきません。",
+          "translation": "Xin lỗi, tôi đã chờ khoảng 40 phút nhưng hành lý của tôi vẫn chưa ra ở băng chuyền.",
+          "furigana": "すみません、よんじゅっぷんほどまっているのですが、わたしのにもつがターンテーブルからでてきません。",
+          "romaji": "Sumimasen, yonjuppun hodo matte iru no desu ga, watashi no nimotsu ga tān tēburu kara dete kimasen."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "大変申し訳ございません。便名と搭乗券をお持ちでしょうか？",
+          "translation": "Thành thật xin lỗi. Bạn có số chuyến bay và thẻ lên máy bay không?",
+          "furigana": "たいへんもうしわけございません。びんめいととうじょうけんをおもちでしょうか？",
+          "romaji": "Taihen mōshiwake gozaimasen. Bin-mei to tōjō-ken wo o-mochi deshō ka?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "シンガポール発のVA-452便です。搭乗券はこちらです。",
+          "translation": "Chuyến VA-452 từ Singapore. Đây là thẻ lên máy bay.",
+          "furigana": "シンガポールはつのVA-452びんです。とうじょうけんはこちらです。",
+          "romaji": "Shingapōru hatsu no VA-yon-go-nī bin desu. Tōjō-ken wa kochira desu."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "ありがとうございます。お荷物の特徴をお聞かせいただけますか？",
+          "translation": "Cảm ơn. Bạn có thể mô tả đặc điểm hành lý không?",
+          "furigana": "ありがとうございます。おにもつのとくちょうをおきかせいただけますか？",
+          "romaji": "Arigatō gozaimasu. O-nimotsu no tokuchō wo o-kikase itadakemasu ka?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "大きいハードケースで、濃いネイビーブルーです。ハンドルに黄色いタグがついています。",
+          "translation": "Vali cứng lớn, màu xanh navy đậm. Có thẻ màu vàng trên tay cầm.",
+          "furigana": "おおきいハードケースで、こいネイビーブルーです。ハンドルにきいろいタグがついています。",
+          "romaji": "Ōkii hādo kēsu de, koi neibī burū desu. Handoru ni kiiroi tagu ga tsuite imasu."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "ただいまシステムを確認いたします…シンガポールでの乗り継ぎ便に積み込まれなかった可能性がございます。",
+          "translation": "Tôi kiểm tra hệ thống ngay... Có khả năng hành lý không được xếp lên chuyến kết nối ở Singapore.",
+          "furigana": "ただいまシステムをかくにんいたします…シンガポールでののりつぎびんにつみこまれなかったかのうせいがございます。",
+          "romaji": "Tadaima shisutemu wo kakunin itashimasu... Shingapōru de no noritsugi-bin ni tsumikoma renakatta kanōsei ga gozaimasu."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "シンガポールにあるんですか？明日の朝に会議があるので、非常に困ります。",
+          "translation": "Nó ở Singapore à? Sáng mai tôi có cuộc họp, điều này rất bất tiện.",
+          "furigana": "シンガポールにあるんですか？あしたのあさにかいぎがあるので、ひじょうにこまります。",
+          "romaji": "Shingapōru ni aru n desu ka? Ashita no asa ni kaigi ga aru node, hijō ni komarimasu."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "誠に申し訳ございません。次の便でお届けできるよう手配いたします。明日の夜には届く予定です。",
+          "translation": "Thành thật xin lỗi. Chúng tôi sẽ sắp xếp giao qua chuyến bay gần nhất. Dự kiến đến vào tối mai.",
+          "furigana": "まことにもうしわけございません。つぎのびんでおとどけできるようてはいいたします。あしたのよるにはとどくよていです。",
+          "romaji": "Makoto ni mōshiwake gozaimasen. Tsugi no bin de o-todoke dekiru yō ni tehai itashimasu. Ashita no yoru ni wa todoku yotei desu."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "明日の夜ですか。今夜と明日に必要なものがあるのですが、サポートしていただけますか？",
+          "translation": "Tối mai à. Tôi cần một số đồ cho tối nay và ngày mai, bạn có thể hỗ trợ không?",
+          "furigana": "あしたのよるですか。こんやとあしたにひつようなものがあるのですが、サポートしていただけますか？",
+          "romaji": "Ashita no yoru desu ka. Konya to ashita ni hitsuyō na mono ga aru no desu ga, sapōto shite itadakemasu ka?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "はい。洗面用具セットと、緊急の衣類購入のために最大10,000円のバウチャーをご提供できます。",
+          "translation": "Có. Chúng tôi có thể cung cấp bộ đồ vệ sinh và phiếu mua quần áo khẩn cấp tối đa 10.000 yên.",
+          "furigana": "はい。せんめんようぐセットと、きんきゅうのいるいこうにゅうのためにさいだいいちまんえんのバウチャーをごていきょうできます。",
+          "romaji": "Hai. Senmen-yōgu setto to, kinkyū no irui kōnyū no tame ni saidai ichi-man-en no bauchā wo go-teikyō dekimasu."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "わかりました。荷物が届いたらどう知らせてもらえますか？",
+          "translation": "Hiểu rồi. Làm sao tôi biết khi hành lý đến?",
+          "furigana": "わかりました。にもつがとどいたらどうしらせてもらえますか？",
+          "romaji": "Wakarimashita. Nimotsu ga todaitara dō shirasete moraemasu ka?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "お電話とSMSでご連絡いたします。受付番号はLH-3792でございます。改めてご迷惑をおかけして大変申し訳ございません。",
+          "translation": "Chúng tôi sẽ gọi và nhắn tin cho bạn. Số tiếp nhận là LH-3792. Một lần nữa xin thành thật xin lỗi vì sự bất tiện.",
+          "furigana": "おでんわとSMSでごれんらくいたします。うけつけばんごうはLH-3792でございます。あらためてごめいわくをおかけしてたいへんもうしわけございません。",
+          "romaji": "O-denwa to SMS de go-renraku itashimasu. Uketsuke-bangō wa LH-san-nana-kyū-ni de gozaimasu. Aratamete go-meiwaku wo o-kake shite taihen mōshiwake gozaimasen."
+        }
+      ]
+    }
+  }
+}

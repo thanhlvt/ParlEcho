@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000008",
+    "slug": "social-connection",
+    "category": "social"
+  },
+  "sort_order": 4,
+  "icon": "👴",
+  "level": "intermediate",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0006-000000000015",
+      "title": "Chatting with an Older Person",
+      "description": "Have a respectful, warm conversation with someone older — listening actively, asking about their experience, and showing genuine interest.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "Excuse me, do you mind if I sit here? All the other benches are taken.",
+          "translation": "Xin lỗi, tôi ngồi đây được không? Tất cả ghế khác đều có người."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Please, go ahead. It's a lovely day to be out, isn't it?",
+          "translation": "Xin mời. Hôm nay thời tiết đẹp để ra ngoài nhỉ?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "It really is. I try to walk here every morning if the weather allows.",
+          "translation": "Đúng vậy. Tôi cố gắng đi bộ ở đây mỗi sáng nếu thời tiết cho phép."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "That's a wonderful habit. Have you lived in this area for long?",
+          "translation": "Đó là thói quen tuyệt vời. Bạn đã sống ở khu vực này lâu chưa?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "Over forty years now. This park has changed so much. It used to be much smaller.",
+          "translation": "Hơn 40 năm rồi. Công viên này đã thay đổi rất nhiều. Trước đây nhỏ hơn nhiều."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "Really? I'd love to hear what it was like. Do you remember when they expanded it?",
+          "translation": "Thật à? Tôi muốn nghe về nó trước đây. Bạn có nhớ khi họ mở rộng không?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "I do. They added the pond in the eighties. Before that it was just open grass.",
+          "translation": "Nhớ chứ. Họ thêm cái ao vào những năm 80. Trước đó chỉ là bãi cỏ trống."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "The pond is my favourite part! What do you think has changed for the better?",
+          "translation": "Cái ao là phần tôi thích nhất! Bạn nghĩ điều gì đã thay đổi tốt hơn?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "More green spaces, more paths. It's much more walkable now.",
+          "translation": "Nhiều không gian xanh hơn, nhiều đường đi hơn. Giờ đi bộ thoải mái hơn nhiều."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "I completely agree. It must be nice to have watched it grow over the years.",
+          "translation": "Tôi hoàn toàn đồng ý. Chắc thật thú vị khi được chứng kiến nó phát triển theo năm tháng."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "It is. You young people are lucky to have it this nice.",
+          "translation": "Đúng vậy. Các bạn trẻ may mắn có được công viên đẹp như vậy."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "Thanks to people like you who've looked after it over the years. Enjoy your morning walk.",
+          "translation": "Nhờ những người như bạn đã chăm sóc nó qua nhiều năm. Chúc bạn đi bộ buổi sáng vui nhé."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0006-000000000016",
+      "title": "目上の方との丁寧な会話",
+      "description": "お年寄りや目上の方と、丁寧で温かみのある日本語で会話する練習をします。基本的な敬語（です・ます調、尊敬語の入門）と、相手の話に関心を示す表現を身につけます。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "すみません、ここに座ってもよいですか？他のベンチが全部ふさがっていて。",
+          "translation": "Xin lỗi, tôi ngồi đây được không? Tất cả ghế khác đều có người.",
+          "furigana": "すみません、ここにすわってもよいですか？ほかのベンチがぜんぶふさがっていて。",
+          "romaji": "Sumimasen, koko ni suwatte mo yoi desu ka? Hoka no benchi ga zenbu fusagatte ite."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "どうぞ、お座りください。今日はお天気がよくて、気持ちいいですね。",
+          "translation": "Xin mời ngồi. Hôm nay trời đẹp, dễ chịu nhỉ.",
+          "furigana": "どうぞ、おすわりください。きょうはおてんきがよくて、きもちいいですね。",
+          "romaji": "Dōzo, o-suwari kudasai. Kyō wa o-tenki ga yokute, kimochi ii desu ne."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "そうですね。お天気がよければ、毎朝ここを歩くようにしているんですよ。",
+          "translation": "Đúng vậy. Nếu trời đẹp, tôi cố gắng đi bộ ở đây mỗi sáng.",
+          "furigana": "そうですね。おてんきがよければ、まいあさここをあるくようにしているんですよ。",
+          "romaji": "Sō desu ne. O-tenki ga yokereba, mai-asa koko wo aruku yō ni shite iru n desu yo."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "素晴らしい習慣ですね。この辺りには長くお住まいなのですか？",
+          "translation": "Thói quen tuyệt vời. Bạn đã sống ở khu vực này lâu chưa?",
+          "furigana": "すばらしいしゅうかんですね。このあたりにはながくおすまいなのですか？",
+          "romaji": "Subarashii shūkan desu ne. Kono atari ni wa nagaku o-sumai na no desu ka?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "もう40年以上になります。この公園も随分変わりましたよ。昔はもっと小さかったんです。",
+          "translation": "Hơn 40 năm rồi. Công viên này cũng đã thay đổi nhiều lắm. Ngày xưa nhỏ hơn nhiều.",
+          "furigana": "もうよんじゅうねんいじょうになります。このこうえんもずいぶんかわりましたよ。むかしはもっとちいさかったんです。",
+          "romaji": "Mō yonjūnen ijō ni narimasu. Kono kōen mo zuibun kawarimashita yo. Mukashi wa motto chiisakatta n desu."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "そうなんですか！昔のお話を聞かせていただけますか？池ができたのはいつ頃ですか？",
+          "translation": "Thật à! Bạn có thể kể chuyện ngày xưa không? Cái ao được xây dựng khi nào?",
+          "furigana": "そうなんですか！むかしのおはなしをきかせていただけますか？いけができたのはいつごろですか？",
+          "romaji": "Sō nan desu ka! Mukashi no o-hanashi wo kikasete itadakemasu ka? Ike ga dekita no wa itsu goro desu ka?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "池は昭和の終わり頃にできたんですよ。それまでは広い草地だったんです。",
+          "translation": "Cái ao được làm vào cuối thời Shōwa. Trước đó chỉ là bãi cỏ rộng.",
+          "furigana": "いけはしょうわのおわりごろにできたんですよ。それまではひろいくさちだったんです。",
+          "romaji": "Ike wa Shōwa no owari goro ni dekita n desu yo. Sore made wa hiroi kusachi datta n desu."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "池が一番好きな場所です！変わってよかったと思うところはどこですか？",
+          "translation": "Cái ao là nơi tôi thích nhất! Bạn nghĩ điều gì thay đổi là tốt nhất?",
+          "furigana": "いけがいちばんすきなばしょです！かわってよかったとおもうところはどこですか？",
+          "romaji": "Ike ga ichiban suki na basho desu! Kawatte yokatta to omou tokoro wa doko desu ka?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "緑が増えて、散歩道もたくさんできました。今の方がずっと歩きやすいですね。",
+          "translation": "Xanh hơn và nhiều đường đi hơn. Bây giờ đi bộ thoải mái hơn nhiều.",
+          "furigana": "みどりがふえて、さんぽみちもたくさんできました。いまのほうがずっとあるきやすいですね。",
+          "romaji": "Midori ga fuete, sanpomichi mo takusan dekimashita. Ima no hō ga zutto arukiyasui desu ne."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "本当にそうですね。長年ここの変化を見守ってこられたのは、素敵なことだと思います。",
+          "translation": "Thật vậy. Tôi nghĩ thật tuyệt khi được chứng kiến sự thay đổi nơi này qua nhiều năm.",
+          "furigana": "ほんとうにそうですね。ながねんここのへんかをみまもってこられたのは、すてきなことだとおもいます。",
+          "romaji": "Hontō ni sō desu ne. Nagannen koko no henka wo mimamotte korareta no wa, suteki na koto da to omoimasu."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "ありがとう。あなたたち若い人がこんなに良い公園を使えるのは、うれしいですよ。",
+          "translation": "Cảm ơn. Thật vui khi các bạn trẻ có thể tận hưởng công viên đẹp như vậy.",
+          "furigana": "ありがとう。あなたたちわかいひとがこんなによいこうえんをつかえるのは、うれしいですよ。",
+          "romaji": "Arigatō. Anata-tachi wakai hito ga konna ni yoi kōen wo tsukaeru no wa, ureshii desu yo."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "長年大切にしてくださった皆さんのおかげです。どうぞ、朝の散歩をお楽しみください。",
+          "translation": "Đó là nhờ những người như bạn đã gìn giữ nó bao năm nay. Chúc bạn thưởng thức buổi đi bộ sáng.",
+          "furigana": "ながねんたいせつにしてくださったみなさんのおかげです。どうぞ、あさのさんぽをおたのしみください。",
+          "romaji": "Nagannen taisetsu ni shite kudasatta mina-san no okage desu. Dōzo, asa no sanpo wo o-tanoshimi kudasai."
+        }
+      ]
+    }
+  }
+}

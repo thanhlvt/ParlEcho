@@ -35,16 +35,16 @@ function loadEnvFile(path) {
 loadEnvFile(join(__dirname, '.env.scripts'));
 loadEnvFile(join(__dirname, '..', '.env'));
 
-const SUPABASE_URL  = process.env.EXPO_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-const SERVICE_KEY   = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
-const GEMINI_KEY    = process.env.GOOGLE_GENAI_API_KEY ?? '';
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+const GEMINI_KEY = process.env.GOOGLE_GENAI_API_KEY ?? '';
 
 if (!SUPABASE_URL || !SERVICE_KEY || !GEMINI_KEY) {
   console.error(
     '\nMissing required env vars:\n' +
-    (SUPABASE_URL  ? '' : '  EXPO_PUBLIC_SUPABASE_URL (or SUPABASE_URL)\n') +
-    (SERVICE_KEY   ? '' : '  SUPABASE_SERVICE_ROLE_KEY\n') +
-    (GEMINI_KEY    ? '' : '  GOOGLE_GENAI_API_KEY\n') +
+    (SUPABASE_URL ? '' : '  EXPO_PUBLIC_SUPABASE_URL (or SUPABASE_URL)\n') +
+    (SERVICE_KEY ? '' : '  SUPABASE_SERVICE_ROLE_KEY\n') +
+    (GEMINI_KEY ? '' : '  GOOGLE_GENAI_API_KEY\n') +
     '\nCreate .env.scripts with these values and re-run.\n',
   );
   process.exit(1);
@@ -53,23 +53,24 @@ if (!SUPABASE_URL || !SERVICE_KEY || !GEMINI_KEY) {
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
 // ── Config ────────────────────────────────────────────────────────────────
-const TTS_MODEL   = 'gemini-3.1-flash-tts-preview';
-const VOICE       = 'Kore';
-const BUCKET      = 'tts';
-const DELAY_MS    = 600;   // rate-limit: ~100 RPM free tier → ~1 req/600ms
+//const TTS_MODEL   = 'gemini-3.1-flash-tts-preview';
+const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+const VOICE = 'Kore';
+const BUCKET = 'tts';
+const DELAY_MS = 600;   // rate-limit: ~100 RPM free tier → ~1 req/600ms
 
 // ── WAV builder (24 kHz, 16-bit, mono) ───────────────────────────────────
 function buildWav(pcm) {
   const sampleRate = 24000, ch = 1, bits = 16;
   const byteRate = sampleRate * ch * (bits / 8);
   const buf = Buffer.alloc(44 + pcm.length);
-  buf.write('RIFF',  0);  buf.writeUInt32LE(36 + pcm.length, 4);
-  buf.write('WAVE',  8);  buf.write('fmt ', 12);
-  buf.writeUInt32LE(16, 16);  buf.writeUInt16LE(1,         20);  // PCM
-  buf.writeUInt16LE(ch, 22);  buf.writeUInt32LE(sampleRate,24);
-  buf.writeUInt32LE(byteRate, 28);  buf.writeUInt16LE(ch * bits / 8, 32);
+  buf.write('RIFF', 0); buf.writeUInt32LE(36 + pcm.length, 4);
+  buf.write('WAVE', 8); buf.write('fmt ', 12);
+  buf.writeUInt32LE(16, 16); buf.writeUInt16LE(1, 20);  // PCM
+  buf.writeUInt16LE(ch, 22); buf.writeUInt32LE(sampleRate, 24);
+  buf.writeUInt32LE(byteRate, 28); buf.writeUInt16LE(ch * bits / 8, 32);
   buf.writeUInt16LE(bits, 34);
-  buf.write('data', 36);  buf.writeUInt32LE(pcm.length, 40);
+  buf.write('data', 36); buf.writeUInt32LE(pcm.length, 40);
   pcm.copy(buf, 44);
   return buf;
 }

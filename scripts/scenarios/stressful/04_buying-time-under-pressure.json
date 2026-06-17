@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000007",
+    "slug": "stressful-situations",
+    "category": "daily"
+  },
+  "sort_order": 4,
+  "icon": "🧘",
+  "level": "intermediate",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0007-000000000007",
+      "title": "Staying Calm Under Pressure",
+      "description": "Practice slowing down when put on the spot — asking for thinking time, requesting clarification, and composing yourself when questions come rapidly.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "So, Minh — what's your biggest weakness? And how have you addressed it?",
+          "translation": "Vậy Minh — điểm yếu lớn nhất của bạn là gì? Và bạn đã giải quyết nó như thế nào?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "That's a great question. Could I take a moment to think before I answer?",
+          "translation": "Đó là câu hỏi hay. Tôi có thể suy nghĩ một chút trước khi trả lời không?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "Of course, take your time.",
+          "translation": "Tất nhiên, cứ từ từ."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "Thank you. I'd say I've sometimes struggled with delegating. I tend to want to handle things myself.",
+          "translation": "Cảm ơn. Tôi nghĩ tôi đôi khi gặp khó khăn với việc giao việc. Tôi có xu hướng muốn tự xử lý mọi thứ."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "How has that affected your team?",
+          "translation": "Điều đó ảnh hưởng đến nhóm của bạn như thế nào?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "Sorry — could you clarify what you mean? Are you asking about team dynamics generally, or a specific incident?",
+          "translation": "Xin lỗi — bạn có thể làm rõ không? Bạn hỏi về động lực nhóm nói chung, hay một sự kiện cụ thể?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "I mean, did it slow things down for the team?",
+          "translation": "Ý tôi là, nó có làm chậm tiến độ nhóm không?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "In the early stages of my career, yes. Once I recognised it, I actively worked on changing that.",
+          "translation": "Trong giai đoạn đầu sự nghiệp, có. Khi nhận ra, tôi đã tích cực thay đổi."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "What specifically did you do about it?",
+          "translation": "Cụ thể bạn đã làm gì để thay đổi?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "Let me think for a second — I want to give you an accurate answer. I started weekly check-ins with my team and practised giving clear handoffs.",
+          "translation": "Cho tôi nghĩ một chút — tôi muốn đưa ra câu trả lời chính xác. Tôi bắt đầu họp kiểm tra hàng tuần với nhóm và tập giao việc rõ ràng hơn."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "And did that make a difference?",
+          "translation": "Và điều đó có tạo ra sự khác biệt không?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "Significantly. In my last role, team output increased by around twenty percent after I made those changes. It was a real turning point for me.",
+          "translation": "Đáng kể. Ở công việc trước, năng suất nhóm tăng khoảng 20% sau khi tôi thực hiện những thay đổi đó. Đó là bước ngoặt thực sự với tôi."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0007-000000000008",
+      "title": "プレッシャー下で冷静に時間を求める",
+      "description": "突然の質問や圧力がかかる場面で、焦らずに考える時間を求め、自分のペースで話す練習をします。「少し考えてもよいですか？」などの表現を身につけます。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "ミンさん、あなたの一番の弱点は何ですか？そして、それをどう改善してきましたか？",
+          "translation": "Minh-san, điểm yếu lớn nhất của bạn là gì? Và bạn đã cải thiện nó như thế nào?",
+          "furigana": "ミンさん、あなたのいちばんのじゃくてんはなんですか？そして、それをどうかいぜんしてきましたか？",
+          "romaji": "Min-san, anata no ichiban no jakuten wa nan desu ka? Soshite, sore wo dō kaizen shite kimashita ka?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "いい質問ですね。お答えする前に少し考える時間をいただいてもよいでしょうか？",
+          "translation": "Câu hỏi hay. Tôi có thể xin ít thời gian suy nghĩ trước khi trả lời không?",
+          "furigana": "いいしつもんですね。おこたえするまえにすこしかんがえるじかんをいただいてもよいでしょうか？",
+          "romaji": "Ii shitsumon desu ne. O-kotae suru mae ni sukoshi kangaeru jikan wo itadaite mo yoi deshō ka?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "もちろんです。どうぞ。",
+          "translation": "Tất nhiên. Cứ tự nhiên.",
+          "furigana": "もちろんです。どうぞ。",
+          "romaji": "Mochiron desu. Dōzo."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "ありがとうございます。仕事を人に任せることが苦手だったと思います。なんでも自分でやってしまう傾向がありました。",
+          "translation": "Cảm ơn. Tôi nghĩ tôi đã gặp khó khăn với việc giao việc cho người khác. Tôi có xu hướng muốn tự làm mọi thứ.",
+          "furigana": "ありがとうございます。しごとをひとにまかせることがにがてだったとおもいます。なんでもじぶんでやってしまうけいこうがありました。",
+          "romaji": "Arigatō gozaimasu. Shigoto wo hito ni makaseru koto ga nigate datta to omoimasu. Nandemo jibun de yatte shimau keikō ga arimashita."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "それはチームにどのような影響を与えましたか？",
+          "translation": "Điều đó ảnh hưởng đến nhóm như thế nào?",
+          "furigana": "それはチームにどのようなえいきょうをあたえましたか？",
+          "romaji": "Sore wa chīmu ni dono yō na eikyō wo ataemashita ka?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "すみません、少し確認させてください。過去のチーム全体のことをお聞きですか、それとも具体的なエピソードでしょうか？",
+          "translation": "Xin lỗi, cho tôi xác nhận một chút. Bạn hỏi về toàn bộ nhóm trong quá khứ, hay một sự kiện cụ thể?",
+          "furigana": "すみません、すこしかくにんさせてください。かこのチームぜんたいのことをおききですか、それともぐたいてきなエピソードでしょうか？",
+          "romaji": "Sumimasen, sukoshi kakunin sasete kudasai. Kako no chīmu zentai no koto wo o-kiki desu ka, soretomo gutaiteki na episōdo deshō ka?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "チームの仕事が遅くなったりしましたか？",
+          "translation": "Nó có làm chậm tiến độ nhóm không?",
+          "furigana": "チームのしごとがおそくなったりしましたか？",
+          "romaji": "Chīmu no shigoto ga osoku nattari shimashita ka?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "キャリアの初期段階では、そうなったことがあります。自覚してからは、積極的に改善するよう努めてきました。",
+          "translation": "Trong giai đoạn đầu sự nghiệp, có. Khi nhận ra, tôi đã tích cực cố gắng cải thiện.",
+          "furigana": "キャリアのしょきだんかいでは、そうなったことがあります。じかくしてからは、せっきょくてきにかいぜんするようつとめてきました。",
+          "romaji": "Kyaria no shoki dankai de wa, sō natta koto ga arimasu. Jikaku shite kara wa, sekkyoku-teki ni kaizen suru yō tsutomete kimashita."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "具体的にはどのようなことをしましたか？",
+          "translation": "Cụ thể bạn đã làm gì?",
+          "furigana": "ぐたいてきにはどのようなことをしましたか？",
+          "romaji": "Gutaiteki ni wa dono yō na koto wo shimashita ka?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "正確にお伝えしたいので、少し考えてもよいでしょうか。チームとの週次確認を始め、仕事の引き継ぎを明確にするよう意識しました。",
+          "translation": "Tôi muốn trả lời chính xác, cho tôi nghĩ thêm chút nhé. Tôi bắt đầu kiểm tra hàng tuần với nhóm và chú ý làm rõ việc bàn giao công việc.",
+          "furigana": "せいかくにおつたえしたいので、すこしかんがえてもよいでしょうか。チームとのしゅうじかくにんをはじめ、しごとのひきつぎをめいかくにするよういしきしました。",
+          "romaji": "Seikaku ni o-tsutae shitai node, sukoshi kangaete mo yoi deshō ka. Chīmu to no shū-ji kakunin wo hajime, shigoto no hikitsugi wo meikaku ni suru yō ishiki shimashita."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "それで改善されましたか？",
+          "translation": "Điều đó có cải thiện không?",
+          "furigana": "それでかいぜんされましたか？",
+          "romaji": "Sore de kaizen saremashita ka?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "はい、大きく改善されました。前職では、その変化の後、チームのアウトプットが約20%向上しました。私にとって大きな転機になりました。",
+          "translation": "Vâng, cải thiện đáng kể. Ở công việc trước, sau những thay đổi đó, năng suất nhóm tăng khoảng 20%. Đó là bước ngoặt lớn với tôi.",
+          "furigana": "はい、おおきくかいぜんされました。ぜんしょくでは、そのへんかのあと、チームのアウトプットがやくにじゅっぱーせんとこうじょうしました。わたしにとっておおきなてんきになりました。",
+          "romaji": "Hai, ōkiku kaizen saremashita. Zenshoku de wa, sono henka no ato, chīmu no autoputto ga yaku ni-jū-pāsento kōjō shimashita. Watashi ni totte ōkina tenki ni narimashita."
+        }
+      ]
+    }
+  }
+}

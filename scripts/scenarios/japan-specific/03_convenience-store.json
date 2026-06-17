@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000009",
+    "slug": "japan-specific",
+    "category": "culture"
+  },
+  "sort_order": 3,
+  "icon": "🏪",
+  "level": "beginner",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0009-000000000005",
+      "title": "At the Convenience Store",
+      "description": "Navigate a Japanese convenience store (konbini) interaction — paying, asking for heating, requesting a bag, and handling a loyalty card. Based on Family Mart / 7-Eleven scenarios.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "いらっしゃいませ！",
+          "translation": "Chào mừng quý khách!"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Hi. Could you heat this up for me, please? [holding a bento box]",
+          "translation": "Xin chào. Bạn có thể hâm nóng cái này cho tôi không? [cầm hộp cơm bento]"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "Of course. Will that be all?",
+          "translation": "Tất nhiên. Bạn còn muốn thêm gì không?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "I also have this coffee and this sandwich.",
+          "translation": "Tôi cũng có cái cà phê và cái bánh mì sandwich này."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "Do you have a point card?",
+          "translation": "Bạn có thẻ tích điểm không?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "Yes, I have a T-Point card. Here you go.",
+          "translation": "Có, tôi có thẻ T-Point. Đây ạ."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "Thank you. Your total comes to eight hundred and twenty yen.",
+          "translation": "Cảm ơn. Tổng cộng là 820 yên."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "I'll pay by IC card — is that okay?",
+          "translation": "Tôi sẽ thanh toán bằng thẻ IC — được không?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "Of course. Please hold it over the reader.",
+          "translation": "Tất nhiên. Xin đặt thẻ lên đầu đọc."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "Do I need a bag for this?",
+          "translation": "Tôi có cần túi không?"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "Plastic bags are three yen. Would you like one?",
+          "translation": "Túi nhựa là 3 yên. Bạn có muốn không?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "Yes please — just one. Thank you for heating the bento too.",
+          "translation": "Có ạ — một cái thôi. Cảm ơn bạn đã hâm nóng hộp cơm."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0009-000000000006",
+      "title": "コンビニでの会話",
+      "description": "ファミリーマートや7-イレブンなどのコンビニでよく使う表現を練習します。お弁当の温め依頼、ポイントカード、ICカード払い、袋の購入など、実際の場面を想定した会話です。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "いらっしゃいませ！",
+          "translation": "Chào mừng quý khách!",
+          "furigana": "いらっしゃいませ！",
+          "romaji": "Irasshaimase!"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "すみません、これを温めてもらえますか？[お弁当を差し出す]",
+          "translation": "Xin lỗi, bạn có thể hâm nóng cái này không? [đưa hộp cơm bento]",
+          "furigana": "すみません、これをあたためてもらえますか？",
+          "romaji": "Sumimasen, kore wo atatamete moraemasu ka?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "はい、かしこまりました。以上でよろしいですか？",
+          "translation": "Vâng, được ạ. Bạn còn muốn gì thêm không?",
+          "furigana": "はい、かしこまりました。いじょうでよろしいですか？",
+          "romaji": "Hai, kashikomarimashita. Ijō de yoroshii desu ka?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "このコーヒーとサンドイッチも一緒にお願いします。",
+          "translation": "Cái cà phê này và bánh mì sandwich cũng cùng nhé.",
+          "furigana": "このコーヒーとサンドイッチもいっしょにおねがいします。",
+          "romaji": "Kono kōhī to sandoicchi mo issho ni onegai shimasu."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "ポイントカードはお持ちですか？",
+          "translation": "Bạn có thẻ tích điểm không?",
+          "furigana": "ポイントカードはおもちですか？",
+          "romaji": "Pointo kādo wa o-mochi desu ka?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "はい、Tポイントカードを持っています。どうぞ。",
+          "translation": "Có, tôi có thẻ T-Point. Đây ạ.",
+          "furigana": "はい、Tポイントカードをもっています。どうぞ。",
+          "romaji": "Hai, T-pointo kādo wo motte imasu. Dōzo."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "ありがとうございます。お会計は820円になります。",
+          "translation": "Cảm ơn. Tổng cộng là 820 yên.",
+          "furigana": "ありがとうございます。おかいけいははっぴゃくにじゅうえんになります。",
+          "romaji": "Arigatō gozaimasu. O-kaikei wa happyaku nijū en ni narimasu."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "ICカードで払えますか？",
+          "translation": "Tôi có thể thanh toán bằng thẻ IC không?",
+          "furigana": "ICカードではらえますか？",
+          "romaji": "Aishipi kādo de haraemasu ka?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "はい、こちらのリーダーにタッチしてください。",
+          "translation": "Được, xin đặt thẻ lên đầu đọc này.",
+          "furigana": "はい、こちらのリーダーにタッチしてください。",
+          "romaji": "Hai, kochira no rīdā ni tatchi shite kudasai."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "袋はもらえますか？",
+          "translation": "Tôi có thể lấy túi không?",
+          "furigana": "ふくろはもらえますか？",
+          "romaji": "Fukuro wa moraemasu ka?"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "レジ袋は3円になりますが、いかがでしょうか？",
+          "translation": "Túi nhựa là 3 yên, bạn có muốn không?",
+          "furigana": "レジぶくろはさんえんになりますが、いかがでしょうか？",
+          "romaji": "Reji-bukuro wa san-en ni narimasu ga, ikaga deshō ka?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "はい、一枚ください。お弁当も温めていただいてありがとうございます。",
+          "translation": "Có, cho tôi một cái. Cảm ơn đã hâm nóng hộp cơm.",
+          "furigana": "はい、いちまいください。おべんとうもあたためていただいてありがとうございます。",
+          "romaji": "Hai, ichi-mai kudasai. O-bentō mo atatamete itadaite arigatō gozaimasu."
+        }
+      ]
+    }
+  }
+}

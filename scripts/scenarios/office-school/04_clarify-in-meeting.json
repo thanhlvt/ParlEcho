@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000006",
+    "slug": "office-school",
+    "category": "work"
+  },
+  "sort_order": 4,
+  "icon": "🙋",
+  "level": "beginner",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0006-000000000007",
+      "title": "Asking for Clarification in a Meeting",
+      "description": "Politely ask someone to repeat or clarify what they said — one of the most important real-world skills for any professional or academic setting.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "...so the revised deadline will be the fourteenth, which ties into the stakeholder review on the fifteenth. Any questions?",
+          "translation": "...vì vậy hạn chót sửa đổi sẽ là ngày 14, liên kết với đợt review từ stakeholder ngày 15. Có câu hỏi gì không?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Sorry, could I just check — did you say the fourteenth?",
+          "translation": "Xin lỗi, cho tôi xác nhận — bạn nói ngày 14 phải không?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "That's right — the fourteenth of July.",
+          "translation": "Đúng rồi — ngày 14 tháng 7."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "Got it. And could you say that again about the stakeholder review? I didn't quite follow.",
+          "translation": "Hiểu rồi. Và bạn có thể nói lại về đợt review từ stakeholder không? Tôi không bắt kịp."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "Sure. The stakeholder review is the day after — the fifteenth. Everyone needs to submit before midnight on the fourteenth.",
+          "translation": "Tất nhiên. Review từ stakeholder là ngày hôm sau — ngày 15. Mọi người cần nộp trước nửa đêm ngày 14."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "Perfect. And you mentioned a revised budget figure — could you repeat that number?",
+          "translation": "Tuyệt. Và bạn có nhắc đến con số ngân sách sửa đổi — bạn có thể nhắc lại không?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "The budget has been revised to eighty-five thousand — up from seventy-five.",
+          "translation": "Ngân sách được sửa lên 85.000 — tăng từ 75.000."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "Eighty-five thousand. Got it. I just wanted to make sure I have the right number in my notes.",
+          "translation": "Tám mươi lăm nghìn. Hiểu rồi. Tôi chỉ muốn chắc chắn ghi đúng số."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "No problem at all. Does anyone else need anything clarified?",
+          "translation": "Không vấn đề gì. Còn ai cần làm rõ điều gì không?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "Actually, I didn't catch who is responsible for the final sign-off. Could you clarify?",
+          "translation": "À, tôi không nghe rõ ai chịu trách nhiệm phê duyệt cuối. Bạn có thể làm rõ không?"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "That'll be Sarah — she's the project lead. All final approvals go through her.",
+          "translation": "Đó là Sarah — cô ấy là trưởng dự án. Tất cả phê duyệt cuối đều qua cô ấy."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "Great. Thanks for your patience — I think I have everything I need now.",
+          "translation": "Tuyệt. Cảm ơn sự kiên nhẫn của bạn — tôi nghĩ tôi đã có đủ thông tin rồi."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0006-000000000008",
+      "title": "会議や授業で聞き返す・確認する",
+      "description": "会議や授業で聞き取れなかったときに、相手に失礼なく聞き返す表現を練習します。「もう一度お願いできますか？」「確認させてください」など、ビジネスで必須のフレーズです。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "…ということで、修正後の締め切りは14日になります。翌15日に関係者レビューがあります。ご質問はありますか？",
+          "translation": "...vì vậy hạn chót sửa đổi là ngày 14. Ngày 15 có đợt review từ stakeholder. Có câu hỏi gì không?",
+          "furigana": "ということで、しゅうせいごのしめきりはじゅうよっかになります。よくじゅうごにちにかんけいしゃレビューがあります。ごしつもんはありますか？",
+          "romaji": "To iu koto de, shūsei-go no shimekiri wa jū-yokka ni narimasu. Yoku jū-go-nichi ni kankeisha rebyū ga arimasu. Go-shitsumon wa arimasu ka?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "あの、確認させていただけますか？14日とおっしゃいましたか？",
+          "translation": "Xin lỗi, cho tôi xác nhận — bạn nói ngày 14 đúng không?",
+          "furigana": "あの、かくにんさせていただけますか？じゅうよっかとおっしゃいましたか？",
+          "romaji": "Ano, kakunin sasete itadakemasu ka? Jū-yokka to osshaimashita ka?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "はい、7月14日です。",
+          "translation": "Đúng, ngày 14 tháng 7.",
+          "furigana": "はい、しちがつじゅうよっかです。",
+          "romaji": "Hai, shichi-gatsu jū-yokka desu."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "ありがとうございます。関係者レビューについて、もう一度おっしゃっていただけますか？少し聞き取れなかったので。",
+          "translation": "Cảm ơn. Về đợt review từ stakeholder, bạn có thể nói lại không? Tôi không nghe rõ lắm.",
+          "furigana": "ありがとうございます。かんけいしゃレビューについて、もういちどおっしゃっていただけますか？すこしききとれなかったので。",
+          "romaji": "Arigatō gozaimasu. Kankeisha rebyū ni tsuite, mō ichi-do osshatte itadakemasu ka? Sukoshi kikitorenakatta node."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "はい。関係者レビューは翌日の15日です。14日の深夜0時までに全員提出する必要があります。",
+          "translation": "Vâng. Review từ stakeholder là ngày 15 hôm sau. Mọi người phải nộp trước nửa đêm ngày 14.",
+          "furigana": "はい。かんけいしゃレビューはよくじつのじゅうごにちです。じゅうよっかのしんやれいじまでにぜんいんていしゅつするひつようがあります。",
+          "romaji": "Hai. Kankeisha rebyū wa yokujitsu no jū-go-nichi desu. Jū-yokka no shin'ya rei-ji made ni zenin teishutsu suru hitsuyō ga arimasu."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "わかりました。予算の修正金額についてもおっしゃっていましたが、もう一度お願いできますか？",
+          "translation": "Hiểu rồi. Bạn cũng có nhắc đến con số ngân sách sửa đổi, bạn có thể nhắc lại không?",
+          "furigana": "わかりました。よさんのしゅうせいきんがくについてもおっしゃっていましたが、もういちどおねがいできますか？",
+          "romaji": "Wakarimashita. Yosan no shūsei kingaku ni tsuite mo osshatte imashita ga, mō ichi-do onegai dekimasu ka?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "もちろんです。予算は75,000ドルから85,000ドルに修正されました。",
+          "translation": "Tất nhiên. Ngân sách được sửa từ 75.000 lên 85.000 đô.",
+          "furigana": "もちろんです。よさんはなんまんごせんドルからはちまんごせんドルにしゅうせいされました。",
+          "romaji": "Mochiron desu. Yosan wa nana-man go-sen doru kara hachi-man go-sen doru ni shūsei saremashita."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "85,000ドルですね。ノートに正確に記録したいので、確認させていただきました。",
+          "translation": "85.000 đô. Tôi muốn ghi chính xác vào ghi chú nên xác nhận lại.",
+          "furigana": "はちまんごせんドルですね。ノートにせいかくにきろくしたいので、かくにんさせていただきました。",
+          "romaji": "Hachi-man go-sen doru desu ne. Nōto ni seikaku ni kiroku shitai node, kakunin sasete itadakimashita."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "全く問題ありません。他に確認が必要な方はいらっしゃいますか？",
+          "translation": "Không vấn đề gì. Còn ai cần làm rõ điều gì không?",
+          "furigana": "まったくもんだいありません。ほかにかくにんがひつようなかたはいらっしゃいますか？",
+          "romaji": "Mattaku mondai arimasen. Hoka ni kakunin ga hitsuyō na kata wa irasshaimasu ka?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "もう一点、最終承認を誰が担当するのか聞き取れませんでした。教えていただけますか？",
+          "translation": "Thêm một điểm nữa, tôi không nghe rõ ai chịu trách nhiệm phê duyệt cuối. Bạn có thể cho biết không?",
+          "furigana": "もういってん、さいしゅうしょうにんをだれがたんとうするのかききとれませんでした。おしえていただけますか？",
+          "romaji": "Mō ichi-ten, saishū shōnin wo dare ga tantō suru no ka kikitoremasen deshita. Oshiete itadakemasu ka?"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "サラが担当します。彼女がプロジェクトリードです。最終承認はすべて彼女を通してください。",
+          "translation": "Sarah phụ trách. Cô ấy là trưởng dự án. Tất cả phê duyệt cuối đều qua cô ấy.",
+          "furigana": "サラがたんとうします。かのじょがプロジェクトリードです。さいしゅうしょうにんはすべてかのじょをとおしてください。",
+          "romaji": "Sara ga tantō shimasu. Kanojo ga purojekuto rīdo desu. Saishū shōnin wa subete kanojo wo tōshite kudasai."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "わかりました。丁寧に教えていただき、ありがとうございます。これで全部確認できました。",
+          "translation": "Hiểu rồi. Cảm ơn bạn đã giải thích tỉ mỉ. Tôi đã xác nhận được tất cả rồi.",
+          "furigana": "わかりました。ていねいにおしえていただき、ありがとうございます。これでぜんぶかくにんできました。",
+          "romaji": "Wakarimashita. Teinei ni oshiete itadaki, arigatō gozaimasu. Kore de zenbu kakunin dekimashita."
+        }
+      ]
+    }
+  }
+}

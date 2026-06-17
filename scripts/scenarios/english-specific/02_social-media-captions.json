@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000010",
+    "slug": "english-specific",
+    "category": "culture"
+  },
+  "sort_order": 2,
+  "icon": "📱",
+  "level": "beginner",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0010-000000000003",
+      "title": "Writing Captions and Comments",
+      "description": "Practise informal English for social media — writing punchy captions, leaving natural comments, replying to reactions, and understanding common internet tones.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "I just posted a photo of my hike. What kind of caption do you think works well?",
+          "translation": "Tôi vừa đăng ảnh đi bộ leo núi. Bạn nghĩ loại chú thích nào hiệu quả?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Something short and punchy works best — like 'Legs aching, heart full' or 'Peak happiness up here.'",
+          "translation": "Ngắn gọn và ấn tượng là tốt nhất — như 'Chân đau, lòng no' hoặc 'Hạnh phúc đỉnh cao ở đây.'"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "Oh I like that. What about hashtags — should I add a lot?",
+          "translation": "Ồ tôi thích vậy. Còn hashtag — tôi có nên thêm nhiều không?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "Three to five targeted ones is usually better than twenty generic ones. Like #hikinglife, #weekendescape.",
+          "translation": "Ba đến năm hashtag phù hợp thường tốt hơn hai mươi cái chung chung. Như #hikinglife, #weekendescape."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "Got it. Now someone commented 'This is giving me wanderlust!' — what does that mean?",
+          "translation": "Hiểu rồi. Bây giờ có người bình luận 'This is giving me wanderlust!' — điều đó có nghĩa gì?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "It means your photo is making them want to travel. 'Giving me X' is a super trendy phrase right now.",
+          "translation": "Nghĩa là ảnh của bạn khiến họ muốn đi du lịch. 'Giving me X' là cụm từ rất thịnh hành hiện nay."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "What's a good reply to that?",
+          "translation": "Phản hồi tốt cho điều đó là gì?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "Something like 'Come with me next time!' or 'The trail is calling your name!' — keep it warm and inviting.",
+          "translation": "Điều gì đó như 'Lần sau cùng đi với tôi nhé!' hoặc 'Con đường đang gọi tên bạn!' — giữ nó ấm áp và mời gọi."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "And someone said 'no cap this looks amazing' — what's 'no cap'?",
+          "translation": "Và ai đó nói 'no cap this looks amazing' — 'no cap' nghĩa là gì?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "'No cap' means 'no lie' or 'for real'. So they're saying it genuinely looks amazing — not sarcastically.",
+          "translation": "'No cap' nghĩa là 'thật đấy' hoặc 'thực sự'. Vậy họ đang nói nó thật sự trông tuyệt vời — không mỉa mai."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "Okay! I think I need to learn more of this internet English.",
+          "translation": "Ồ! Tôi nghĩ tôi cần học thêm tiếng Anh internet này."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "It changes fast! But the basics — short, positive, personal — stay the same. Just write how you actually feel.",
+          "translation": "Nó thay đổi nhanh lắm! Nhưng những điều cơ bản — ngắn, tích cực, cá nhân — vẫn giống nhau. Chỉ cần viết những gì bạn thực sự cảm thấy."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0010-000000000004",
+      "title": "英語でのSNS投稿とコメント",
+      "description": "英語のSNSでよく使われるカジュアルな表現を練習します。インパクトのあるキャプション、自然なコメントの返し方、ハッシュタグの使い方、インターネットスラングの意味を学びます。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "ハイキングの写真を投稿しました。どんなキャプションがいいと思いますか？",
+          "translation": "Tôi vừa đăng ảnh đi bộ. Bạn nghĩ loại chú thích nào hay?",
+          "furigana": "ハイキングのしゃしんをとうこうしました。どんなキャプションがいいとおもいますか？",
+          "romaji": "Haikingu no shashin wo tōkō shimashita. Donna kyapushon ga ii to omoimasu ka?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "短くてインパクトのあるものがベストです。たとえば「Legs aching, heart full」や「Peak happiness up here」など。",
+          "translation": "Ngắn gọn và ấn tượng là tốt nhất. Ví dụ như 'Legs aching, heart full' hay 'Peak happiness up here'.",
+          "furigana": "みじかくてインパクトのあるものがベストです。たとえば「Legs aching, heart full」や「Peak happiness up here」など。",
+          "romaji": "Mijikakute inpakuto no aru mono ga besuto desu. Tatoeba 'Legs aching, heart full' ya 'Peak happiness up here' nado."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "いいですね。ハッシュタグはたくさんつけた方がいいですか？",
+          "translation": "Hay đó. Nên thêm nhiều hashtag không?",
+          "furigana": "いいですね。ハッシュタグはたくさんつけたほうがいいですか？",
+          "romaji": "Ii desu ne. Hasshu tagu wa takusan tsuketa hō ga ii desu ka?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "一般的なものを20個つけるより、関連性の高いものを3〜5個にする方が効果的です。#hikinglife や #weekendescape などですね。",
+          "translation": "Thêm 20 cái chung chung không bằng 3–5 cái phù hợp. Như #hikinglife hay #weekendescape.",
+          "furigana": "いっぱんてきなものをにじゅっこつけるより、かんれんせいのたかいものをさんからごこにするほうがこうかてきです。ハイキングライフやウィークエンドエスケープなどですね。",
+          "romaji": "Ippanteki na mono wo nijukko tsukeru yori, kanrensei no takai mono wo san kara go-ko ni suru hō ga kōkateki desu. #hikinglife ya #weekendescape nado desu ne."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "わかりました。ところで、「This is giving me wanderlust!」ってコメントが来たんですけど、どういう意味ですか？",
+          "translation": "Hiểu rồi. Có người bình luận 'This is giving me wanderlust!' — nghĩa là gì vậy?",
+          "furigana": "わかりました。ところで、「This is giving me wanderlust!」ってコメントがきたんですけど、どういういみですか？",
+          "romaji": "Wakarimashita. Tokoro de, 'This is giving me wanderlust!' tte komento ga kita n desu kedo, dō iu imi desu ka?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "その写真を見て旅に出たくなったということです。「Giving me X」は今すごく流行っている表現ですよ。",
+          "translation": "Nghĩa là xem ảnh đó họ muốn đi du lịch. 'Giving me X' là cụm từ rất thịnh hành hiện nay.",
+          "furigana": "そのしゃしんをみてたびにでたくなったということです。「Giving me X」はいますごくはやっているひょうげんですよ。",
+          "romaji": "Sono shashin wo mite tabi ni detaku natta to iu koto desu. 'Giving me X' wa ima sugoku hayatte iru hyōgen desu yo."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "それにどう返信すればいいですか？",
+          "translation": "Nên phản hồi lại thế nào?",
+          "furigana": "それにどうへんしんすればいいですか？",
+          "romaji": "Sore ni dō henshin sureba ii desu ka?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "「Come with me next time!」や「The trail is calling your name!」など、温かく誘うような返し方がいいですよ。",
+          "translation": "Như 'Come with me next time!' hay 'The trail is calling your name!' — kiểu ấm áp và mời gọi là tốt.",
+          "furigana": "「Come with me next time!」や「The trail is calling your name!」など、あたたかくさそうようなかえしかたがいいですよ。",
+          "romaji": "'Come with me next time!' ya 'The trail is calling your name!' nado, atatakaku sasō yō na kaeshi-kata ga ii desu yo."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "「no cap this looks amazing」っていうコメントも来たんですけど、「no cap」って何ですか？",
+          "translation": "Còn có người nói 'no cap this looks amazing' — 'no cap' là gì vậy?",
+          "furigana": "「no cap this looks amazing」っていうコメントもきたんですけど、「no cap」ってなんですか？",
+          "romaji": "'No cap this looks amazing' tte iu komento mo kita n desu kedo, 'no cap' tte nan desu ka?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "「No cap」は「嘘じゃなくて」「本当に」という意味です。つまり、本当にすごいと思っていると言っているんです。皮肉じゃないですよ。",
+          "translation": "'No cap' nghĩa là 'thật đấy' hoặc 'thực sự'. Tức là họ thực sự nghĩ nó tuyệt vời — không mỉa mai.",
+          "furigana": "「No cap」は「うそじゃなくて」「ほんとうに」というみです。つまり、ほんとうにすごいとおもっていると言っているんです。ひにくじゃないですよ。",
+          "romaji": "'No cap' wa 'uso ja nakute' 'hontō ni' to iu imi desu. Tsumari, hontō ni sugoi to omotte iru to itte iru n desu. Hiniku ja nai desu yo."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "なるほど！インターネット英語、もっと勉強しないといけませんね。",
+          "translation": "Ra vậy! Có lẽ tôi cần học thêm tiếng Anh internet.",
+          "furigana": "なるほど！インターネットえいご、もっとべんきょうしないといけませんね。",
+          "romaji": "Naruhodo! Intānetto Eigo, motto benkyō shinai to ikemasen ne."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "変化が早いですが、基本は同じです。短く、前向きに、自分らしく書く。感じたままを書けば大丈夫ですよ。",
+          "translation": "Thay đổi nhanh lắm, nhưng cơ bản vẫn giống nhau. Ngắn, tích cực, cá nhân. Cứ viết những gì bạn cảm thấy thôi.",
+          "furigana": "へんかがはやいですが、きほんはおなじです。みじかく、まえむきに、じぶんらしくかく。かんじたままをかけばだいじょうぶですよ。",
+          "romaji": "Henka ga hayai desu ga, kihon wa onaji desu. Mijikaku, mae-muki ni, jibunrashiku kaku. Kanjita mama wo kakeba daijōbu desu yo."
+        }
+      ]
+    }
+  }
+}

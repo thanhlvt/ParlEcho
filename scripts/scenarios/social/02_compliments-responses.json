@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000008",
+    "slug": "social-connection",
+    "category": "social"
+  },
+  "sort_order": 2,
+  "icon": "✨",
+  "level": "beginner",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0006-000000000011",
+      "title": "Giving and Receiving Compliments",
+      "description": "Give genuine compliments and accept them gracefully without deflecting or over-modesty — a subtle but important social skill in English-speaking cultures.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "I loved your presentation today. The slides were really clear.",
+          "translation": "Tôi thích bài thuyết trình của bạn hôm nay. Các slide rất rõ ràng."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Thank you so much — that means a lot. I spent a while thinking about how to structure it.",
+          "translation": "Cảm ơn bạn rất nhiều — điều đó có ý nghĩa lắm. Tôi đã dành thời gian suy nghĩ về cách sắp xếp."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "It really showed. The data visualisation especially was great.",
+          "translation": "Điều đó thể hiện rõ. Đặc biệt phần trực quan hoá dữ liệu rất hay."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "I'm glad that landed well. By the way, I've been meaning to say — your feedback last week was really helpful.",
+          "translation": "Tôi vui vì điều đó hiệu quả. Nhân tiện, tôi muốn nói — phản hồi của bạn tuần trước rất hữu ích."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "Oh, was it? I just said what I thought.",
+          "translation": "Ồ vậy sao? Tôi chỉ nói những gì tôi nghĩ thôi."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "Exactly — that's what made it useful. Honest and specific feedback is rare.",
+          "translation": "Đúng vậy — đó là điều làm nó hữu ích. Phản hồi thành thật và cụ thể thật hiếm."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "Well, thank you for saying that. I appreciate it.",
+          "translation": "Vậy thì, cảm ơn bạn đã nói điều đó. Tôi trân trọng điều đó."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "Also — love the new jacket, by the way. It suits you.",
+          "translation": "À — tôi cũng thích chiếc áo khoác mới của bạn. Nó hợp với bạn lắm."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "Oh, thanks! I wasn't sure about it actually. Good to know.",
+          "translation": "Ồ cảm ơn! Thực ra tôi không chắc về nó. Tốt khi biết điều đó."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "Definitely keep it. The colour works really well.",
+          "translation": "Nhất định giữ nó lại. Màu sắc rất hợp."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "You're very good at noticing things! You'd be great as a stylist.",
+          "translation": "Bạn rất giỏi quan sát! Bạn sẽ làm nhà tạo mẫu giỏi đấy."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "Ha! Maybe a side career. Thanks — you've made my day.",
+          "translation": "Ha! Có thể là nghề tay trái. Cảm ơn — bạn đã làm tôi vui cả ngày rồi."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0006-000000000012",
+      "title": "自然にほめ言葉を伝え、受け取る",
+      "description": "相手をほめる表現と、ほめられたときに自然に受け取る応答を練習します。日本語特有の謙遜表現も含め、過度な否定をせず自然に受け答えするスキルを養います。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "今日のプレゼン、よかったですよ。スライドがとてもわかりやすかった。",
+          "translation": "Bài thuyết trình hôm nay của bạn rất hay. Slide rất dễ hiểu.",
+          "furigana": "きょうのプレゼン、よかったですよ。スライドがとてもわかりやすかった。",
+          "romaji": "Kyō no purezen, yokatta desu yo. Suraido ga totemo wakariyasukatta."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "ありがとうございます。そう言っていただけると嬉しいです。構成をどうするか、少し時間をかけて考えたんです。",
+          "translation": "Cảm ơn bạn. Thật vui khi nghe điều đó. Tôi đã mất khá nhiều thời gian suy nghĩ về cách sắp xếp.",
+          "furigana": "ありがとうございます。そういっていただけるとうれしいです。こうせいをどうするか、すこしじかんをかけてかんがえたんです。",
+          "romaji": "Arigatō gozaimasu. Sō itte itadakeru to ureshii desu. Kōsei wo dō suru ka, sukoshi jikan wo kakete kangaeta n desu."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "それが伝わりました。特にデータの見せ方がよかったです。",
+          "translation": "Điều đó thể hiện rõ. Đặc biệt cách trình bày dữ liệu rất hay.",
+          "furigana": "それがつたわりました。とくにデータのみせかたがよかったです。",
+          "romaji": "Sore ga tsutawarimashita. Toku ni dēta no mise-kata ga yokatta desu."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "よかったです。ところで、先週のフィードバックがとても参考になりました。",
+          "translation": "Mừng quá. Nhân tiện, phản hồi của bạn tuần trước rất có ích.",
+          "furigana": "よかったです。ところで、せんしゅうのフィードバックがとてもさんこうになりました。",
+          "romaji": "Yokatta desu. Tokoro de, senshū no fīdobakku ga totemo sankō ni narimashita."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "そうですか？思ったことを言っただけですよ。",
+          "translation": "Vậy à? Tôi chỉ nói những gì mình nghĩ thôi.",
+          "furigana": "そうですか？おもったことをいっただけですよ。",
+          "romaji": "Sō desu ka? Omotta koto wo itta dake desu yo."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "それがよかったんです。率直で具体的なフィードバックは、なかなか得られないですから。",
+          "translation": "Đó chính là điều làm nó hữu ích. Phản hồi thẳng thắn và cụ thể thật hiếm có.",
+          "furigana": "それがよかったんです。そっちょくでぐたいてきなフィードバックは、なかなかえられないですから。",
+          "romaji": "Sore ga yokatta n desu. Sōchoku de gutaiteki na fīdobakku wa, nakanaka erarenai desu kara."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "そう言ってもらえると嬉しいです。ありがとう。",
+          "translation": "Thật vui khi nghe điều đó. Cảm ơn bạn.",
+          "furigana": "そういってもらえるとうれしいです。ありがとう。",
+          "romaji": "Sō itte moraeru to ureshii desu. Arigatō."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "それと、新しいジャケット、似合っていますよ。",
+          "translation": "À, áo khoác mới của bạn hợp lắm đó.",
+          "furigana": "それと、あたらしいジャケット、にあっていますよ。",
+          "romaji": "Sore to, atarashii jaketto, niatte imasu yo."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "えっ、ありがとう！実はどうかなと思ってたんですよ。よかった。",
+          "translation": "Ồ cảm ơn! Thực ra tôi cũng không chắc. Mừng quá.",
+          "furigana": "えっ、ありがとう！じつはどうかなとおもってたんですよ。よかった。",
+          "romaji": "E, arigatō! Jitsu wa dō ka na to omotte ta n desu yo. Yokatta."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "ぜひ着続けてください。色がとても合っていると思います。",
+          "translation": "Nhất định tiếp tục mặc nó nhé. Tôi nghĩ màu sắc rất hợp với bạn.",
+          "furigana": "ぜひきつづけてください。いろがとてもあっていると思います。",
+          "romaji": "Zehi ki-tsuzukete kudasai. Iro ga totemo atte iru to omoimasu."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "気づくのが上手いですね！スタイリストに向いてますよ。",
+          "translation": "Bạn rất tinh ý! Bạn hợp làm nhà tạo mẫu đó.",
+          "furigana": "きづくのがうまいですね！スタイリストにむいてますよ。",
+          "romaji": "Kizuku no ga umai desu ne! Sutairisuto ni muite masu yo."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "ありがとう！副業にしようかな。おかげで今日は気分がいいです。",
+          "translation": "Cảm ơn! Có lẽ làm nghề tay trái vậy. Nhờ bạn hôm nay tôi vui cả ngày rồi.",
+          "furigana": "ありがとう！ふくぎょうにしようかな。おかげできょうはきぶんがいいです。",
+          "romaji": "Arigatō! Fukugyō ni shiyō ka na. Okage de kyō wa kibun ga ii desu."
+        }
+      ]
+    }
+  }
+}

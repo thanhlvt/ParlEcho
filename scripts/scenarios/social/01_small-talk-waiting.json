@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000008",
+    "slug": "social-connection",
+    "category": "social"
+  },
+  "sort_order": 1,
+  "icon": "💬",
+  "level": "beginner",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0006-000000000009",
+      "title": "Small Talk While Waiting",
+      "description": "Start and keep a light conversation going with a stranger — in an elevator, a queue, or an airport lounge. Build confidence breaking the ice and keeping chat natural.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "Quite a queue today, isn't it?",
+          "translation": "Hôm nay xếp hàng đông quá nhỉ?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "Isn't it! I've been here for about twenty minutes already.",
+          "translation": "Đúng vậy! Tôi đã đứng đây khoảng 20 phút rồi."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "Same here. Are you heading somewhere nice today?",
+          "translation": "Tôi cũng vậy. Bạn đang đi đâu vui vẻ hôm nay không?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "Just back from a trip to Kyoto. You?",
+          "translation": "Tôi vừa đi Kyoto về. Còn bạn?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "Oh nice! I've always wanted to go there. How was it?",
+          "translation": "Thật tuyệt! Tôi luôn muốn đến đó. Chuyến đi thế nào?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "Really lovely. We went in autumn so the leaves were incredible.",
+          "translation": "Thật tuyệt vời. Chúng tôi đi vào mùa thu nên lá rất đẹp."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "I heard autumn is the best time to visit. Did you have a favourite spot?",
+          "translation": "Tôi nghe mùa thu là thời điểm đẹp nhất để thăm. Bạn có điểm yêu thích không?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "Arashiyama — the bamboo grove. Have you been to Japan before?",
+          "translation": "Arashiyama — rừng tre. Bạn đã từng đến Nhật Bản chưa?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "Not yet, but it's at the top of my list. I'm actually learning Japanese at the moment.",
+          "translation": "Chưa, nhưng nó đứng đầu danh sách của tôi. Tôi đang học tiếng Nhật đấy."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "Oh, that's great! You'll have such an advantage when you visit.",
+          "translation": "Ồ tuyệt quá! Bạn sẽ có lợi thế lớn khi đến thăm."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "I hope so! The queue seems to be moving now at least.",
+          "translation": "Tôi hy vọng vậy! Hàng có vẻ đang nhúc nhích rồi."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "Finally! Nice chatting with you. Hope your trip to Japan happens soon.",
+          "translation": "Cuối cùng rồi! Rất vui được trò chuyện. Chúc chuyến đi Nhật Bản của bạn sớm thành hiện thực."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0006-000000000010",
+      "title": "待ち時間の世間話",
+      "description": "エレベーターや行列、空港ラウンジなど待ち時間に初対面の人と自然な会話を始める練習をします。話のきっかけを作り、無理なく会話を続けるスキルを身につけます。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "今日は並んでいますね。",
+          "translation": "Hôm nay xếp hàng đông nhỉ.",
+          "furigana": "きょうはならんでいますね。",
+          "romaji": "Kyō wa narande imasu ne."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "そうですね！もう20分ほど待っています。",
+          "translation": "Đúng vậy! Tôi đã đứng chờ khoảng 20 phút rồi.",
+          "furigana": "そうですね！もうにじゅっぷんほどまっています。",
+          "romaji": "Sō desu ne! Mō nijuppun hodo matte imasu."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "私もです。今日はどちらへ？",
+          "translation": "Tôi cũng vậy. Hôm nay bạn đi đâu vậy?",
+          "furigana": "わたしもです。きょうはどちらへ？",
+          "romaji": "Watashi mo desu. Kyō wa dochira e?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "京都に行ってきたんです。あなたは？",
+          "translation": "Tôi vừa đi Kyoto về. Còn bạn?",
+          "furigana": "きょうとにいってきたんです。あなたは？",
+          "romaji": "Kyōto ni itte kita n desu. Anata wa?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "いいですね！ずっと行ってみたいと思っていました。どうでしたか？",
+          "translation": "Thật tuyệt! Tôi luôn muốn đến đó. Chuyến đi thế nào?",
+          "furigana": "いいですね！ずっといってみたいとおもっていました。どうでしたか？",
+          "romaji": "Ii desu ne! Zutto itte mitai to omotte imashita. Dō deshita ka?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "とても良かったです。秋に行ったので、紅葉がすごくきれいでした。",
+          "translation": "Rất tuyệt. Tôi đi vào mùa thu nên lá đỏ rất đẹp.",
+          "furigana": "とてもよかったです。あきにいったので、こうようがすごくきれいでした。",
+          "romaji": "Totemo yokatta desu. Aki ni itta node, kōyō ga sugoku kirei deshita."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "秋が一番いい時期だと聞いています。お気に入りの場所はありましたか？",
+          "translation": "Tôi nghe mùa thu là thời điểm đẹp nhất. Bạn có điểm yêu thích không?",
+          "furigana": "あきがいちばんいいじきだとさいてきだときいています。おきにいりのばしょはありましたか？",
+          "romaji": "Aki ga ichiban ii jiki da to kiite imasu. O-ki ni iri no basho wa arimashita ka?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "嵐山の竹林がよかったですね。日本には行ったことがありますか？",
+          "translation": "Rừng tre Arashiyama rất đẹp. Bạn đã từng đến Nhật Bản chưa?",
+          "furigana": "あらしやまのちくりんがよかったですね。にほんにはいったことがありますか？",
+          "romaji": "Arashiyama no chikurin ga yokatta desu ne. Nihon ni wa itta koto ga arimasu ka?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "まだないんですが、ぜひ行ってみたいです。実は今、日本語を勉強しているんです。",
+          "translation": "Chưa, nhưng tôi rất muốn đến. Thực ra tôi đang học tiếng Nhật đấy.",
+          "furigana": "まだないんですが、ぜひいってみたいです。じつはいま、にほんごをべんきょうしているんです。",
+          "romaji": "Mada nai n desu ga, zehi itte mitai desu. Jitsu wa ima, Nihon-go wo benkyō shite iru n desu."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "それは素晴らしい！行ったときにきっと役に立ちますよ。",
+          "translation": "Thật tuyệt vời! Khi bạn đến chắc chắn sẽ có ích lắm.",
+          "furigana": "それはすばらしい！いったときにきっとやくにたちますよ。",
+          "romaji": "Sore wa subarashii! Itta toki ni kitto yaku ni tachimasu yo."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "そうだといいですね！列がようやく動きだしてきましたよ。",
+          "translation": "Tôi hy vọng vậy! Hàng cuối cùng cũng bắt đầu di chuyển rồi.",
+          "furigana": "そうだといいですね！れつがようやくうごきだしてきましたよ。",
+          "romaji": "Sō da to ii desu ne! Retsu ga yōyaku ugokidashite kimashita yo."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "やっとですね！お話しできてよかったです。早く日本に行けるといいですね。",
+          "translation": "Cuối cùng rồi! Rất vui được trò chuyện. Hy vọng bạn sớm đến được Nhật Bản.",
+          "furigana": "やっとですね！おはなしできてよかったです。はやくにほんにいけるといいですね。",
+          "romaji": "Yatto desu ne! O-hanashi dekite yokatta desu. Hayaku Nihon ni ikeru to ii desu ne."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000003",
+    "slug": "daily-life",
+    "category": "daily"
+  },
+  "sort_order": 3,
+  "icon": "🏛️",
+  "level": "beginner",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0003-000000000005",
+      "title": "Calling to Ask About Hours & Admission",
+      "description": "Call a museum or attraction to find out opening hours, admission fees, group discounts, and current exhibitions.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "Hello, City Art Museum. How can I help you today?",
+          "translation": "Xin chào, Bảo tàng Nghệ thuật thành phố. Tôi có thể giúp gì cho bạn?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Hi! I'd like to find out your opening hours and admission fees, please.",
+          "translation": "Xin chào! Tôi muốn hỏi về giờ mở cửa và giá vé vào."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "Of course! We're open Tuesday through Sunday, ten a.m. to six p.m. We're closed on Mondays.",
+          "translation": "Tất nhiên! Chúng tôi mở cửa từ thứ Ba đến Chủ Nhật, 10h sáng đến 6h chiều. Thứ Hai đóng cửa."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "Got it. And how much is admission?",
+          "translation": "Hiểu rồi. Vé vào cửa bao nhiêu tiền?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "Adults are fifteen dollars, students with a valid ID are ten, and children under twelve get in free.",
+          "translation": "Người lớn 15 đô, sinh viên có thẻ 10 đô, trẻ em dưới 12 tuổi miễn phí."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "Is there a group discount, by any chance?",
+          "translation": "Có giảm giá cho đoàn không?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "Yes — groups of ten or more get twenty percent off. You'd need to book in advance.",
+          "translation": "Có — đoàn 10 người trở lên được giảm 20%. Cần đặt trước."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "Wonderful. Are there any special exhibitions on right now?",
+          "translation": "Tuyệt. Hiện có triển lãm đặc biệt nào không?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "We have a photography exhibition running until the end of the month. It's included in the regular ticket.",
+          "translation": "Chúng tôi đang có triển lãm nhiếp ảnh đến cuối tháng. Vé vào cửa thường đã bao gồm."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "That sounds lovely. Is there parking nearby?",
+          "translation": "Nghe hay đấy. Có bãi đỗ xe gần đó không?"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "There's a public car park right next to us. We validate parking for up to two hours with any paid ticket.",
+          "translation": "Có bãi đỗ xe công cộng ngay bên cạnh. Chúng tôi xác nhận miễn phí đỗ xe tối đa 2 tiếng cho khách có vé."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "Perfect, thank you so much for your help. I'll plan my visit soon!",
+          "translation": "Tuyệt vời, cảm ơn bạn rất nhiều. Tôi sẽ lên kế hoạch đến sớm thôi!"
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0003-000000000006",
+      "title": "電話で施設の情報を問い合わせる",
+      "description": "美術館などの施設に電話して、開館時間・入館料・団体割引・特別展示について問い合わせる練習をします。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "はい、市立美術館でございます。",
+          "translation": "Vâng, Bảo tàng Nghệ thuật thành phố xin nghe.",
+          "furigana": "はい、しりつびじゅつかんでございます。",
+          "romaji": "Hai, shiritsu bijutsukan de gozaimasu."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "あの、開館時間と入館料をお教えいただけますか？",
+          "translation": "Xin lỗi, bạn có thể cho tôi biết giờ mở cửa và giá vé không?",
+          "furigana": "あの、かいかんじかんとにゅうかんりょうをおしえいただけますか？",
+          "romaji": "Ano, kaikan jikan to nyūkan ryō wo oshie itadakemasu ka?"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "かしこまりました。火曜日から日曜日の午前10時から午後6時まで開館しております。月曜日は休館日です。",
+          "translation": "Vâng. Chúng tôi mở cửa từ thứ Ba đến Chủ Nhật, 10h đến 18h. Thứ Hai đóng cửa.",
+          "furigana": "かしこまりました。かようびからにちようびのごぜんじゅうじからごごろくじまでかいかんしております。げつようびはきゅうかんびです。",
+          "romaji": "Kashikomarimashita. Kayōbi kara nichiyōbi no gozen jū-ji kara gogo roku-ji made kaikan shite orimasu. Getsuyōbi wa kyūkan-bi desu."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "ありがとうございます。入館料はおいくらでしょうか？",
+          "translation": "Cảm ơn. Giá vé vào là bao nhiêu?",
+          "furigana": "ありがとうございます。にゅうかんりょうはおいくらでしょうか？",
+          "romaji": "Arigatō gozaimasu. Nyūkan ryō wa o-ikura deshō ka?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "大人が1,500円、学生証をお持ちの方は1,000円、12歳以下のお子様は無料でございます。",
+          "translation": "Người lớn 1.500 yên, sinh viên có thẻ 1.000 yên, trẻ em dưới 12 tuổi miễn phí.",
+          "furigana": "おとながせんごひゃくえん、がくせいしょうをおもちのかたはせんえん、じゅうにさいいかのおこさまはむりょうでございます。",
+          "romaji": "Otona ga sen-go-hyaku-en, gakusei-shō wo o-mochi no kata wa sen-en, jū-ni-sai ika no o-ko-sama wa muryō de gozaimasu."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "団体割引はございますか？",
+          "translation": "Có giảm giá cho đoàn không?",
+          "furigana": "だんたいわりびきはございますか？",
+          "romaji": "Dantai waribiki wa gozaimasu ka?"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "10名様以上でご来館の場合、2割引でご利用いただけます。事前のご予約が必要となります。",
+          "translation": "Đoàn từ 10 người trở lên được giảm 20%. Cần đặt trước.",
+          "furigana": "じゅうめいさまいじょうでごらいかんのばあい、にわりびきでごりようていただけます。じぜんのごよやくがひつようとなります。",
+          "romaji": "Jū-mei-sama ijō de go-raikan no baai, ni-wari-biki de go-riyō itadakemasu. Jizen no go-yoyaku ga hitsuyō to narimasu."
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "そうですか。現在、特別な展示はありますか？",
+          "translation": "Vậy à. Hiện có triển lãm đặc biệt nào không?",
+          "furigana": "そうですか。げんざい、とくべつなてんじはありますか？",
+          "romaji": "Sō desu ka. Genzai, tokubetsu na tenji wa arimasu ka?"
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "はい、今月末まで写真展を開催しております。通常の入館料でご覧いただけます。",
+          "translation": "Có, chúng tôi đang tổ chức triển lãm nhiếp ảnh đến cuối tháng. Vé thường đã bao gồm.",
+          "furigana": "はい、こんげつまつまでしゃしんてんをかいさいしております。つうじょうのにゅうかんりょうでごらんいただけます。",
+          "romaji": "Hai, kongetsu-matsu made shashin-ten wo kaisai shite orimasu. Tsūjō no nyūkan ryō de go-ran itadakemasu."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "それは楽しそうですね。駐車場はございますか？",
+          "translation": "Nghe hay đấy. Có bãi đỗ xe không?",
+          "furigana": "それはたのしそうですね。ちゅうしゃじょうはございますか？",
+          "romaji": "Sore wa tanoshi-sō desu ne. Chūsha-jō wa gozaimasu ka?"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "美術館の隣に公共駐車場がございます。有料入館券をお持ちの方は、2時間分の駐車料を補助いたします。",
+          "translation": "Có bãi đỗ xe công cộng ngay bên cạnh. Khách có vé sẽ được hỗ trợ 2 tiếng phí đỗ xe.",
+          "furigana": "びじゅつかんのとなりにこうきょうちゅうしゃじょうがございます。ゆうりょうにゅうかんけんをおもちのかたは、にじかんぶんのちゅうしゃりょうをほじょいたします。",
+          "romaji": "Bijutsukan no tonari ni kōkyō chūsha-jō ga gozaimasu. Yūryō nyūkan-ken wo o-mochi no kata wa, ni-jikan bun no chūsha-ryō wo hojo itashimasu."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "わかりました。詳しく教えていただき、ありがとうございました。近いうちに伺います。",
+          "translation": "Hiểu rồi. Cảm ơn bạn đã giải thích chi tiết. Tôi sẽ ghé thăm sớm.",
+          "furigana": "わかりました。くわしくおしえていただき、ありがとうございました。ちかいうちにうかがいます。",
+          "romaji": "Wakarimashita. Kuwashiku oshiete itadaki, arigatō gozaimashita. Chikai uchi ni ukagaimasu."
+        }
+      ]
+    }
+  }
+}

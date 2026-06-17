@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000006",
+    "slug": "office-school",
+    "category": "work"
+  },
+  "sort_order": 2,
+  "icon": "💡",
+  "level": "intermediate",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0006-000000000003",
+      "title": "Presenting Ideas in a Meeting",
+      "description": "Share an opinion, propose an idea, and build on others' suggestions in a team meeting. Practice signalling, hedging, and inviting discussion.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "Right, let's move on to the last item — any new ideas for the Q3 campaign?",
+          "translation": "Được rồi, hãy chuyển sang mục cuối — ai có ý tưởng mới cho chiến dịch Q3 không?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Yes, I have a suggestion, if I may.",
+          "translation": "Có, tôi có một đề xuất, nếu được phép."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "Please, go ahead.",
+          "translation": "Mời bạn cứ nói."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "I think we should try a short-video series on social media. Our data shows engagement is significantly higher on video posts.",
+          "translation": "Tôi nghĩ chúng ta nên thử một series video ngắn trên mạng xã hội. Dữ liệu cho thấy tương tác với bài video cao hơn đáng kể."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "Interesting. Can you give us a rough idea of the cost?",
+          "translation": "Thú vị đấy. Bạn có thể ước tính chi phí không?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "I haven't done a full breakdown yet, but I'd estimate around five thousand for a three-video pilot. I can get the exact figures to you by tomorrow.",
+          "translation": "Tôi chưa tính chi tiết, nhưng ước tính khoảng 5.000 đô cho 3 video thử nghiệm. Tôi có thể đưa con số chính xác vào ngày mai."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "That could work. Does anyone else have thoughts on this?",
+          "translation": "Có thể được. Còn ai có ý kiến gì không?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "I'd also like to add that we could tie this in with the August product launch. That way, we'd maximize reach.",
+          "translation": "Tôi cũng muốn bổ sung rằng có thể kết hợp với đợt ra mắt sản phẩm tháng 8. Như vậy sẽ tối đa hoá độ phủ sóng."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "Good thinking. What would the timeline look like?",
+          "translation": "Suy nghĩ tốt đấy. Lịch trình sẽ như thế nào?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "If we approve the concept this week, we could start production in mid-July and launch by the first of August.",
+          "translation": "Nếu phê duyệt ý tưởng tuần này, chúng ta có thể bắt đầu sản xuất giữa tháng 7 và ra mắt ngày 1 tháng 8."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "That's tight but doable. Let's put it to a vote. All in favour?",
+          "translation": "Gấp nhưng khả thi. Hãy biểu quyết. Ai đồng ý?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "I'm in favour. And I'm happy to lead the project if that helps.",
+          "translation": "Tôi đồng ý. Và tôi sẵn sàng dẫn dắt dự án nếu cần."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0006-000000000004",
+      "title": "会議でアイデアを提案する",
+      "description": "チーム会議で意見を述べたり、アイデアを提案したり、他の発言に付け加えたりする練習をします。ビジネス日本語の表現と、発言を切り出すフレーズを学びます。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "では、最後の議題に移りましょう。第3四半期のキャンペーンについて、何かアイデアはありますか？",
+          "translation": "Được, hãy chuyển sang chủ đề cuối. Ai có ý tưởng gì cho chiến dịch quý 3 không?",
+          "furigana": "では、さいごのぎだいにうつりましょう。だいさんしはんきのキャンペーンについて、なにかアイデアはありますか？",
+          "romaji": "Dewa, saigo no gidai ni utsurimashō. Dai-san shihan-ki no kyampēn ni tsuite, nanika aidea wa arimasu ka?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "はい、よろしければ一つご提案してもよいでしょうか。",
+          "translation": "Vâng, nếu được phép tôi muốn đề xuất một ý.",
+          "furigana": "はい、よろしければひとつごていあんしてもよいでしょうか。",
+          "romaji": "Hai, yoroshikereba hitotsu go-teian shite mo yoi deshō ka."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "もちろんです。どうぞ。",
+          "translation": "Tất nhiên. Mời bạn.",
+          "furigana": "もちろんです。どうぞ。",
+          "romaji": "Mochiron desu. Dōzo."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "SNSで短い動画シリーズを展開することを提案したいと思います。データによると、動画投稿のエンゲージメントが大幅に高いことがわかっています。",
+          "translation": "Tôi muốn đề xuất triển khai series video ngắn trên mạng xã hội. Dữ liệu cho thấy tương tác với video cao hơn đáng kể.",
+          "furigana": "SNSでみじかいどうがシリーズをてんかいすることをていあんしたいとおもいます。データによると、どうがとうこうのエンゲージメントがおおはばにたかいことがわかっています。",
+          "romaji": "SNS de mijikai dōga shirīzu wo tenkai suru koto wo teian shitai to omoimasu. Dēta ni yoru to, dōga tōkō no engējiimento ga ōhaba ni takai koto ga wakatte imasu."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "面白い提案ですね。コスト感はいかがでしょうか？",
+          "translation": "Đề xuất thú vị. Chi phí dự kiến thế nào?",
+          "furigana": "おもしろいていあんですね。コストかんはいかがでしょうか？",
+          "romaji": "Omoshiroi teian desu ne. Kosuto-kan wa ikaga deshō ka?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "まだ詳しい見積もりは出していませんが、3本のパイロット動画で約50万円を見込んでいます。明日中に正確な数字をお出しできます。",
+          "translation": "Chưa tính chi tiết, nhưng dự kiến khoảng 500.000 yên cho 3 video thử nghiệm. Tôi có thể đưa con số chính xác vào ngày mai.",
+          "furigana": "まだくわしいみつもりはだしていませんが、さんぼんのパイロットどうがでやくごじゅうまんえんをみこんでいます。あしたじゅうにせいかくなかずをおだしできます。",
+          "romaji": "Mada kuwashii mitsumori wa dashite imasen ga, san-bon no pairotto dōga de yaku go-jū-man-en wo mikonde imasu. Ashita-jū ni seikaku na kazu wo o-dashi dekimasu."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "検討の余地がありますね。他にご意見はありますか？",
+          "translation": "Đáng cân nhắc đấy. Còn ai có ý kiến gì không?",
+          "furigana": "けんとうのよちがありますね。ほかにごいけんはありますか？",
+          "romaji": "Kentō no yochi ga arimasu ne. Hoka ni go-iken wa arimasu ka?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "追加でお伝えすると、8月の製品ローンチに合わせることで、より大きなリーチが期待できます。",
+          "translation": "Thêm nữa, nếu kết hợp với đợt ra mắt sản phẩm tháng 8 thì có thể kỳ vọng độ phủ rộng hơn.",
+          "furigana": "ついかでおつたえすると、はちがつのせいひんローンチにあわせることで、よりおおきなリーチがきたいできます。",
+          "romaji": "Tsuika de o-tsutae suru to, hachi-gatsu no seihin rōnchi ni awaseru koto de, yori ōkina rīchi ga kitai dekimasu."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "いい考えですね。スケジュールはどう見ていますか？",
+          "translation": "Ý hay đấy. Lịch trình bạn dự kiến thế nào?",
+          "furigana": "いいかんがえですね。スケジュールはどうみていますか？",
+          "romaji": "Ii kangae desu ne. Sukejūru wa dō mite imasu ka?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "今週中に企画を承認いただければ、7月中旬から制作を開始し、8月1日のローンチに間に合わせることができます。",
+          "translation": "Nếu phê duyệt trong tuần này, chúng ta có thể bắt đầu sản xuất giữa tháng 7 và kịp ra mắt ngày 1 tháng 8.",
+          "furigana": "こんしゅうじゅうにきかくをしょうにんいただければ、しちがつちゅうじゅんからせいさくをかいしし、はちがつついたちのローンチにまにあわせることができます。",
+          "romaji": "Konshū-jū ni kikaku wo shōnin itadakereba, shichi-gatsu chūjun kara seisaku wo kaishi shi, hachi-gatsu tsuitachi no rōnchi ni maniawaseru koto ga dekimasu."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "タイトですが実現可能ですね。採決を取りましょう。賛成の方は？",
+          "translation": "Gấp nhưng khả thi. Hãy biểu quyết. Ai đồng ý?",
+          "furigana": "タイトですがじつげんかのうですね。さいけつをとりましょう。さんせいのかたは？",
+          "romaji": "Taito desu ga jitsugen kanō desu ne. Saiketsu wo torimashō. Sansei no kata wa?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "賛成です。もし必要であれば、プロジェクトのリードを担当します。",
+          "translation": "Tôi đồng ý. Nếu cần, tôi sẵn sàng dẫn dắt dự án.",
+          "furigana": "さんせいです。もしひつようであれば、プロジェクトのリードをたんとうします。",
+          "romaji": "Sansei desu. Moshi hitsuyō de areba, purojekuto no rīdo wo tantō shimasu."
+        }
+      ]
+    }
+  }
+}

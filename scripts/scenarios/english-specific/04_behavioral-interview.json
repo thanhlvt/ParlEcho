@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000010",
+    "slug": "english-specific",
+    "category": "culture"
+  },
+  "sort_order": 4,
+  "icon": "💼",
+  "level": "advanced",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0010-000000000007",
+      "title": "Behavioural Interview: STAR Method",
+      "description": "Answer tough behavioural interview questions using the STAR method (Situation, Task, Action, Result) — common in English-speaking work environments for jobs and promotions.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "Tell me about a time you had to manage a difficult situation with a tight deadline.",
+          "translation": "Hãy kể về một lần bạn phải xử lý tình huống khó khăn với thời hạn gấp."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "Sure. Last year, our main supplier cancelled two days before a product launch. [Situation]",
+          "translation": "Được. Năm ngoái, nhà cung cấp chính của chúng tôi huỷ hợp đồng hai ngày trước khi ra mắt sản phẩm. [Tình huống]"
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "That sounds stressful. What was your role in that situation?",
+          "translation": "Nghe có vẻ căng thẳng. Vai trò của bạn trong tình huống đó là gì?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "I was the project lead, so it fell on me to find a solution without delaying the launch. [Task]",
+          "translation": "Tôi là trưởng dự án, nên trách nhiệm tìm giải pháp mà không trì hoãn ra mắt nằm ở tôi. [Nhiệm vụ]"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "What steps did you take?",
+          "translation": "Bạn đã thực hiện những bước gì?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "First, I contacted three backup suppliers we'd previously vetted. Two could meet the timeline. I negotiated an emergency order with the faster one overnight. [Action]",
+          "translation": "Đầu tiên, tôi liên hệ ba nhà cung cấp dự phòng mà chúng tôi đã kiểm duyệt trước. Hai người có thể đáp ứng thời hạn. Tôi đàm phán đơn hàng khẩn cấp với nhà cung cấp nhanh hơn trong đêm. [Hành động]"
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "Were there any obstacles along the way?",
+          "translation": "Có trở ngại nào trên đường không?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "Yes — the backup supplier's pricing was fifteen percent higher. I had to get rapid approval from finance and restructure one part of the budget.",
+          "translation": "Có — giá của nhà cung cấp dự phòng cao hơn 15%. Tôi phải nhanh chóng xin phê duyệt từ tài chính và tái cơ cấu một phần ngân sách."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "And what was the outcome?",
+          "translation": "Và kết quả là gì?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "The launch went ahead on schedule. We absorbed the cost difference and actually exceeded our first-week sales target by twelve percent. [Result]",
+          "translation": "Ra mắt diễn ra đúng kế hoạch. Chúng tôi hấp thụ chênh lệch chi phí và thực sự vượt chỉ tiêu bán hàng tuần đầu 12%. [Kết quả]"
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "Impressive. What did you learn from that experience?",
+          "translation": "Ấn tượng. Bạn học được gì từ kinh nghiệm đó?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "I learned the value of pre-approved backup suppliers — and that staying calm and methodical under pressure is often more effective than moving fast and chaotically.",
+          "translation": "Tôi học được giá trị của nhà cung cấp dự phòng đã được phê duyệt trước — và rằng bình tĩnh và có phương pháp dưới áp lực thường hiệu quả hơn là di chuyển nhanh mà hỗn loạn."
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0010-000000000008",
+      "title": "英語の行動面接：STARメソッド",
+      "description": "英語圏の就職・昇進面接でよく使われる行動面接の質問に、STARメソッド（状況・課題・行動・結果）を使って答える練習をします。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "partner",
+          "text": "締め切りが迫る中で難しい状況を乗り越えた経験を教えてください。",
+          "translation": "Hãy kể về một lần bạn vượt qua tình huống khó khăn khi thời hạn gấp.",
+          "furigana": "しめきりがせまるなかでむずかしいじょうきょうをのりこえたけいけんをおしえてください。",
+          "romaji": "Shimekiri ga semaru naka de muzukashii jōkyō wo norikoe ta keiken wo oshiete kudasai."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "user",
+          "text": "はい。昨年、製品発売の2日前にメインのサプライヤーが契約をキャンセルしました。【状況】",
+          "translation": "Vâng. Năm ngoái, nhà cung cấp chính huỷ hợp đồng 2 ngày trước khi ra mắt sản phẩm. [Tình huống]",
+          "furigana": "はい。さくねん、せいひんはつばいのふつかまえにメインのサプライヤーがけいやくをキャンセルしました。",
+          "romaji": "Hai. Sakunen, seihin hatsubai no futsuka mae ni mein no sapuraiyā ga keiyaku wo kyanseru shimashita."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "partner",
+          "text": "それはストレスだったでしょうね。その状況でのあなたの役割は何でしたか？",
+          "translation": "Chắc căng thẳng lắm. Vai trò của bạn trong tình huống đó là gì?",
+          "furigana": "それはストレスだったでしょうね。そのじょうきょうでのあなたのやくわりはなんでしたか？",
+          "romaji": "Sore wa sutoresu datta deshō ne. Sono jōkyō de no anata no yakuwari wa nan deshita ka?"
+        },
+        {
+          "sort_order": 4,
+          "speaker": "user",
+          "text": "私がプロジェクトリードでしたので、発売を遅らせずに解決策を見つける責任が私にありました。【課題】",
+          "translation": "Tôi là trưởng dự án, nên trách nhiệm tìm giải pháp mà không trì hoãn ra mắt nằm ở tôi. [Nhiệm vụ]",
+          "furigana": "わたしがプロジェクトリードでしたので、はつばいをおくらせずにかいけつさくをみつけるせきにんがわたしにありました。",
+          "romaji": "Watashi ga purojekuto rīdo deshita node, hatsubai wo okurase zu ni kaiketsu-saku wo mitsukeru sekinin ga watashi ni arimashita."
+        },
+        {
+          "sort_order": 5,
+          "speaker": "partner",
+          "text": "どのような手順を踏みましたか？",
+          "translation": "Bạn đã thực hiện những bước gì?",
+          "furigana": "どのようなてじゅんをふみましたか？",
+          "romaji": "Dono yō na tejun wo fumimashita ka?"
+        },
+        {
+          "sort_order": 6,
+          "speaker": "user",
+          "text": "まず、事前に審査していたバックアップサプライヤー3社に連絡しました。そのうち2社が納期を満たせるとのことで、より早い方と夜通し緊急発注の交渉をしました。【行動】",
+          "translation": "Đầu tiên liên hệ 3 nhà cung cấp dự phòng đã kiểm duyệt. Hai người đáp ứng được thời hạn, tôi đàm phán đơn hàng khẩn cấp với nhà nhanh hơn trong đêm. [Hành động]",
+          "furigana": "まず、じぜんにしんさしていたバックアップサプライヤーさんしゃにれんらくしました。そのうちにしゃがのうきをみたせるとのことで、よりはやいほうとよとおしきんきゅうはっちゅうのこうしょうをしました。",
+          "romaji": "Mazu, jizen ni shinsa shite ita bakkuappu sapuraiyā san-sha ni renraku shimashita. Sono uchi ni-sha ga nōki wo mitaseru to no koto de, yori hayai hō to yodōshi kinkyū hatchū no kōshō wo shimashita."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "partner",
+          "text": "途中で困難はありましたか？",
+          "translation": "Có trở ngại nào trên đường không?",
+          "furigana": "とちゅうでこんなんはありましたか？",
+          "romaji": "Tochū de konnan wa arimashita ka?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "user",
+          "text": "はい。バックアップ先の価格が15%高かったので、財務部門から迅速な承認を得て予算の一部を組み直す必要がありました。",
+          "translation": "Có. Giá nhà cung cấp dự phòng cao hơn 15%, nên tôi phải nhanh chóng xin phê duyệt từ tài chính và tái cơ cấu một phần ngân sách.",
+          "furigana": "はい。バックアップさきのかかくがじゅうごぱーせんとたかかったので、ざいむぶもんからじんそくなしょうにんをえてよさんのいちぶをくみなおすひつようがありました。",
+          "romaji": "Hai. Bakkuappu-saki no kakaku ga jūgo-pāsento takakatta node, zaimu-bumon kara jinsoku na shōnin wo ete yosan no ichi-bu wo kuminaōsu hitsuyō ga arimashita."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "partner",
+          "text": "結果はどうなりましたか？",
+          "translation": "Kết quả là gì?",
+          "furigana": "けっかはどうなりましたか？",
+          "romaji": "Kekka wa dō narimashita ka?"
+        },
+        {
+          "sort_order": 10,
+          "speaker": "user",
+          "text": "予定通り発売できました。コスト差は吸収し、初週の販売目標を12%超えることができました。【結果】",
+          "translation": "Ra mắt đúng kế hoạch. Hấp thụ chênh lệch chi phí và vượt chỉ tiêu bán hàng tuần đầu 12%. [Kết quả]",
+          "furigana": "よていどおりはつばいできました。コストさはきゅうしゅうし、しょしゅうのはんばいもくひょうをじゅうにぱーせんとこえることができました。",
+          "romaji": "Yotei dōri hatsubai dekimashita. Kosuto-sa wa kyūshū shi, shoshu no hanbai mokuhyō wo jūni-pāsento koeru koto ga dekimashita."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "partner",
+          "text": "素晴らしいですね。その経験から何を学びましたか？",
+          "translation": "Ấn tượng. Bạn học được gì từ kinh nghiệm đó?",
+          "furigana": "すばらしいですね。そのけいけんからなにをまなびましたか？",
+          "romaji": "Subarashii desu ne. Sono keiken kara nani wo manabimashita ka?"
+        },
+        {
+          "sort_order": 12,
+          "speaker": "user",
+          "text": "事前承認済みのバックアップサプライヤーを用意しておくことの重要性を学びました。また、プレッシャー下では焦って混乱するよりも、冷静かつ体系的に動く方が効果的だということも実感しました。",
+          "translation": "Tôi học được tầm quan trọng của nhà cung cấp dự phòng đã được phê duyệt trước. Và rằng bình tĩnh, có hệ thống dưới áp lực thường hiệu quả hơn là vội vã hỗn loạn.",
+          "furigana": "じぜんしょうにんずみのバックアップサプライヤーをようしておくことのじゅうようせいをまなびました。また、プレッシャーかではあせってこんらんするよりも、れいせいかつたいけいてきにうごくほうがこうかてきだということもじっかんしました。",
+          "romaji": "Jizen shōnin-zumi no bakkuappu sapuraiyā wo yōi shite oku koto no jūyōsei wo manabimashita. Mata, puressshā ka de wa asette konran suru yori mo, reisei katsu taikeiteki ni ugoku hō ga kōkateki da to iu koto mo jikkan shimashita."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "group": {
+    "id": "00000000-0000-0000-0000-000000000009",
+    "slug": "japan-specific",
+    "category": "culture"
+  },
+  "sort_order": 1,
+  "icon": "☀️",
+  "level": "beginner",
+  "type": "scripted",
+  "scenarios": {
+    "en": {
+      "id": "00000000-0000-0000-0009-000000000001",
+      "title": "Japanese Weather Small Talk",
+      "description": "Weather small talk is the most common everyday conversation opener in Japan. Practise commenting on weather, seasonal changes, and tying observations to daily life.",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "The weather's been so humid lately, hasn't it?",
+          "translation": "Dạo này thời tiết ẩm ướt quá nhỉ?"
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "Really! I feel like summer came early this year.",
+          "translation": "Đúng vậy! Tôi cảm giác mùa hè đến sớm hơn năm nay."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "I know — and the rainy season hasn't even started yet.",
+          "translation": "Đúng vậy — và mùa mưa thậm chí chưa bắt đầu."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "Oh, I know. The rainy season here is tough. Do you find it hard to deal with?",
+          "translation": "Tôi biết. Mùa mưa ở đây rất khắc nghiệt. Bạn thấy khó chịu không?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "A little — especially the mould. I have to run the dehumidifier every day.",
+          "translation": "Một chút — đặc biệt là nấm mốc. Tôi phải chạy máy hút ẩm mỗi ngày."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "Same here. But the hydrangeas are beautiful in the rainy season, at least.",
+          "translation": "Tôi cũng vậy. Nhưng hoa cẩm tú cầu rất đẹp trong mùa mưa, ít nhất là vậy."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "That's true — every season has something. What's your favourite season in Japan?",
+          "translation": "Đúng vậy — mỗi mùa đều có điều gì đó. Mùa yêu thích của bạn ở Nhật là gì?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "Autumn, for sure. The leaves are gorgeous and the weather is perfect for walking.",
+          "translation": "Chắc chắn là mùa thu. Lá rất đẹp và thời tiết hoàn hảo để đi bộ."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "I think autumn is wonderful here too. The light is different somehow.",
+          "translation": "Tôi cũng nghĩ mùa thu ở đây rất tuyệt. Ánh sáng cũng có gì đó khác."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "Exactly. Well, let's hope the summer isn't too brutal this year.",
+          "translation": "Đúng vậy. Vậy thì hy vọng mùa hè năm nay không quá khắc nghiệt."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "I hope so! Apparently it may be hotter than average this year.",
+          "translation": "Tôi cũng hy vọng! Nghe nói năm nay có thể nóng hơn trung bình."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "I heard that too. Better stock up on those cooling towels now!",
+          "translation": "Tôi cũng nghe vậy. Tốt hơn là mua nhiều khăn lạnh từ bây giờ đi!"
+        }
+      ]
+    },
+    "ja": {
+      "id": "00000000-0000-0000-0009-000000000002",
+      "title": "日本式の天気の世間話",
+      "description": "日本では天気の話題が最もよく使われる会話のきっかけです。季節の変化、蒸し暑さ、梅雨など日本特有の表現を使って自然に会話を始める練習をします。",
+      "lines": [
+        {
+          "sort_order": 1,
+          "speaker": "user",
+          "text": "最近、蒸し暑い日が続きますね。",
+          "translation": "Dạo này thời tiết oi bức liên tục nhỉ.",
+          "furigana": "さいきん、むしあついひがつづきますね。",
+          "romaji": "Saikin, mushiatsui hi ga tsuzukimasu ne."
+        },
+        {
+          "sort_order": 2,
+          "speaker": "partner",
+          "text": "そうですね！今年は夏が早く来た気がしますよ。",
+          "translation": "Đúng vậy! Tôi cảm giác mùa hè đến sớm năm nay.",
+          "furigana": "そうですね！ことしはなつがはやくきたきがしますよ。",
+          "romaji": "Sō desu ne! Kotoshi wa natsu ga hayaku kita ki ga shimasu yo."
+        },
+        {
+          "sort_order": 3,
+          "speaker": "user",
+          "text": "本当に。梅雨もまだ始まっていないのに。",
+          "translation": "Thật vậy. Mùa mưa thậm chí chưa bắt đầu.",
+          "furigana": "ほんとうに。つゆもまだはじまっていないのに。",
+          "romaji": "Hontō ni. Tsuyu mo mada hajimatte inai no ni."
+        },
+        {
+          "sort_order": 4,
+          "speaker": "partner",
+          "text": "そうなんですよ。梅雨はきついですね。梅雨は苦手ですか？",
+          "translation": "Đúng vậy. Mùa mưa rất khó chịu. Bạn không thích mùa mưa à?",
+          "furigana": "そうなんですよ。つゆはきついですね。つゆはにがてですか？",
+          "romaji": "Sō nan desu yo. Tsuyu wa kitsui desu ne. Tsuyu wa nigate desu ka?"
+        },
+        {
+          "sort_order": 5,
+          "speaker": "user",
+          "text": "少し苦手です。特にカビが…。毎日除湿機を使っています。",
+          "translation": "Hơi không thích. Đặc biệt là nấm mốc... Tôi dùng máy hút ẩm mỗi ngày.",
+          "furigana": "すこしにがてです。とくにカビが…。まいにちじょしつきをつかっています。",
+          "romaji": "Sukoshi nigate desu. Toku ni kabi ga... Mainichi joshitsuki wo tsukatte imasu."
+        },
+        {
+          "sort_order": 6,
+          "speaker": "partner",
+          "text": "私もそうです。でも、梅雨のアジサイはきれいですよね。",
+          "translation": "Tôi cũng vậy. Nhưng hoa cẩm tú cầu mùa mưa rất đẹp nhỉ.",
+          "furigana": "わたしもそうです。でも、つゆのアジサイはきれいですよね。",
+          "romaji": "Watashi mo sō desu. Demo, tsuyu no ajisai wa kirei desu yo ne."
+        },
+        {
+          "sort_order": 7,
+          "speaker": "user",
+          "text": "確かに。どの季節にも良いものがありますね。日本で一番好きな季節はいつですか？",
+          "translation": "Đúng vậy. Mỗi mùa đều có điều gì đó. Mùa yêu thích của bạn ở Nhật là gì?",
+          "furigana": "たしかに。どのきせつにもよいものがありますね。にほんでいちばんすきなきせつはいつですか？",
+          "romaji": "Tashika ni. Dono kisetsu ni mo yoi mono ga arimasu ne. Nihon de ichiban suki na kisetsu wa itsu desu ka?"
+        },
+        {
+          "sort_order": 8,
+          "speaker": "partner",
+          "text": "やっぱり秋ですね。紅葉がきれいで、散歩するのにもちょうどいい気候で。",
+          "translation": "Vẫn là mùa thu. Lá đỏ đẹp và thời tiết hoàn hảo để đi bộ.",
+          "furigana": "やっぱりあきですね。こうようがきれいで、さんぽするのにもちょうどいいきこうで。",
+          "romaji": "Yappari aki desu ne. Kōyō ga kirei de, sanpo suru no ni mo chōdo ii kikō de."
+        },
+        {
+          "sort_order": 9,
+          "speaker": "user",
+          "text": "私も日本の秋が好きです。光の感じがどことなく違いますよね。",
+          "translation": "Tôi cũng thích mùa thu Nhật Bản. Ánh sáng có gì đó khác biệt nhỉ.",
+          "furigana": "わたしもにほんのあきがすきです。ひかりのかんじがどことなくちがいますよね。",
+          "romaji": "Watashi mo Nihon no aki ga suki desu. Hikari no kanji ga doko to naku chigaimasu yo ne."
+        },
+        {
+          "sort_order": 10,
+          "speaker": "partner",
+          "text": "そうなんですよ。今年の夏はそんなに厳しくないといいですね。",
+          "translation": "Đúng vậy. Hy vọng mùa hè năm nay không quá khắc nghiệt.",
+          "furigana": "そうなんですよ。ことしのなつはそんなにきびしくないといいですね。",
+          "romaji": "Sō nan desu yo. Kotoshi no natsu wa son'na ni kibishikunai to ii desu ne."
+        },
+        {
+          "sort_order": 11,
+          "speaker": "user",
+          "text": "ですね！今年は平均より暑くなるかもしれないって聞きました。",
+          "translation": "Đúng vậy! Tôi nghe nói năm nay có thể nóng hơn trung bình.",
+          "furigana": "ですね！ことしはへいきんよりあつくなるかもしれないってききました。",
+          "romaji": "Desu ne! Kotoshi wa heikin yori atsuku naru kamo shirenai tte kikimashita."
+        },
+        {
+          "sort_order": 12,
+          "speaker": "partner",
+          "text": "私も聞きました。今のうちに冷感タオルを買いだめした方がいいかもしれませんね！",
+          "translation": "Tôi cũng nghe vậy. Có lẽ nên mua trữ khăn lạnh từ bây giờ!",
+          "furigana": "わたしもききました。いまのうちにれいかんタオルをかいだめしたほうがいいかもしれませんね！",
+          "romaji": "Watashi mo kikimashita. Ima no uchi ni reikan taoru wo kaidame shita hō ga ii kamo shiremasen ne!"
+        }
+      ]
+    }
+  }
+}
