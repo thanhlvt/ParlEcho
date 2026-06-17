@@ -1,5 +1,6 @@
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { AuthProvider, useAuth } from '../providers/AuthProvider';
 
 function RouteGuard() {
@@ -24,8 +25,10 @@ function RouteGuard() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RouteGuard />
-    </AuthProvider>
+    <KeyboardProvider>
+      <AuthProvider>
+        <RouteGuard />
+      </AuthProvider>
+    </KeyboardProvider>
   );
 }

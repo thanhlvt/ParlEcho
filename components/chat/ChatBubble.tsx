@@ -60,8 +60,8 @@ export function ChatBubble({
         user_id: user.id,
         language_id: languageId,
         type: 'mistake',
-        content: c.original,
-        translation: c.fixed,
+        content: c.fixed,
+        translation: c.original,
         note: c.explanation,
         source_message_id: isOptimistic ? null : message.id,
       });

@@ -47,7 +47,10 @@ export function LineCard({
     <View style={[styles.card, isPartner ? styles.cardPartner : styles.cardUser]}>
       {/* Speaker label */}
       <View style={styles.speakerRow}>
-        <Text style={styles.speakerLabel}>{isPartner ? '🤝 Partner' : '👤 Bạn'}</Text>
+        <View style={styles.speakerBadge}>
+          <Text style={styles.speakerEmoji}>{isPartner ? '🤝' : '👤'}</Text>
+          <Text style={styles.speakerLabel}>{isPartner ? 'Partner' : 'Bạn'}</Text>
+        </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Text style={styles.lineNum}>#{index + 1}</Text>
           {onSave && (
@@ -166,7 +169,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 10,
   },
-  speakerLabel: { fontSize: 12, fontWeight: '700', color: Colors.textMuted },
+  speakerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  speakerEmoji: {
+    fontSize: 14,
+  },
+  speakerLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textMuted,
+  },
   lineNum: { fontSize: 11, color: Colors.border },
 
   lineText: {
