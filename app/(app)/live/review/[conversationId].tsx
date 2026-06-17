@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../../../constants/Colors';
+import { useTheme } from '../../../../providers/ThemeProvider';
 import { supabase } from '../../../../lib/supabase';
 import {
   Conversation,
@@ -32,6 +32,8 @@ type ConversationWithReview = Conversation & {
 };
 
 export default function ReviewScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
   const { user } = useAuth();
 
@@ -104,17 +106,17 @@ export default function ReviewScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <Stack.Screen options={{ title: 'Nhận xét phiên' }} />
-        <ActivityIndicator style={{ flex: 1 }} color={Colors.primary} />
+        <ActivityIndicator style={{ flex: 1 }} color={colors.primary} />
       </SafeAreaView>
     );
   }
 
   const score = conv?.avg_pronunciation;
   const scoreColor =
-    score == null ? Colors.textMuted
-      : score >= 80 ? Colors.success
-      : score >= 60 ? Colors.warning
-      : Colors.error;
+    score == null ? colors.textMuted
+      : score >= 80 ? colors.success
+      : score >= 60 ? colors.warning
+      : colors.error;
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
@@ -173,7 +175,7 @@ export default function ReviewScreen() {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.vocabText}>{w}</Text>
-                  <Ionicons name="bookmark-outline" size={13} color={Colors.primary} />
+                  <Ionicons name="bookmark-outline" size={13} color={colors.primary} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -203,12 +205,14 @@ export default function ReviewScreen() {
 }
 
 function CorrectionRow({ correction }: { correction: Correction }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   return (
     <View style={styles.corrRow}>
       <View style={styles.corrLine}>
         <Text style={styles.corrLabelSai}>Sai</Text>
         <Text style={styles.corrOriginal}>{correction.original}</Text>
-        <Ionicons name="arrow-forward" size={13} color={Colors.textMuted} />
+        <Ionicons name="arrow-forward" size={13} color={colors.textMuted} />
         <Text style={styles.corrFixed}>{correction.fixed}</Text>
       </View>
       {correction.explanation ? (
@@ -219,6 +223,8 @@ function CorrectionRow({ correction }: { correction: Correction }) {
 }
 
 function FlaggedWordRow({ fw }: { fw: FlaggedWord }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   return (
     <View style={styles.flagRow}>
       <Text style={styles.flagWord}>{fw.word}</Text>
@@ -227,61 +233,61 @@ function FlaggedWordRow({ fw }: { fw: FlaggedWord }) {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+const getStyles = (colors: any) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   content: { padding: 16, gap: 14 },
 
   feedbackCard: {
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     borderRadius: 16, padding: 16, gap: 8,
   },
-  sectionTitle: { fontSize: 14, fontWeight: '700', color: Colors.textPrimary, marginBottom: 4 },
-  feedbackText: { fontSize: 14, color: Colors.textPrimary, lineHeight: 22 },
-  fluencyText: { fontSize: 13, color: Colors.textSecondary, fontStyle: 'italic' },
+  sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 },
+  feedbackText: { fontSize: 14, color: colors.textPrimary, lineHeight: 22 },
+  fluencyText: { fontSize: 13, color: colors.textSecondary, fontStyle: 'italic' },
 
   scoreCard: {
-    backgroundColor: Colors.surface, borderRadius: 16, padding: 16,
+    backgroundColor: colors.surface, borderRadius: 16, padding: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
   scoreRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
   scoreBig: { fontSize: 42, fontWeight: '800' },
-  scoreOf: { fontSize: 16, color: Colors.textMuted, fontWeight: '600' },
-  scoreLabel: { marginLeft: 10, fontSize: 14, color: Colors.textSecondary },
+  scoreOf: { fontSize: 16, color: colors.textMuted, fontWeight: '600' },
+  scoreLabel: { marginLeft: 10, fontSize: 14, color: colors.textSecondary },
 
   section: { gap: 8 },
-  noIssues: { fontSize: 14, color: Colors.success },
+  noIssues: { fontSize: 14, color: colors.success },
 
   corrPanel: {
-    backgroundColor: Colors.surface, borderRadius: 14, padding: 12, gap: 12,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.border,
+    backgroundColor: colors.surface, borderRadius: 14, padding: 12, gap: 12,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
   },
   corrRow: { gap: 4 },
   corrLine: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  corrLabelSai: { fontSize: 10, fontWeight: '700', color: Colors.textMuted, width: 26 },
-  corrOriginal: { fontSize: 13, color: Colors.error, textDecorationLine: 'line-through' },
-  corrFixed: { fontSize: 13, color: Colors.success, fontWeight: '700' },
-  corrExplain: { fontSize: 12, color: Colors.textMuted, fontStyle: 'italic', paddingLeft: 32 },
+  corrLabelSai: { fontSize: 10, fontWeight: '700', color: colors.textMuted, width: 26 },
+  corrOriginal: { fontSize: 13, color: colors.error, textDecorationLine: 'line-through' },
+  corrFixed: { fontSize: 13, color: colors.success, fontWeight: '700' },
+  corrExplain: { fontSize: 12, color: colors.textMuted, fontStyle: 'italic', paddingLeft: 32 },
 
   vocabRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   vocabChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: Colors.primaryLight, borderRadius: 10,
+    backgroundColor: colors.primaryLight, borderRadius: 10,
     paddingHorizontal: 12, paddingVertical: 8,
     maxWidth: '100%',
   },
-  vocabText: { fontSize: 13, color: Colors.primary, fontWeight: '600', flexShrink: 1 },
-  vocabHint: { fontSize: 11, color: Colors.textMuted },
+  vocabText: { fontSize: 13, color: colors.primary, fontWeight: '600', flexShrink: 1 },
+  vocabHint: { fontSize: 11, color: colors.textMuted },
 
   transcriptPanel: {
-    backgroundColor: Colors.surface, borderRadius: 14, padding: 12, gap: 10,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.border,
+    backgroundColor: colors.surface, borderRadius: 14, padding: 12, gap: 10,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
   },
   transcriptRow: { gap: 2 },
-  transcriptRole: { fontSize: 11, fontWeight: '700', color: Colors.textMuted },
-  transcriptText: { fontSize: 14, color: Colors.textPrimary, lineHeight: 20 },
+  transcriptRole: { fontSize: 11, fontWeight: '700', color: colors.textMuted },
+  transcriptText: { fontSize: 14, color: colors.textPrimary, lineHeight: 20 },
 
   flagRow: { gap: 2 },
-  flagWord: { fontSize: 13, fontWeight: '700', color: Colors.warning },
-  flagTip: { fontSize: 12, color: Colors.textMuted },
+  flagWord: { fontSize: 13, fontWeight: '700', color: colors.warning },
+  flagTip: { fontSize: 12, color: colors.textMuted },
 });

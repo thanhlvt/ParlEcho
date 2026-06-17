@@ -10,10 +10,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { supabase } from '../../lib/supabase';
 
 export default function RegisterScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -84,7 +86,7 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder="Nguyễn Văn A"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             autoCapitalize="words"
             value={name}
             onChangeText={setName}
@@ -94,7 +96,7 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder="you@example.com"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="email-address"
@@ -106,7 +108,7 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder="Tối thiểu 6 ký tự"
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -137,14 +139,14 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Colors.background },
+const getStyles = (colors: any) => StyleSheet.create({
+  flex: { flex: 1, backgroundColor: colors.background },
   container: { flexGrow: 1, justifyContent: 'center', padding: 24 },
   header: { alignItems: 'center', marginBottom: 48 },
-  logo: { fontSize: 36, fontWeight: '800', color: Colors.primary, letterSpacing: -0.5 },
-  tagline: { fontSize: 15, color: Colors.textMuted, marginTop: 6 },
+  logo: { fontSize: 36, fontWeight: '800', color: colors.primary, letterSpacing: -0.5 },
+  tagline: { fontSize: 15, color: colors.textMuted, marginTop: 6 },
   form: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 24,
     shadowColor: '#000',
@@ -155,7 +157,7 @@ const styles = StyleSheet.create({
   },
   error: {
     backgroundColor: '#FEF2F2',
-    color: Colors.error,
+    color: colors.error,
     padding: 12,
     borderRadius: 10,
     marginBottom: 16,
@@ -164,21 +166,21 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 8,
     marginTop: 12,
   },
   input: {
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: 12,
     padding: 14,
     fontSize: 16,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   button: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 14,
     padding: 16,
     alignItems: 'center',
@@ -187,26 +189,26 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.65 },
   buttonText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
   link: { alignItems: 'center', marginTop: 20, padding: 8 },
-  linkText: { color: Colors.textMuted, fontSize: 14 },
-  linkBold: { color: Colors.primary, fontWeight: '600' },
+  linkText: { color: colors.textMuted, fontSize: 14 },
+  linkBold: { color: colors.primary, fontWeight: '600' },
   successContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
   },
   successIcon: { fontSize: 64, marginBottom: 24 },
-  successTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary, marginBottom: 12 },
+  successTitle: { fontSize: 24, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 },
   successText: {
     fontSize: 15,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 32,
   },
   backButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 14,
     paddingHorizontal: 32,
     paddingVertical: 14,

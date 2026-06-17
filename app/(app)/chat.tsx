@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { supabase } from '../../lib/supabase';
 import { ChatApiResponse, LanguageId, Message } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
@@ -25,6 +25,8 @@ import { useSidebar } from './_layout';
 type ViewState = 'start' | 'chat' | 'history';
 
 export default function ChatScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const { user } = useAuth();
   const { toggleSidebar } = useSidebar();
   const flatListRef = useRef<FlatList>(null);
@@ -218,7 +220,7 @@ export default function ChatScreen() {
   if (loadingInit) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ActivityIndicator style={{ flex: 1 }} color={Colors.primary} />
+        <ActivityIndicator style={{ flex: 1 }} color={colors.primary} />
       </SafeAreaView>
     );
   }
@@ -228,16 +230,16 @@ export default function ChatScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.topBar}>
           <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
-            <Ionicons name="menu" size={28} color={Colors.textPrimary} />
+            <Ionicons name="menu" size={28} color={colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.historyBtn} onPress={loadHistory} activeOpacity={0.7}>
-            <Ionicons name="time-outline" size={18} color={Colors.primary} />
+            <Ionicons name="time-outline" size={18} color={colors.primary} />
             <Text style={styles.historyBtnText}>Lịch sử</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.startContainer}>
           <View style={styles.iconWrap}>
-            <Ionicons name="chatbubbles" size={48} color={Colors.primary} />
+            <Ionicons name="chatbubbles" size={48} color={colors.primary} />
           </View>
           <Text style={styles.startTitle}>Hội thoại AI</Text>
           <Text style={styles.startSubtitle}>
@@ -286,17 +288,17 @@ export default function ChatScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.historyHeader}>
           <TouchableOpacity onPress={() => setView('start')} hitSlop={8}>
-            <Ionicons name="arrow-back" size={22} color={Colors.textPrimary} />
+            <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.historyTitle}>Lịch sử hội thoại</Text>
           <View style={{ width: 22 }} />
         </View>
 
         {historyLoading ? (
-          <ActivityIndicator style={{ flex: 1 }} color={Colors.primary} />
+          <ActivityIndicator style={{ flex: 1 }} color={colors.primary} />
         ) : historyConvs.length === 0 ? (
           <View style={styles.historyEmpty}>
-            <Ionicons name="chatbubbles-outline" size={40} color={Colors.textMuted} />
+            <Ionicons name="chatbubbles-outline" size={40} color={colors.textMuted} />
             <Text style={styles.historyEmptyText}>Chưa có phiên nào</Text>
           </View>
         ) : (
@@ -330,7 +332,7 @@ export default function ChatScreen() {
                 </View>
                 <View style={styles.historyResume}>
                   <Text style={styles.historyResumeText}>Tiếp tục</Text>
-                  <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+                  <Ionicons name="chevron-forward" size={14} color={colors.primary} />
                 </View>
               </TouchableOpacity>
             )}
@@ -346,7 +348,7 @@ export default function ChatScreen() {
       {/* Header */}
       <View style={styles.chatHeader}>
         <TouchableOpacity onPress={newChat} hitSlop={8}>
-          <Ionicons name="arrow-back" size={22} color={Colors.textPrimary} />
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.chatHeaderCenter}>
           <Text style={styles.chatHeaderTitle}>AI Partner</Text>
@@ -355,7 +357,7 @@ export default function ChatScreen() {
           </Text>
         </View>
         <TouchableOpacity onPress={newChat} hitSlop={8}>
-          <Ionicons name="add-circle-outline" size={24} color={Colors.primary} />
+          <Ionicons name="add-circle-outline" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -390,7 +392,7 @@ export default function ChatScreen() {
             value={input}
             onChangeText={setInput}
             placeholder={languageId === 'en' ? 'Type in English…' : '日本語で書いてください…'}
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             multiline
             maxLength={500}
             returnKeyType="send"
@@ -419,8 +421,8 @@ export default function ChatScreen() {
 }
 
 // ── Styles ────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+const getStyles = (colors: any) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
 
   // ── Start screen
   startContainer: {
@@ -433,16 +435,16 @@ const styles = StyleSheet.create({
   iconWrap: {
     width: 96,
     height: 96,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
   },
-  startTitle: { fontSize: 26, fontWeight: '800', color: Colors.textPrimary },
+  startTitle: { fontSize: 26, fontWeight: '800', color: colors.textPrimary },
   startSubtitle: {
     fontSize: 14,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     lineHeight: 21,
   },
@@ -452,17 +454,17 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 14,
     borderWidth: 2,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
-  langBtnActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
-  langBtnText: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary },
-  langBtnTextActive: { color: Colors.primary },
+  langBtnActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+  langBtnText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
+  langBtnTextActive: { color: colors.primary },
   startBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 16,
     paddingHorizontal: 28,
     paddingVertical: 16,
@@ -479,17 +481,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
   },
   chatHeaderCenter: { flex: 1, alignItems: 'center' },
-  chatHeaderTitle: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
-  chatHeaderSub: { fontSize: 12, color: Colors.textMuted },
+  chatHeaderTitle: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
+  chatHeaderSub: { fontSize: 12, color: colors.textMuted },
 
   // ── Message list
   messageList: { padding: 16, gap: 12 },
   emptyChat: { alignItems: 'center', paddingTop: 48 },
-  emptyChatText: { fontSize: 14, color: Colors.textMuted, textAlign: 'center', lineHeight: 22 },
+  emptyChatText: { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
 
 
 
@@ -501,30 +503,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderTopColor: colors.border,
+    backgroundColor: colors.surface,
   },
   textInput: {
     flex: 1,
     minHeight: 44,
     maxHeight: 120,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 22,
     paddingHorizontal: 18,
     paddingTop: Platform.OS === 'ios' ? 12 : 10,
     paddingBottom: 10,
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   sendBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendBtnDisabled: { backgroundColor: Colors.border },
+  sendBtnDisabled: { backgroundColor: colors.border },
 
   // ── History
   topBar: {
@@ -537,28 +539,28 @@ const styles = StyleSheet.create({
   historyBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 20, backgroundColor: Colors.primaryLight,
+    borderRadius: 20, backgroundColor: colors.primaryLight,
   },
-  historyBtnText: { fontSize: 13, fontWeight: '600', color: Colors.primary },
+  historyBtnText: { fontSize: 13, fontWeight: '600', color: colors.primary },
   historyHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border,
+    backgroundColor: colors.surface,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
   },
-  historyTitle: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
+  historyTitle: { fontSize: 16, fontWeight: '700', color: colors.textPrimary },
   historyList: { padding: 16, gap: 10 },
   historyEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  historyEmptyText: { fontSize: 14, color: Colors.textMuted },
+  historyEmptyText: { fontSize: 14, color: colors.textMuted },
   historyCard: {
-    backgroundColor: Colors.surface, borderRadius: 14, padding: 14,
+    backgroundColor: colors.surface, borderRadius: 14, padding: 14,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.border,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
   },
   historyCardLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   historyLang: { fontSize: 24 },
-  historyDate: { fontSize: 13, fontWeight: '600', color: Colors.textPrimary },
-  historyTime: { fontSize: 12, color: Colors.textMuted },
+  historyDate: { fontSize: 13, fontWeight: '600', color: colors.textPrimary },
+  historyTime: { fontSize: 12, color: colors.textMuted },
   historyResume: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  historyResumeText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
+  historyResumeText: { fontSize: 12, fontWeight: '600', color: colors.primary },
 });

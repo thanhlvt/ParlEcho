@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { SavedItem } from '../../lib/types';
 
 interface SavedItemCardProps {
@@ -19,6 +19,8 @@ export const SavedItemCard: React.FC<SavedItemCardProps> = ({
   onPractice,
   onDelete,
 }) => {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const isEn = item.language_id === 'en';
   const typeLabel =
     item.type === 'word' ? 'Từ vựng' : item.type === 'phrase' ? 'Mẫu câu' : 'Lỗi sai';
@@ -40,7 +42,7 @@ export const SavedItemCard: React.FC<SavedItemCardProps> = ({
       <View style={styles.cardHeader}>
         <View style={styles.badges}>
           <View style={[styles.badge, { backgroundColor: isEn ? '#EEF2FF' : '#FFF5F5' }]}>
-            <Text style={[styles.badgeText, { color: isEn ? Colors.en : Colors.ja }]}>
+            <Text style={[styles.badgeText, { color: isEn ? colors.en : colors.ja }]}>
               {isEn ? '🇬🇧 Tiếng Anh' : '🇯🇵 Tiếng Nhật'}
             </Text>
           </View>
@@ -74,7 +76,7 @@ export const SavedItemCard: React.FC<SavedItemCardProps> = ({
           <Ionicons
             name={speakingItemId === item.id ? 'stop-circle' : 'volume-high-outline'}
             size={18}
-            color={Colors.primary}
+            color={colors.primary}
           />
           <Text style={styles.actionBtnText}>Nghe</Text>
         </TouchableOpacity>
@@ -84,7 +86,7 @@ export const SavedItemCard: React.FC<SavedItemCardProps> = ({
           onPress={() => onPractice(item)}
           activeOpacity={0.7}
         >
-          <Ionicons name="mic-outline" size={18} color={Colors.primary} />
+          <Ionicons name="mic-outline" size={18} color={colors.primary} />
           <Text style={styles.actionBtnText}>Luyện đọc</Text>
         </TouchableOpacity>
 
@@ -93,16 +95,16 @@ export const SavedItemCard: React.FC<SavedItemCardProps> = ({
           onPress={() => onDelete(item)}
           activeOpacity={0.7}
         >
-          <Ionicons name="trash-outline" size={18} color={Colors.error} />
+          <Ionicons name="trash-outline" size={18} color={colors.error} />
         </TouchableOpacity>
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -111,7 +113,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -134,31 +136,31 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   cardContent: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 26,
     marginBottom: 6,
   },
   cardTranslation: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 22,
     marginBottom: 10,
     fontStyle: 'italic',
   },
   noteBox: {
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 8,
     padding: 10,
     marginBottom: 12,
   },
   noteText: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 18,
   },
   cardActions: {
@@ -166,21 +168,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     paddingTop: 12,
   },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
   },
   actionBtnText: {
     fontSize: 12,
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
 });

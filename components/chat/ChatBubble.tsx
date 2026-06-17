@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { LanguageId, Message } from '../../lib/types';
 import { CorrectionRow } from './CorrectionRow';
 import { supabase } from '../../lib/supabase';
@@ -25,6 +25,8 @@ export function ChatBubble({
   expanded,
   onToggleExpand,
 }: ChatBubbleProps) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const isUser = message.role === 'user';
   const { user } = useAuth();
   const [showTranslation, setShowTranslation] = useState(false);
@@ -147,7 +149,7 @@ export function ChatBubble({
                 <Ionicons 
                   name={savedPhrase ? 'bookmark' : 'bookmark-outline'} 
                   size={15} 
-                  color={savedPhrase ? Colors.primary : Colors.textMuted} 
+                  color={savedPhrase ? colors.primary : colors.textMuted} 
                 />
               </Pressable>
             </View>
@@ -160,7 +162,7 @@ export function ChatBubble({
             <Ionicons
               name={expanded ? 'checkmark-circle' : 'alert-circle-outline'}
               size={14}
-              color={expanded ? Colors.success : Colors.warning}
+              color={expanded ? colors.success : colors.warning}
             />
             <Text style={styles.corrChipText}>
               {message.corrections.length} lỗi cần sửa {expanded ? '▲' : '▼'}
@@ -186,7 +188,7 @@ export function ChatBubble({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   bubbleRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -199,7 +201,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -214,11 +216,11 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   bubbleUser: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderBottomRightRadius: 4,
   },
   bubbleAI: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderBottomLeftRadius: 4,
     ...Platform.select({
       ios: {
@@ -232,13 +234,13 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  bubbleText: { fontSize: 15, color: Colors.textPrimary, lineHeight: 22 },
+  bubbleText: { fontSize: 15, color: colors.textPrimary, lineHeight: 22 },
   bubbleTextUser: { color: '#fff' },
-  furigana: { fontSize: 12, color: Colors.textMuted, marginTop: 6 },
-  romaji: { fontSize: 12, color: Colors.textMuted, fontStyle: 'italic', marginTop: 2 },
+  furigana: { fontSize: 12, color: colors.textMuted, marginTop: 6 },
+  romaji: { fontSize: 12, color: colors.textMuted, fontStyle: 'italic', marginTop: 2 },
   transBtn: {},
-  transBtnText: { fontSize: 12, color: Colors.primary, fontWeight: '600' },
-  translationText: { fontSize: 13, color: Colors.textSecondary, marginTop: 4, fontStyle: 'italic' },
+  transBtnText: { fontSize: 12, color: colors.primary, fontWeight: '600' },
+  translationText: { fontSize: 13, color: colors.textSecondary, marginTop: 4, fontStyle: 'italic' },
   bubbleActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -257,18 +259,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     alignSelf: 'flex-start',
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
-  corrChipText: { fontSize: 12, color: Colors.textSecondary, fontWeight: '600' },
+  corrChipText: { fontSize: 12, color: colors.textSecondary, fontWeight: '600' },
   corrPanel: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 12,
     gap: 10,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
 });

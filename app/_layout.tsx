@@ -1,7 +1,9 @@
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '../providers/AuthProvider';
+import { ThemeProvider, useTheme } from '../providers/ThemeProvider';
 
 function RouteGuard() {
   const { session, loading } = useAuth();
@@ -23,12 +25,21 @@ function RouteGuard() {
   return <Slot />;
 }
 
+function ThemeStatusBar() {
+  const { isDark } = useTheme();
+  return <StatusBar style={isDark ? 'light' : 'dark'} />;
+}
+
 export default function RootLayout() {
   return (
     <KeyboardProvider>
-      <AuthProvider>
-        <RouteGuard />
-      </AuthProvider>
+      <ThemeProvider>
+        <ThemeStatusBar />
+        <AuthProvider>
+          <RouteGuard />
+        </AuthProvider>
+      </ThemeProvider>
     </KeyboardProvider>
   );
 }
+

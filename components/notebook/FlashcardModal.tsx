@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { SavedItem } from '../../lib/types';
 
 interface FlashcardModalProps {
@@ -15,6 +15,8 @@ export const FlashcardModal: React.FC<FlashcardModalProps> = ({
   onClose,
   items,
 }) => {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const [flashcardIndex, setFlashcardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -121,7 +123,7 @@ export const FlashcardModal: React.FC<FlashcardModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -149,7 +151,7 @@ const styles = StyleSheet.create({
   flashcard: {
     width: '100%',
     height: 320,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 24,
     padding: 24,
     justifyContent: 'center',
@@ -162,7 +164,7 @@ const styles = StyleSheet.create({
   },
   flashcardFlipped: {
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   cardFace: {
     flex: 1,
@@ -172,14 +174,14 @@ const styles = StyleSheet.create({
   },
   cardFaceLang: {
     fontSize: 14,
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '700',
     textTransform: 'uppercase',
     marginBottom: 20,
   },
   cardFaceLangBack: {
     fontSize: 14,
-    color: Colors.success,
+    color: colors.success,
     fontWeight: '700',
     textTransform: 'uppercase',
     marginBottom: 20,
@@ -187,7 +189,7 @@ const styles = StyleSheet.create({
   cardFaceContent: {
     fontSize: 24,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
     lineHeight: 34,
     marginBottom: 24,
@@ -195,13 +197,13 @@ const styles = StyleSheet.create({
   cardFaceContentBack: {
     fontSize: 20,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
     lineHeight: 30,
     marginBottom: 16,
   },
   flashcardNote: {
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 12,
     padding: 12,
     width: '100%',
@@ -209,13 +211,13 @@ const styles = StyleSheet.create({
   },
   flashcardNoteText: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 18,
     textAlign: 'center',
   },
   cardFaceHint: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 'auto',
   },
   flashcardControls: {
@@ -248,7 +250,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   doneFlashcardText: {
-    color: Colors.primaryLight,
+    color: colors.primaryLight,
     fontSize: 15,
     fontWeight: '600',
     textDecorationLine: 'underline',

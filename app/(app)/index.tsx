@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { supabase } from '../../lib/supabase';
 import { DailyActivity, LanguageId, Profile } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
@@ -67,6 +67,8 @@ function greeting() {
 
 // ── Main screen ─────────────────────────────────────────────────────────
 export default function HomeScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const { user } = useAuth();
   const router = useRouter();
   const { toggleSidebar } = useSidebar();
@@ -175,7 +177,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
-              <Ionicons name="menu" size={28} color={Colors.textPrimary} />
+              <Ionicons name="menu" size={28} color={colors.textPrimary} />
             </TouchableOpacity>
             <View>
               <Text style={styles.greeting}>{greeting()},</Text>
@@ -204,8 +206,8 @@ export default function HomeScreen() {
               size={68}
               progress={goalProgress}
               strokeWidth={8}
-              color={Colors.primary}
-              backgroundColor={Colors.surfaceAlt}
+              color={colors.primary}
+              backgroundColor={colors.surfaceAlt}
             >
               <Text style={styles.goalPercentText}>
                 {Math.round(goalProgress * 100)}%
@@ -215,10 +217,10 @@ export default function HomeScreen() {
           <View style={styles.goalCardRight}>
             <Text style={styles.goalTitle}>Mục tiêu hôm nay</Text>
             <Text style={styles.goalProgressText}>
-              Đã hoàn thành <Text style={{ fontWeight: '800', color: Colors.primary }}>{currentProgress}</Text> / {goalTarget} {goalType === 'lines' ? 'câu' : 'phút'}
+              Đã hoàn thành <Text style={{ fontWeight: '800', color: colors.primary }}>{currentProgress}</Text> / {goalTarget} {goalType === 'lines' ? 'câu' : 'phút'}
             </Text>
             <TouchableOpacity style={styles.goalSetupBtn} onPress={openGoalSettings} activeOpacity={0.7} hitSlop={8}>
-              <Ionicons name="settings-outline" size={14} color={Colors.primary} />
+              <Ionicons name="settings-outline" size={14} color={colors.primary} />
               <Text style={styles.goalSetupBtnText}>Thiết lập mục tiêu</Text>
             </TouchableOpacity>
           </View>
@@ -255,7 +257,7 @@ export default function HomeScreen() {
             icon="mic"
             title="Luyện phát âm"
             subtitle={'Shadowing\nKịch bản soạn sẵn'}
-            color={Colors.primary}
+            color={colors.primary}
             onPress={() => router.push('/(app)/practice')}
           />
           <ActionCard
@@ -341,7 +343,7 @@ export default function HomeScreen() {
                 style={styles.adjustBtn}
                 onPress={() => setTempGoalTarget(prev => Math.max(1, prev - (tempGoalType === 'lines' ? 5 : 5)))}
               >
-                <Ionicons name="remove" size={20} color={Colors.textPrimary} />
+                <Ionicons name="remove" size={20} color={colors.textPrimary} />
               </TouchableOpacity>
               
               <TextInput
@@ -358,7 +360,7 @@ export default function HomeScreen() {
                 style={styles.adjustBtn}
                 onPress={() => setTempGoalTarget(prev => prev + (tempGoalType === 'lines' ? 5 : 5))}
               >
-                <Ionicons name="add" size={20} color={Colors.textPrimary} />
+                <Ionicons name="add" size={20} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
             <Text style={styles.adjusterUnit}>
@@ -401,6 +403,8 @@ function WeeklyChart({
   data: { label: string; lines: number; isToday: boolean }[];
   onPressDetails: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const maxLines = Math.max(...data.map((d) => d.lines), 1);
 
   return (
@@ -408,7 +412,7 @@ function WeeklyChart({
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <Text style={styles.chartTitle}>7 ngày gần đây</Text>
         <TouchableOpacity onPress={onPressDetails} activeOpacity={0.7}>
-          <Text style={{ fontSize: 12, color: Colors.primary, fontWeight: '600' }}>Xem chi tiết →</Text>
+          <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>Xem chi tiết →</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.chartBars}>
@@ -426,10 +430,10 @@ function WeeklyChart({
                     {
                       height: Math.max(4, Math.round(heightPct * 56)),
                       backgroundColor: d.isToday
-                        ? Colors.primary
+                        ? colors.primary
                         : d.lines > 0
-                        ? Colors.primary + '60'
-                        : Colors.border,
+                        ? colors.primary + '60'
+                        : colors.border,
                     },
                   ]}
                 />
@@ -460,6 +464,8 @@ function ActionCard({
   color: string;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   return (
     <TouchableOpacity style={styles.actionCard} onPress={onPress} activeOpacity={0.8}>
       <View style={[styles.actionIcon, { backgroundColor: color + '20' }]}>
@@ -472,8 +478,8 @@ function ActionCard({
 }
 
 // ── Styles ──────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+const getStyles = (colors: any) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   content: { padding: 20, paddingBottom: 40, gap: 0 },
 
   // Header
@@ -483,31 +489,31 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 20,
   },
-  greeting: { fontSize: 14, color: Colors.textMuted },
-  userName: { fontSize: 22, fontWeight: '700', color: Colors.textPrimary, marginTop: 2 },
+  greeting: { fontSize: 14, color: colors.textMuted },
+  userName: { fontSize: 22, fontWeight: '700', color: colors.textPrimary, marginTop: 2 },
   langToggle: {
     flexDirection: 'row',
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 12,
     padding: 3,
   },
   langBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 9 },
   langBtnActive: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
   },
-  langBtnText: { fontSize: 13, color: Colors.textMuted, fontWeight: '500' },
-  langBtnTextActive: { color: Colors.textPrimary, fontWeight: '700' },
+  langBtnText: { fontSize: 13, color: colors.textMuted, fontWeight: '500' },
+  langBtnTextActive: { color: colors.textPrimary, fontWeight: '700' },
 
   // Stats row
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
   statCard: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 14,
     alignItems: 'center',
@@ -519,13 +525,13 @@ const styles = StyleSheet.create({
   },
   statCardStreak: { backgroundColor: '#FFF7ED' },
   streakFire: { fontSize: 22, marginBottom: 2 },
-  streakNum: { fontSize: 24, fontWeight: '800', color: Colors.warning },
-  statValue: { fontSize: 24, fontWeight: '800', color: Colors.textPrimary },
-  statLabel: { fontSize: 11, color: Colors.textMuted, marginTop: 2, textAlign: 'center' },
+  streakNum: { fontSize: 24, fontWeight: '800', color: colors.warning },
+  statValue: { fontSize: 24, fontWeight: '800', color: colors.textPrimary },
+  statLabel: { fontSize: 11, color: colors.textMuted, marginTop: 2, textAlign: 'center' },
 
   // Weekly chart
   chartCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
@@ -535,22 +541,22 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  chartTitle: { fontSize: 13, fontWeight: '700', color: Colors.textPrimary, marginBottom: 12 },
+  chartTitle: { fontSize: 13, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 },
   chartBars: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
   chartCol: { flex: 1, alignItems: 'center', gap: 4 },
   barContainer: { width: '100%', alignItems: 'center', height: 72, justifyContent: 'flex-end' },
   bar: { width: '70%', borderRadius: 4 },
-  barValue: { fontSize: 9, color: Colors.textMuted, marginBottom: 2 },
-  barLabel: { fontSize: 10, color: Colors.textMuted, fontWeight: '500' },
-  barLabelToday: { color: Colors.primary, fontWeight: '800' },
-  chartSub: { fontSize: 11, color: Colors.textMuted, marginTop: 10, textAlign: 'center' },
+  barValue: { fontSize: 9, color: colors.textMuted, marginBottom: 2 },
+  barLabel: { fontSize: 10, color: colors.textMuted, fontWeight: '500' },
+  barLabelToday: { color: colors.primary, fontWeight: '800' },
+  chartSub: { fontSize: 11, color: colors.textMuted, marginTop: 10, textAlign: 'center' },
 
   // Actions
-  sectionTitle: { fontSize: 17, fontWeight: '700', color: Colors.textPrimary, marginBottom: 12 },
+  sectionTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 },
   actions: { flexDirection: 'row', gap: 12, marginBottom: 20, flexWrap: 'wrap' },
   actionCard: {
     width: (width - 40 - 12) / 2,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 18,
     shadowColor: '#000',
@@ -567,22 +573,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
-  actionTitle: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary, marginBottom: 4 },
-  actionSubtitle: { fontSize: 12, color: Colors.textMuted, lineHeight: 17 },
+  actionTitle: { fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 },
+  actionSubtitle: { fontSize: 12, color: colors.textMuted, lineHeight: 17 },
 
   // Coming soon
   comingSoon: {
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 16,
     padding: 18,
     gap: 10,
   },
-  comingSoonTitle: { fontSize: 13, fontWeight: '600', color: Colors.textMuted, marginBottom: 4 },
-  comingSoonItem: { fontSize: 14, color: Colors.textSecondary },
+  comingSoonTitle: { fontSize: 13, fontWeight: '600', color: colors.textMuted, marginBottom: 4 },
+  comingSoonItem: { fontSize: 14, color: colors.textSecondary },
 
   // Daily Goal Card styles
   goalCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
@@ -595,7 +601,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   goalCardLeft: {
     justifyContent: 'center',
@@ -607,17 +613,17 @@ const styles = StyleSheet.create({
   goalPercentText: {
     fontSize: 16,
     fontWeight: '800',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   goalTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: 4,
   },
   goalProgressText: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   goalSetupBtn: {
@@ -628,7 +634,7 @@ const styles = StyleSheet.create({
   goalSetupBtnText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.primary,
+    color: colors.primary,
   },
 
   // Modal styles
@@ -640,7 +646,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalContent: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 24,
     width: '100%',
@@ -654,20 +660,20 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: 20,
   },
   modalLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 8,
     marginTop: 12,
   },
   typeSelector: {
     flexDirection: 'row',
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 12,
     padding: 4,
     gap: 4,
@@ -680,7 +686,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   typeBtnActive: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -690,10 +696,10 @@ const styles = StyleSheet.create({
   typeBtnText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   typeBtnTextActive: {
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   adjusterRow: {
@@ -707,27 +713,27 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   targetInput: {
     width: 80,
     height: 44,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 10,
     textAlign: 'center',
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   adjusterUnit: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     marginTop: 8,
     marginBottom: 16,
@@ -743,19 +749,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   cancelBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   saveBtn: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
   },
   saveBtnText: {
     fontSize: 14,

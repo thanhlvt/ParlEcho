@@ -16,7 +16,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { supabase } from '../../lib/supabase';
 import { SavedItem } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
@@ -29,6 +29,8 @@ type FilterType = 'all' | 'word' | 'phrase' | 'mistake';
 type FilterLang = 'all' | 'en' | 'ja';
 
 export default function NotebookScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const { user } = useAuth();
   const { toggleSidebar } = useSidebar();
   const [items, setItems] = useState<SavedItem[]>([]);
@@ -153,7 +155,7 @@ export default function NotebookScreen() {
       {/* Custom Header */}
       <View style={styles.customHeader}>
         <TouchableOpacity onPress={toggleSidebar} style={styles.backBtn} hitSlop={12}>
-          <Ionicons name="menu" size={28} color={Colors.textPrimary} />
+          <Ionicons name="menu" size={28} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.customHeaderTitle}>Sổ tay ôn tập</Text>
         <View style={{ width: 28 }} />
@@ -163,19 +165,19 @@ export default function NotebookScreen() {
       <View style={styles.filterContainer}>
         {/* Search Input */}
         <View style={styles.searchBarContainer}>
-          <Ionicons name="search" size={18} color={Colors.textMuted} style={styles.searchIcon} />
+          <Ionicons name="search" size={18} color={colors.textMuted} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Tìm kiếm từ vựng, mẫu câu..."
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={colors.textMuted}
             autoCapitalize="none"
             autoCorrect={false}
           />
           {searchQuery ? (
             <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={8}>
-              <Ionicons name="close-circle" size={16} color={Colors.textMuted} />
+              <Ionicons name="close-circle" size={16} color={colors.textMuted} />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -246,7 +248,7 @@ export default function NotebookScreen() {
       )}
 
       {loading ? (
-        <ActivityIndicator style={styles.loader} color={Colors.primary} size="large" />
+        <ActivityIndicator style={styles.loader} color={colors.primary} size="large" />
       ) : filteredItems.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>{items.length === 0 ? '📚' : '🔍'}</Text>
@@ -303,19 +305,19 @@ export default function NotebookScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+const getStyles = (colors: any) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   loader: { flex: 1, justifyContent: 'center' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
   emptyIcon: { fontSize: 64, marginBottom: 16 },
-  emptyText: { fontSize: 16, color: Colors.textSecondary, textAlign: 'center', lineHeight: 24 },
+  emptyText: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', lineHeight: 24 },
 
   // Filters
   filterContainer: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: colors.border,
   },
   filterScroll: {
     paddingHorizontal: 16,
@@ -326,17 +328,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   filterTabActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterTabText: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '600',
   },
   filterTabTextActive: {
@@ -350,14 +352,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   filterTabSubActive: {
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
   },
   filterTabSubText: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   filterTabSubTextActive: {
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
 
@@ -366,12 +368,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     marginHorizontal: 16,
     marginVertical: 12,
     paddingVertical: 12,
     borderRadius: 12,
-    shadowColor: Colors.primary,
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -396,13 +398,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
   },
   customHeaderTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   backBtn: {
     padding: 4,
@@ -412,14 +414,14 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 12,
     marginHorizontal: 16,
     marginBottom: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   searchIcon: {
     marginRight: 8,
@@ -427,18 +429,18 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     padding: 0,
   },
   resetBtn: {
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
     marginTop: 16,
   },
   resetBtnText: {
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '600',
     fontSize: 13,
   },

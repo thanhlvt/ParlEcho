@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../../constants/Colors';
+import { useTheme } from '../../../providers/ThemeProvider';
 import { supabase } from '../../../lib/supabase';
 import { Conversation } from '../../../lib/types';
 import { useAuth } from '../../../providers/AuthProvider';
@@ -28,6 +28,8 @@ function formatTime(iso: string) {
 }
 
 export default function LiveHistoryScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const { user } = useAuth();
   const router = useRouter();
   const [sessions, setSessions] = useState<SessionItem[]>([]);
@@ -59,7 +61,7 @@ export default function LiveHistoryScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ActivityIndicator style={{ flex: 1 }} color={Colors.primary} />
+        <ActivityIndicator style={{ flex: 1 }} color={colors.primary} />
       </SafeAreaView>
     );
   }
@@ -68,7 +70,7 @@ export default function LiveHistoryScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.empty}>
-          <Ionicons name="radio-outline" size={48} color={Colors.textMuted} />
+          <Ionicons name="radio-outline" size={48} color={colors.textMuted} />
           <Text style={styles.emptyTitle}>Chưa có phiên nào</Text>
           <Text style={styles.emptySub}>Bắt đầu một phiên Live để xem nhận xét ở đây.</Text>
         </View>
@@ -85,10 +87,10 @@ export default function LiveHistoryScreen() {
         renderItem={({ item }) => {
           const score = item.avg_pronunciation;
           const scoreColor =
-            score == null ? Colors.textMuted
-              : score >= 80 ? Colors.success
-              : score >= 60 ? Colors.warning
-              : Colors.error;
+            score == null ? colors.textMuted
+              : score >= 80 ? colors.success
+              : score >= 60 ? colors.warning
+              : colors.error;
           const langFlag = item.language_id === 'en' ? '🇺🇸' : '🇯🇵';
 
           return (
@@ -124,7 +126,7 @@ export default function LiveHistoryScreen() {
               )}
               <View style={styles.cardFooter}>
                 <Text style={styles.viewText}>Xem nhận xét</Text>
-                <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+                <Ionicons name="chevron-forward" size={14} color={colors.primary} />
               </View>
             </TouchableOpacity>
           );
@@ -134,34 +136,34 @@ export default function LiveHistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+const getStyles = (colors: any) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   list: { padding: 16, gap: 12 },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32 },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: Colors.textPrimary },
-  emptySub: { fontSize: 13, color: Colors.textMuted, textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary },
+  emptySub: { fontSize: 13, color: colors.textMuted, textAlign: 'center', lineHeight: 20 },
 
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 14,
     gap: 6,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   cardLang: { fontSize: 16 },
-  cardDate: { fontSize: 13, fontWeight: '600', color: Colors.textPrimary },
-  cardTime: { fontSize: 12, color: Colors.textMuted },
+  cardDate: { fontSize: 13, fontWeight: '600', color: colors.textPrimary },
+  cardTime: { fontSize: 12, color: colors.textMuted },
 
   scoreWrap: { alignItems: 'flex-end' },
   scoreNum: { fontSize: 22, fontWeight: '800', lineHeight: 26 },
-  scoreLabel: { fontSize: 10, color: Colors.textMuted, fontWeight: '500' },
+  scoreLabel: { fontSize: 10, color: colors.textMuted, fontWeight: '500' },
 
-  feedback: { fontSize: 13, color: Colors.textSecondary, lineHeight: 19 },
-  noFeedback: { fontSize: 13, color: Colors.textMuted, fontStyle: 'italic' },
+  feedback: { fontSize: 13, color: colors.textSecondary, lineHeight: 19 },
+  noFeedback: { fontSize: 13, color: colors.textMuted, fontStyle: 'italic' },
 
   cardFooter: {
     flexDirection: 'row',
@@ -169,5 +171,5 @@ const styles = StyleSheet.create({
     gap: 2,
     marginTop: 2,
   },
-  viewText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
+  viewText: { fontSize: 12, fontWeight: '600', color: colors.primary },
 });

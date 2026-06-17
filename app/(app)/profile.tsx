@@ -3,13 +3,15 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { supabase } from '../../lib/supabase';
 import { Profile } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { useSidebar } from './_layout';
 
 export default function ProfileScreen() {
+  const { colors, themeMode, setThemeMode } = useTheme();
+  const styles = getStyles(colors);
   const { user, signOut } = useAuth();
   const router = useRouter();
   const { toggleSidebar } = useSidebar();
@@ -43,7 +45,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.topBar}>
         <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
-          <Ionicons name="menu" size={28} color={Colors.textPrimary} />
+          <Ionicons name="menu" size={28} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Hồ sơ</Text>
         <View style={{ width: 32 }} />
@@ -81,8 +83,36 @@ export default function ProfileScreen() {
           <SettingRow icon="information-circle-outline" label="Phiên bản" value="1.0.0" />
         </View>
 
+        {/* Theme Settings */}
+        <View style={styles.themeSection}>
+          <Text style={styles.themeTitle}>Giao diện ứng dụng</Text>
+          <View style={styles.themeToggleGroup}>
+            {(['light', 'dark', 'system'] as const).map((mode) => (
+              <TouchableOpacity
+                key={mode}
+                style={[
+                  styles.themeToggleBtn,
+                  themeMode === mode && styles.themeToggleBtnActive,
+                ]}
+                onPress={() => setThemeMode(mode)}
+              >
+                <Text
+                  style={[
+                    styles.themeToggleText,
+                    themeMode === mode && styles.themeToggleTextActive,
+                  ]}
+                >
+                  {mode === 'light' ? '☀️ Sáng'
+                    : mode === 'dark' ? '🌙 Tối'
+                    : '🤖 Tự động'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         <TouchableOpacity style={styles.signOutBtn} onPress={signOut}>
-          <Ionicons name="log-out-outline" size={20} color={Colors.error} />
+          <Ionicons name="log-out-outline" size={20} color={colors.error} />
           <Text style={styles.signOutText}>Đăng xuất</Text>
         </TouchableOpacity>
       </View>
@@ -101,19 +131,21 @@ function SettingRow({
   value?: string;
   onPress?: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const Container = onPress ? TouchableOpacity : View;
   return (
     <Container style={styles.settingRow} onPress={onPress} activeOpacity={0.7}>
-      <Ionicons name={icon} size={20} color={Colors.textMuted} style={styles.settingIcon} />
+      <Ionicons name={icon} size={20} color={colors.textMuted} style={styles.settingIcon} />
       <Text style={styles.settingLabel}>{label}</Text>
       {value ? <Text style={styles.settingValue}>{value}</Text> : null}
-      {onPress && <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />}
+      {onPress && <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />}
     </Container>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -125,24 +157,24 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   content: { padding: 24, alignItems: 'center' },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
   avatarText: { fontSize: 32, fontWeight: '700', color: '#FFF' },
-  name: { fontSize: 20, fontWeight: '700', color: Colors.textPrimary },
-  email: { fontSize: 14, color: Colors.textMuted, marginBottom: 32 },
+  name: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
+  email: { fontSize: 14, color: colors.textMuted, marginBottom: 32 },
   section: {
     alignSelf: 'stretch',
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 24,
@@ -157,22 +189,70 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: colors.border,
   },
   settingIcon: { marginRight: 12 },
-  settingLabel: { flex: 1, fontSize: 15, color: Colors.textPrimary },
-  settingValue: { fontSize: 14, color: Colors.textMuted },
+  settingLabel: { flex: 1, fontSize: 15, color: colors.textPrimary },
+  settingValue: { fontSize: 14, color: colors.textMuted },
   signOutBtn: {
     alignSelf: 'stretch',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: Colors.error + '40',
+    borderColor: colors.error + '40',
   },
-  signOutText: { fontSize: 16, fontWeight: '600', color: Colors.error },
+  signOutText: { fontSize: 16, fontWeight: '600', color: colors.error },
+  themeSection: {
+    alignSelf: 'stretch',
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  themeTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 12,
+  },
+  themeToggleGroup: {
+    flexDirection: 'row',
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: 4,
+    gap: 4,
+  },
+  themeToggleBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  themeToggleBtnActive: {
+    backgroundColor: colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  themeToggleText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  themeToggleTextActive: {
+    color: colors.primary,
+    fontWeight: '700',
+  },
 });

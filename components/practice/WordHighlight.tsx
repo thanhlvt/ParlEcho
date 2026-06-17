@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { WordScore } from '../../lib/types';
 
 interface WordHighlightProps {
@@ -10,6 +10,8 @@ interface WordHighlightProps {
 }
 
 export function WordHighlight({ text, wordScores, onWordPress }: WordHighlightProps) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const words = text.trim().split(/\s+/);
   return (
     <Text style={styles.lineText}>
@@ -18,12 +20,12 @@ export function WordHighlight({ text, wordScores, onWordPress }: WordHighlightPr
         const isMispronounced = !ws || ws.error_type === 'Omission' || ws.score < 60;
         const color =
           !ws || ws.error_type === 'Omission'
-            ? Colors.error
+            ? colors.error
             : ws.score >= 85
-            ? Colors.success
+            ? colors.success
             : ws.score >= 60
-            ? Colors.warning
-            : Colors.error;
+            ? colors.warning
+            : colors.error;
         return (
           <Text
             key={i}
@@ -39,10 +41,10 @@ export function WordHighlight({ text, wordScores, onWordPress }: WordHighlightPr
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   lineText: {
     fontSize: 18,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 28,
     marginBottom: 6,
   },

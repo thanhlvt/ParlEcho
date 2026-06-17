@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../../constants/Colors';
+import { useTheme } from '../../../providers/ThemeProvider';
 import { supabase } from '../../../lib/supabase';
 import { PronounceApiResponse, Scenario, ScenarioLine } from '../../../lib/types';
 import { useAuth } from '../../../providers/AuthProvider';
@@ -20,6 +20,8 @@ import { LineCard } from '../../../components/practice/LineCard';
 
 // ── Main screen ───────────────────────────────────────────────────────
 export default function ShadowingScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const { scenarioId } = useLocalSearchParams<{ scenarioId: string }>();
   const { user } = useAuth();
 
@@ -307,7 +309,7 @@ export default function ShadowingScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <Stack.Screen options={{ title: 'Đang tải...' }} />
-        <ActivityIndicator style={styles.loader} color={Colors.primary} />
+        <ActivityIndicator style={styles.loader} color={colors.primary} />
       </SafeAreaView>
     );
   }
@@ -362,18 +364,18 @@ export default function ShadowingScreen() {
 }
 
 // ── Styles ────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+const getStyles = (colors: any) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   loader: { flex: 1 },
 
   progressBar: {
     height: 3,
-    backgroundColor: Colors.border,
+    backgroundColor: colors.border,
     marginHorizontal: 0,
   },
   progressFill: {
     height: 3,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 2,
   },
 

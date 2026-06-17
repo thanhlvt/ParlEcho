@@ -33,7 +33,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../../constants/Colors';
+import { useTheme } from '../../../providers/ThemeProvider';
 import { LiveClient, LiveState, uploadLiveSegment } from '../../../lib/liveClient';
 import { supabase } from '../../../lib/supabase';
 import { LanguageId, LiveAudioSegment, LiveTurn } from '../../../lib/types';
@@ -77,6 +77,8 @@ type ConversationMethodId = (typeof CONVERSATION_METHODS)[number]['id'];
 type ViewState = 'setup' | 'connecting' | 'live' | 'saving';
 
 export default function LiveScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const { user } = useAuth();
   const router = useRouter();
   const { toggleSidebar } = useSidebar();
@@ -356,14 +358,14 @@ export default function LiveScreen() {
         {/* Topbar with Drawer trigger and History link */}
         <View style={styles.topBar}>
           <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
-            <Ionicons name="menu" size={28} color={Colors.textPrimary} />
+            <Ionicons name="menu" size={28} color={colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.historyBtn}
             onPress={() => router.push('/(app)/live/history')}
             activeOpacity={0.7}
           >
-            <Ionicons name="time-outline" size={18} color={Colors.primary} />
+            <Ionicons name="time-outline" size={18} color={colors.primary} />
             <Text style={styles.historyBtnText}>Lịch sử</Text>
           </TouchableOpacity>
         </View>
@@ -373,7 +375,7 @@ export default function LiveScreen() {
         >
           <ScrollView contentContainerStyle={styles.setupContainer}>
             <View style={styles.iconWrap}>
-              <Ionicons name="radio" size={48} color={Colors.primary} />
+              <Ionicons name="radio" size={48} color={colors.primary} />
             </View>
             <Text style={styles.setupTitle}>Hội thoại trực tiếp</Text>
             <Text style={styles.setupSub}>
@@ -498,14 +500,14 @@ export default function LiveScreen() {
                     ? 'e.g. Travel, Food, Daily life…'
                     : '例: 旅行、食べ物、日常生活…'
                 }
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={colors.textMuted}
                 maxLength={80}
               />
             </View>
 
             {/* EAS dev build notice */}
             <View style={styles.notice}>
-              <Ionicons name="information-circle-outline" size={16} color={Colors.warning} />
+              <Ionicons name="information-circle-outline" size={16} color={colors.warning} />
               <Text style={styles.noticeText}>
                 Tính năng này cần EAS dev build và native audio lib. Không hoạt động trong Expo Go.
               </Text>
@@ -525,7 +527,7 @@ export default function LiveScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.centerFull}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.connectingText}>Đang kết nối...</Text>
         </View>
       </SafeAreaView>
@@ -536,7 +538,7 @@ export default function LiveScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.centerFull}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.connectingText}>{savingMsg}</Text>
         </View>
       </SafeAreaView>
@@ -604,54 +606,54 @@ export default function LiveScreen() {
 }
 
 // ── Styles ────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+const getStyles = (colors: any) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
 
   // Setup
   setupContainer: { alignItems: 'center', padding: 28, gap: 16, paddingBottom: 40 },
   iconWrap: {
     width: 96, height: 96, borderRadius: 28,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     alignItems: 'center', justifyContent: 'center', marginBottom: 4,
   },
-  setupTitle: { fontSize: 26, fontWeight: '800', color: Colors.textPrimary },
-  setupSub: { fontSize: 14, color: Colors.textMuted, textAlign: 'center', lineHeight: 21 },
+  setupTitle: { fontSize: 26, fontWeight: '800', color: colors.textPrimary },
+  setupSub: { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 21 },
   langRow: { flexDirection: 'row', gap: 12, marginTop: 4 },
   langBtn: {
     paddingHorizontal: 20, paddingVertical: 12,
-    borderRadius: 14, borderWidth: 2, borderColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderRadius: 14, borderWidth: 2, borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
-  langBtnActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
-  langBtnText: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary },
-  langBtnTextActive: { color: Colors.primary },
+  langBtnActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+  langBtnText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
+  langBtnTextActive: { color: colors.primary },
   accentRow: { flexDirection: 'row', gap: 12, marginTop: 4 },
   accentBtn: {
     flex: 1,
     paddingHorizontal: 16, paddingVertical: 12,
-    borderRadius: 14, borderWidth: 2, borderColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderRadius: 14, borderWidth: 2, borderColor: colors.border,
+    backgroundColor: colors.surface,
     alignItems: 'center',
   },
-  accentBtnActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
-  accentBtnText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  accentBtnTextActive: { color: Colors.primary },
+  accentBtnActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+  accentBtnText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+  accentBtnTextActive: { color: colors.primary },
   topicWrap: { alignSelf: 'stretch', gap: 6 },
-  topicLabel: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  topicLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
   topicInput: {
-    backgroundColor: Colors.surface, borderRadius: 12,
+    backgroundColor: colors.surface, borderRadius: 12,
     paddingHorizontal: 16, paddingVertical: 12,
-    fontSize: 14, color: Colors.textPrimary,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: Colors.border,
+    fontSize: 14, color: colors.textPrimary,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
   },
   notice: {
     flexDirection: 'row', gap: 8, alignItems: 'flex-start',
     backgroundColor: '#FFF7ED', borderRadius: 12, padding: 12, alignSelf: 'stretch',
   },
-  noticeText: { flex: 1, fontSize: 12, color: Colors.warning, lineHeight: 18 },
+  noticeText: { flex: 1, fontSize: 12, color: colors.warning, lineHeight: 18 },
   startBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: Colors.primary, borderRadius: 16,
+    backgroundColor: colors.primary, borderRadius: 16,
     paddingHorizontal: 28, paddingVertical: 16,
     width: '100%', justifyContent: 'center',
   },
@@ -659,31 +661,31 @@ const styles = StyleSheet.create({
 
   // Option sections
   sectionWrap: { alignSelf: 'stretch', gap: 8 },
-  sectionLabel: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  sectionLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
 
   voiceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   voiceChip: {
     alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8,
-    borderRadius: 12, borderWidth: 2, borderColor: Colors.border,
-    backgroundColor: Colors.surface, width: '23%',
+    borderRadius: 12, borderWidth: 2, borderColor: colors.border,
+    backgroundColor: colors.surface, width: '23%',
   },
-  voiceChipActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
-  voiceChipName: { fontSize: 12, fontWeight: '700', color: Colors.textSecondary, textAlign: 'center' },
-  voiceChipNameActive: { color: Colors.primary },
-  voiceChipDesc: { fontSize: 10, color: Colors.textMuted, marginTop: 2, textAlign: 'center' },
-  voiceChipDescActive: { color: Colors.primary },
+  voiceChipActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+  voiceChipName: { fontSize: 12, fontWeight: '700', color: colors.textSecondary, textAlign: 'center' },
+  voiceChipNameActive: { color: colors.primary },
+  voiceChipDesc: { fontSize: 10, color: colors.textMuted, marginTop: 2, textAlign: 'center' },
+  voiceChipDescActive: { color: colors.primary },
 
   optionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   optionChip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 12, paddingVertical: 9,
-    borderRadius: 12, borderWidth: 2, borderColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderRadius: 12, borderWidth: 2, borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
-  optionChipActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
+  optionChipActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
   optionChipIcon: { fontSize: 14 },
-  optionChipLabel: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  optionChipLabelActive: { color: Colors.primary },
+  optionChipLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+  optionChipLabelActive: { color: colors.primary },
 
   topBar: {
     flexDirection: 'row',
@@ -695,54 +697,54 @@ const styles = StyleSheet.create({
   historyBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 20, backgroundColor: Colors.primaryLight,
+    borderRadius: 20, backgroundColor: colors.primaryLight,
   },
-  historyBtnText: { fontSize: 13, fontWeight: '600', color: Colors.primary },
+  historyBtnText: { fontSize: 13, fontWeight: '600', color: colors.primary },
 
   // Loading / saving
   centerFull: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
-  connectingText: { fontSize: 15, color: Colors.textMuted },
+  connectingText: { fontSize: 15, color: colors.textMuted },
 
   // Live
   liveHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
   },
   liveIndicatorWrap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  liveDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.border },
-  liveDotActive: { backgroundColor: Colors.error },
-  liveLabel: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  timer: { fontSize: 14, fontWeight: '700', color: Colors.textPrimary, fontVariant: ['tabular-nums'] },
-  langChip: { fontSize: 13, fontWeight: '600', color: Colors.textMuted },
+  liveDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.border },
+  liveDotActive: { backgroundColor: colors.error },
+  liveLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+  timer: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, fontVariant: ['tabular-nums'] },
+  langChip: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
 
   transcriptList: { padding: 16, gap: 10, paddingBottom: 8 },
   emptyTranscript: { paddingTop: 60, alignItems: 'center' },
-  emptyTranscriptText: { fontSize: 14, color: Colors.textMuted, textAlign: 'center' },
+  emptyTranscriptText: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
 
   turnRow: { maxWidth: '85%', borderRadius: 16, padding: 12 },
   turnRowUser: {
-    alignSelf: 'flex-end', backgroundColor: Colors.primary, borderBottomRightRadius: 4,
+    alignSelf: 'flex-end', backgroundColor: colors.primary, borderBottomRightRadius: 4,
   },
   turnRowAI: {
-    alignSelf: 'flex-start', backgroundColor: Colors.surface,
+    alignSelf: 'flex-start', backgroundColor: colors.surface,
     borderBottomLeftRadius: 4,
     ...(Platform.OS !== 'android' && { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4 }),
     elevation: 1,
   },
   turnText: { fontSize: 15, lineHeight: 22 },
   turnTextUser: { color: '#fff' },
-  turnTextAI: { color: Colors.textPrimary },
+  turnTextAI: { color: colors.textPrimary },
 
   endBar: {
     padding: 16, paddingBottom: 24,
-    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border,
+    backgroundColor: colors.surface,
   },
   endBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 10, backgroundColor: Colors.error, borderRadius: 16, paddingVertical: 14,
+    gap: 10, backgroundColor: colors.error, borderRadius: 16, paddingVertical: 14,
   },
   endBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 });

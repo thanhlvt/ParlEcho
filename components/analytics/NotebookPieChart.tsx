@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { ProgressRing } from './ProgressRing';
 
 interface NotebookPieChartProps {
@@ -14,6 +14,8 @@ export function NotebookPieChart({
   phraseCount,
   mistakeCount,
 }: NotebookPieChartProps) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const total = wordCount + phraseCount + mistakeCount;
 
   // Tính tỷ lệ và phần trăm cân bằng (Largest Remainder Method)
@@ -81,7 +83,7 @@ export function NotebookPieChart({
       label: 'Từ vựng',
       count: wordCount,
       percentage: pctWord,
-      color: Colors.success,
+      color: colors.success,
       icon: '📝',
     },
     {
@@ -89,7 +91,7 @@ export function NotebookPieChart({
       label: 'Mẫu câu',
       count: phraseCount,
       percentage: pctPhrase,
-      color: Colors.warning,
+      color: colors.warning,
       icon: '💬',
     },
     {
@@ -97,7 +99,7 @@ export function NotebookPieChart({
       label: 'Lỗi sai',
       count: mistakeCount,
       percentage: pctMistake,
-      color: Colors.error,
+      color: colors.error,
       icon: '⚠️',
     },
   ];
@@ -131,7 +133,7 @@ export function NotebookPieChart({
                     height: size,
                     borderRadius: size / 2,
                     borderWidth: strokeWidth,
-                    borderColor: Colors.surfaceAlt,
+                    borderColor: colors.surfaceAlt,
                   },
                 ]}
               />
@@ -143,7 +145,7 @@ export function NotebookPieChart({
                     size={size}
                     progress={pWord}
                     strokeWidth={strokeWidth}
-                    color={Colors.success}
+                    color={colors.success}
                     backgroundColor="transparent"
                   />
                 </View>
@@ -156,7 +158,7 @@ export function NotebookPieChart({
                     size={size}
                     progress={pPhrase}
                     strokeWidth={strokeWidth}
-                    color={Colors.warning}
+                    color={colors.warning}
                     backgroundColor="transparent"
                   />
                 </View>
@@ -169,7 +171,7 @@ export function NotebookPieChart({
                     size={size}
                     progress={pMistake}
                     strokeWidth={strokeWidth}
-                    color={Colors.error}
+                    color={colors.error}
                     backgroundColor="transparent"
                   />
                 </View>
@@ -205,9 +207,9 @@ export function NotebookPieChart({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -216,12 +218,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   title: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: 16,
   },
   chartContainer: {
@@ -250,7 +252,7 @@ const styles = StyleSheet.create({
   centerText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
   centerValueContainer: {
     position: 'absolute',
@@ -260,11 +262,11 @@ const styles = StyleSheet.create({
   centerCount: {
     fontSize: 20,
     fontWeight: '800',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   centerLabel: {
     fontSize: 10,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
   legendContainer: {
@@ -287,11 +289,11 @@ const styles = StyleSheet.create({
   legendLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   legendValue: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 2,
   },
 });

@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 
 const { width, height } = Dimensions.get('window');
 const SIDEBAR_WIDTH = 280;
@@ -31,6 +31,8 @@ export function useSidebar() {
 }
 
 export default function AppLayout() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   
@@ -101,11 +103,11 @@ export default function AppLayout() {
         <Tabs
           screenOptions={{
             headerShown: false,
-            tabBarActiveTintColor: Colors.primary,
-            tabBarInactiveTintColor: Colors.textMuted,
+            tabBarActiveTintColor: colors.primary,
+            tabBarInactiveTintColor: colors.textMuted,
             tabBarStyle: {
-              backgroundColor: Colors.surface,
-              borderTopColor: Colors.border,
+              backgroundColor: colors.surface,
+              borderTopColor: colors.border,
               paddingBottom: 4,
             },
           }}
@@ -189,7 +191,7 @@ export default function AppLayout() {
               <Text style={styles.sidebarLogo}>ParlEcho 🤖</Text>
               <Text style={styles.sidebarSubtitle}>Luyện Anh - Nhật song song</Text>
               <TouchableOpacity style={styles.closeBtn} onPress={closeSidebar} hitSlop={12}>
-                <Ionicons name="close" size={24} color={Colors.textPrimary} />
+                <Ionicons name="close" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
@@ -203,10 +205,10 @@ export default function AppLayout() {
                   activeOpacity={0.7}
                 >
                   <View style={styles.menuIconWrapper}>
-                    <Ionicons name={item.icon} size={22} color={Colors.primary} />
+                    <Ionicons name={item.icon} size={22} color={colors.primary} />
                   </View>
                   <Text style={styles.menuItemLabel}>{item.label}</Text>
-                  <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} style={{ marginLeft: 'auto' }} />
+                  <Ionicons name="chevron-forward" size={14} color={colors.textMuted} style={{ marginLeft: 'auto' }} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -222,7 +224,7 @@ export default function AppLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 99,
@@ -237,7 +239,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: SIDEBAR_WIDTH,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     zIndex: 100,
     shadowColor: '#000',
     shadowOffset: { width: 4, height: 0 },
@@ -251,17 +253,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 24,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
+    borderBottomColor: colors.border,
     position: 'relative',
   },
   sidebarLogo: {
     fontSize: 22,
     fontWeight: '800',
-    color: Colors.primary,
+    color: colors.primary,
   },
   sidebarSubtitle: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 4,
     fontWeight: '500',
   },
@@ -286,24 +288,24 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
   menuItemLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   sidebarFooter: {
     padding: 20,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     alignItems: 'center',
   },
   footerText: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontWeight: '600',
   },
 });

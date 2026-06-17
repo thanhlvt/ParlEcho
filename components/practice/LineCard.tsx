@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { PronounceApiResponse, ScenarioLine } from '../../lib/types';
 import { ScorePanel } from './ScorePanel';
 import { WordHighlight } from './WordHighlight';
@@ -41,6 +41,8 @@ export function LineCard({
   onSave,
   onWordPress,
 }: LineCardProps) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const isPartner = line.speaker === 'partner';
 
   return (
@@ -58,7 +60,7 @@ export function LineCard({
               <Ionicons
                 name={isSaved ? 'bookmark' : 'bookmark-outline'}
                 size={16}
-                color={isSaved ? Colors.primary : Colors.textMuted}
+                color={isSaved ? colors.primary : colors.textMuted}
               />
             </TouchableOpacity>
           )}
@@ -91,7 +93,7 @@ export function LineCard({
           <Ionicons
             name={isPlaying ? 'pause-circle' : 'play-circle'}
             size={18}
-            color={Colors.primary}
+            color={colors.primary}
           />
           <Text style={styles.playBtnText}>
             {isPlaying ? 'Đang phát' : isPartner ? 'Nghe' : 'Nghe mẫu'}
@@ -102,13 +104,13 @@ export function LineCard({
         {!isPartner && (
           <>
             {isProcessing ? (
-              <View style={[styles.recordBtn, { backgroundColor: Colors.textMuted }]}>
+              <View style={[styles.recordBtn, { backgroundColor: colors.textMuted }]}>
                 <ActivityIndicator size="small" color="#fff" />
                 <Text style={styles.recordBtnText}>Đang xử lý</Text>
               </View>
             ) : isRecording ? (
               <TouchableOpacity
-                style={[styles.recordBtn, { backgroundColor: Colors.error }]}
+                style={[styles.recordBtn, { backgroundColor: colors.error }]}
                 onPress={onStopRecord}
                 activeOpacity={0.8}
               >
@@ -136,9 +138,9 @@ export function LineCard({
                 <Ionicons
                   name={isPlayingUser ? 'pause-circle' : 'ear'}
                   size={18}
-                  color={isPlayingUser ? Colors.surface : Colors.primary}
+                  color={isPlayingUser ? colors.surface : colors.primary}
                 />
-                <Text style={[styles.playBtnText, isPlayingUser && { color: Colors.surface }]}>
+                <Text style={[styles.playBtnText, isPlayingUser && { color: colors.surface }]}>
                   {isPlayingUser ? 'Đang phát' : 'Nghe lại'}
                 </Text>
               </TouchableOpacity>
@@ -150,7 +152,7 @@ export function LineCard({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   // Cards
   card: {
     borderRadius: 16,
@@ -161,8 +163,8 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  cardPartner: { backgroundColor: Colors.surfaceAlt },
-  cardUser: { backgroundColor: Colors.surface },
+  cardPartner: { backgroundColor: colors.surfaceAlt },
+  cardUser: { backgroundColor: colors.surface },
 
   speakerRow: {
     flexDirection: 'row',
@@ -180,31 +182,31 @@ const styles = StyleSheet.create({
   speakerLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.textMuted,
+    color: colors.textMuted,
   },
-  lineNum: { fontSize: 11, color: Colors.border },
+  lineNum: { fontSize: 11, color: colors.border },
 
   lineText: {
     fontSize: 18,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 28,
     marginBottom: 6,
   },
-  furigana: { fontSize: 13, color: Colors.textMuted, marginBottom: 2 },
+  furigana: { fontSize: 13, color: colors.textMuted, marginBottom: 2 },
   romaji: {
     fontSize: 13,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontStyle: 'italic',
     marginBottom: 6,
   },
   translation: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     paddingTop: 8,
     marginTop: 4,
     marginBottom: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
   },
 
   // Actions
@@ -218,18 +220,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  playBtnText: { fontSize: 13, color: Colors.primary, fontWeight: '600' },
-  replayBtnActive: { backgroundColor: Colors.primary },
+  playBtnText: { fontSize: 13, color: colors.primary, fontWeight: '600' },
+  replayBtnActive: { backgroundColor: colors.primary },
   recordBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,

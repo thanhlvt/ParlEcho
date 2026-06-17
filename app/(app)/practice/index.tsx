@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../../constants/Colors';
+import { useTheme } from '../../../providers/ThemeProvider';
 import { supabase } from '../../../lib/supabase';
 import { LanguageId, Scenario, UserProgress } from '../../../lib/types';
 import { useAuth } from '../../../providers/AuthProvider';
@@ -21,13 +21,9 @@ type ScenarioWithProgress = Scenario & {
   progress: UserProgress | null;
 };
 
-const LEVEL_COLOR = {
-  beginner: Colors.success,
-  intermediate: Colors.warning,
-  advanced: Colors.error,
-} as const;
-
 export default function PracticeIndexScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const { user } = useAuth();
   const router = useRouter();
   const { toggleSidebar } = useSidebar();
@@ -97,7 +93,7 @@ export default function PracticeIndexScreen() {
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
-            <Ionicons name="menu" size={28} color={Colors.textPrimary} />
+            <Ionicons name="menu" size={28} color={colors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.title}>Luyện phát âm</Text>
         </View>
@@ -108,19 +104,19 @@ export default function PracticeIndexScreen() {
 
       {/* Search Bar */}
       <View style={styles.searchBarContainer}>
-        <Ionicons name="search" size={20} color={Colors.textMuted} style={styles.searchIcon} />
+        <Ionicons name="search" size={20} color={colors.textMuted} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholder="Tìm kiếm bài học..."
-          placeholderTextColor={Colors.textMuted}
+          placeholderTextColor={colors.textMuted}
           autoCapitalize="none"
           autoCorrect={false}
         />
         {searchQuery ? (
           <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={8}>
-            <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -148,7 +144,7 @@ export default function PracticeIndexScreen() {
           >
             <Text style={[
               styles.levelChipText,
-              { color: selectedLevel === 'beginner' ? '#fff' : Colors.success },
+              { color: selectedLevel === 'beginner' ? '#fff' : colors.success },
               selectedLevel === 'beginner' && styles.levelChipTextActive
             ]}>
               Cơ bản
@@ -163,7 +159,7 @@ export default function PracticeIndexScreen() {
           >
             <Text style={[
               styles.levelChipText,
-              { color: selectedLevel === 'intermediate' ? '#fff' : Colors.warning },
+              { color: selectedLevel === 'intermediate' ? '#fff' : colors.warning },
               selectedLevel === 'intermediate' && styles.levelChipTextActive
             ]}>
               Trung cấp
@@ -178,7 +174,7 @@ export default function PracticeIndexScreen() {
           >
             <Text style={[
               styles.levelChipText,
-              { color: selectedLevel === 'advanced' ? '#fff' : Colors.error },
+              { color: selectedLevel === 'advanced' ? '#fff' : colors.error },
               selectedLevel === 'advanced' && styles.levelChipTextActive
             ]}>
               Nâng cao
@@ -188,7 +184,7 @@ export default function PracticeIndexScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator style={styles.loader} color={Colors.primary} />
+        <ActivityIndicator style={styles.loader} color={colors.primary} />
       ) : scenarios.length === 0 ? (
         <EmptyState error={fetchError} lang={activeLang} onRetry={fetchData} />
       ) : filteredScenarios.length === 0 ? (
@@ -235,12 +231,20 @@ function ScenarioCard({
   scenario: ScenarioWithProgress;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+  const LEVEL_COLOR = {
+    beginner: colors.success,
+    intermediate: colors.warning,
+    advanced: colors.error,
+  } as const;
+
   const score = scenario.progress?.best_pronunciation_score;
   const scoreColor =
-    score == null ? Colors.textMuted
-      : score >= 80 ? Colors.success
-      : score >= 60 ? Colors.warning
-      : Colors.error;
+    score == null ? colors.textMuted
+      : score >= 80 ? colors.success
+      : score >= 60 ? colors.warning
+      : colors.error;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
@@ -276,7 +280,7 @@ function ScenarioCard({
             {Math.round(score)}
           </Text>
         )}
-        <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
       </View>
     </TouchableOpacity>
   );
@@ -291,6 +295,8 @@ function EmptyState({
   lang: LanguageId;
   onRetry: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyIcon}>{error ? '⚠️' : '📚'}</Text>
@@ -298,15 +304,15 @@ function EmptyState({
         {error ? 'Lỗi tải dữ liệu' : 'Chưa có kịch bản'}
       </Text>
       {error ? (
-        <Text style={[styles.emptyText, { color: Colors.error }]}>{error}</Text>
+        <Text style={[styles.emptyText, { color: colors.error }]}>{error}</Text>
       ) : (
         <Text style={styles.emptyText}>
           Không có kịch bản nào cho ngôn ngữ{' '}
-          <Text style={{ fontWeight: '700', color: Colors.primary }}>
+          <Text style={{ fontWeight: '700', color: colors.primary }}>
             {lang === 'en' ? 'English (EN)' : 'Japanese (JP)'}
           </Text>
           {'\n\n'}Chạy{' '}
-          <Text style={{ fontFamily: 'monospace', color: Colors.primary }}>
+          <Text style={{ fontFamily: 'monospace', color: colors.primary }}>
             seed_scenarios.sql
           </Text>
           {' '}trong Supabase SQL Editor, hoặc đổi ngôn ngữ ở màn hình Home.
@@ -319,8 +325,8 @@ function EmptyState({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+const getStyles = (colors: any) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -329,19 +335,19 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 16,
   },
-  title: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary },
+  title: { fontSize: 24, fontWeight: '700', color: colors.textPrimary },
   langBadge: {
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  langText: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
+  langText: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
   loader: { flex: 1 },
   list: { padding: 16, gap: 12 },
 
   card: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
@@ -355,22 +361,22 @@ const styles = StyleSheet.create({
   },
   cardIcon: { fontSize: 36 },
   cardBody: { flex: 1 },
-  cardTitle: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary, marginBottom: 4 },
-  cardDesc: { fontSize: 13, color: Colors.textMuted, marginBottom: 8 },
+  cardTitle: { fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 },
+  cardDesc: { fontSize: 13, color: colors.textMuted, marginBottom: 8 },
   cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   levelBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   levelText: { fontSize: 11, fontWeight: '700' },
-  attemptsText: { fontSize: 12, color: Colors.textMuted },
+  attemptsText: { fontSize: 12, color: colors.textMuted },
   cardRight: { alignItems: 'center', gap: 4 },
   scoreText: { fontSize: 18, fontWeight: '800' },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
   emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: Colors.textPrimary, marginBottom: 8 },
-  emptyText: { fontSize: 14, color: Colors.textMuted, textAlign: 'center', lineHeight: 22 },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 },
+  emptyText: { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
   retryBtn: {
     marginTop: 16,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingHorizontal: 24,
     paddingVertical: 10,
@@ -381,14 +387,14 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 12,
     marginHorizontal: 20,
     marginBottom: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   searchIcon: {
     marginRight: 8,
@@ -396,7 +402,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     padding: 0,
   },
   levelScroll: {
@@ -408,29 +414,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   levelChipActiveAll: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   levelChipActiveBeginner: {
-    backgroundColor: Colors.success,
-    borderColor: Colors.success,
+    backgroundColor: colors.success,
+    borderColor: colors.success,
   },
   levelChipActiveIntermediate: {
-    backgroundColor: Colors.warning,
-    borderColor: Colors.warning,
+    backgroundColor: colors.warning,
+    borderColor: colors.warning,
   },
   levelChipActiveAdvanced: {
-    backgroundColor: Colors.error,
-    borderColor: Colors.error,
+    backgroundColor: colors.error,
+    borderColor: colors.error,
   },
   levelChipText: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '600',
   },
   levelChipTextActive: {
@@ -451,24 +457,24 @@ const styles = StyleSheet.create({
   emptyFilteredTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: 8,
   },
   emptyFilteredText: {
     fontSize: 14,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     marginBottom: 16,
     lineHeight: 20,
   },
   resetBtn: {
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
   resetBtnText: {
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '600',
     fontSize: 13,
   },

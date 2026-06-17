@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { PronounceApiResponse } from '../../lib/types';
 
 interface ScorePanelProps {
@@ -8,9 +8,11 @@ interface ScorePanelProps {
 }
 
 export function ScorePanel({ result }: ScorePanelProps) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const score = result.overall_score ?? 0;
   const color =
-    score >= 80 ? Colors.success : score >= 60 ? Colors.warning : Colors.error;
+    score >= 80 ? colors.success : score >= 60 ? colors.warning : colors.error;
   const label =
     score >= 80 ? '🎉 Tốt lắm!' : score >= 60 ? '👍 Khá!' : '💪 Luyện thêm!';
 
@@ -44,9 +46,9 @@ export function ScorePanel({ result }: ScorePanelProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   scorePanel: {
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 12,
     padding: 12,
     marginTop: 10,
@@ -55,21 +57,21 @@ const styles = StyleSheet.create({
   },
   scoreHeader: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
   scoreNum: { fontSize: 28, fontWeight: '800' },
-  scoreDen: { fontSize: 14, color: Colors.textMuted, fontWeight: '600' },
+  scoreDen: { fontSize: 14, color: colors.textMuted, fontWeight: '600' },
   scoreLabel: { marginLeft: 8, fontSize: 14 },
   scoreRow: { flexDirection: 'row', gap: 8 },
   scorePill: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 8,
     alignItems: 'center',
   },
-  pillLabel: { fontSize: 10, color: Colors.textMuted, marginBottom: 2 },
-  pillValue: { fontSize: 16, fontWeight: '800', color: Colors.textPrimary },
+  pillLabel: { fontSize: 10, color: colors.textMuted, marginBottom: 2 },
+  pillValue: { fontSize: 16, fontWeight: '800', color: colors.textPrimary },
   recognized: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontStyle: 'italic',
   },
 });

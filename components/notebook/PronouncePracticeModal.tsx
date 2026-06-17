@@ -3,7 +3,7 @@ import { Modal, View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Ale
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import { supabase } from '../../lib/supabase';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { SavedItem, PronounceApiResponse } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { WordHighlight } from '../practice/WordHighlight';
@@ -18,6 +18,8 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
   item,
   onClose,
 }) => {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const { user } = useAuth();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -225,7 +227,7 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>Luyện phát âm</Text>
             <TouchableOpacity onPress={onClose} hitSlop={8}>
-              <Ionicons name="close-circle" size={24} color={Colors.textMuted} />
+              <Ionicons name="close-circle" size={24} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -282,7 +284,7 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
                   <Ionicons
                     name={isPlayingUser ? 'pause' : 'play'}
                     size={20}
-                    color={isPlayingUser ? '#fff' : Colors.primary}
+                    color={isPlayingUser ? '#fff' : colors.primary}
                   />
                   <Text style={[styles.replayText, isPlayingUser && { color: '#fff' }]}>
                     {isPlayingUser ? 'Đang phát' : 'Nghe lại giọng bạn'}
@@ -297,14 +299,14 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '85%',
@@ -316,36 +318,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
   },
   sheetTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   sheetContent: {
     padding: 16,
     gap: 16,
   },
   practiceCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   practiceText: {
     fontSize: 20,
     fontWeight: '600',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 28,
   },
   practiceTranslation: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 8,
     fontStyle: 'italic',
   },
@@ -356,33 +358,33 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   bigMicBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     width: 80,
     height: 80,
     borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.primary,
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 4,
   },
   bigMicBtnRecording: {
-    backgroundColor: Colors.error,
+    backgroundColor: colors.error,
     width: 80,
     height: 80,
     borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: Colors.error,
+    shadowColor: colors.error,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 4,
   },
   bigMicBtnProcessing: {
-    backgroundColor: Colors.textMuted,
+    backgroundColor: colors.textMuted,
     width: 80,
     height: 80,
     borderRadius: 40,
@@ -391,7 +393,7 @@ const styles = StyleSheet.create({
   },
   micBtnText: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '600',
     marginTop: 8,
   },
@@ -400,19 +402,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   replayBtnActive: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
   },
   replayText: {
     fontSize: 13,
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
 });

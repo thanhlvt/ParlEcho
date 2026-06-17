@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../providers/ThemeProvider';
 import { supabase } from '../../lib/supabase';
 import { DailyActivity } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
@@ -24,6 +24,8 @@ const { width } = Dimensions.get('window');
 type ChartMetric = 'score' | 'lines';
 
 export default function AnalyticsScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   const { user } = useAuth();
   const router = useRouter();
   const { toggleSidebar } = useSidebar();
@@ -168,14 +170,14 @@ export default function AnalyticsScreen() {
       {/* Custom Header */}
       <View style={styles.customHeader}>
         <TouchableOpacity onPress={toggleSidebar} style={styles.backBtn} hitSlop={12}>
-          <Ionicons name="menu" size={28} color={Colors.textPrimary} />
+          <Ionicons name="menu" size={28} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.customHeaderTitle}>Thống kê tiến độ</Text>
         <View style={{ width: 28 }} />
       </View>
 
       {loading ? (
-        <ActivityIndicator style={styles.loader} color={Colors.primary} size="large" />
+        <ActivityIndicator style={styles.loader} color={colors.primary} size="large" />
       ) : (
         <ScrollView contentContainerStyle={styles.container}>
           {/* Streak Section */}
@@ -200,7 +202,7 @@ export default function AnalyticsScreen() {
           <View style={styles.kpiGrid}>
             <View style={styles.kpiCard}>
               <View style={[styles.kpiIconWrapper, { backgroundColor: '#EEF2FF' }]}>
-                <Ionicons name="mic-sharp" size={20} color={Colors.primary} />
+                <Ionicons name="mic-sharp" size={20} color={colors.primary} />
               </View>
               <Text style={styles.kpiValue}>{totalLines}</Text>
               <Text style={styles.kpiLabel}>Câu đã nói</Text>
@@ -208,7 +210,7 @@ export default function AnalyticsScreen() {
 
             <View style={styles.kpiCard}>
               <View style={[styles.kpiIconWrapper, { backgroundColor: '#ECFDF5' }]}>
-                <Ionicons name="chatbubbles" size={20} color={Colors.success} />
+                <Ionicons name="chatbubbles" size={20} color={colors.success} />
               </View>
               <Text style={styles.kpiValue}>{totalConvs}</Text>
               <Text style={styles.kpiLabel}>Cuộc hội thoại</Text>
@@ -216,7 +218,7 @@ export default function AnalyticsScreen() {
 
             <View style={styles.kpiCard}>
               <View style={[styles.kpiIconWrapper, { backgroundColor: '#FFFBEB' }]}>
-                <Ionicons name="time" size={20} color={Colors.warning} />
+                <Ionicons name="time" size={20} color={colors.warning} />
               </View>
               <Text style={styles.kpiValue}>{totalMinutes}</Text>
               <Text style={styles.kpiLabel}>Số phút luyện</Text>
@@ -224,7 +226,7 @@ export default function AnalyticsScreen() {
 
             <View style={styles.kpiCard}>
               <View style={[styles.kpiIconWrapper, { backgroundColor: '#FFF5F5' }]}>
-                <Ionicons name="trophy" size={20} color={Colors.secondary} />
+                <Ionicons name="trophy" size={20} color={colors.secondary} />
               </View>
               <Text style={styles.kpiValue}>{maxOverallScore}%</Text>
               <Text style={styles.kpiLabel}>Điểm cao nhất</Text>
@@ -264,8 +266,8 @@ export default function AnalyticsScreen() {
                 
                 // Custom color
                 const barColor = chartMetric === 'score'
-                  ? (value >= 85 ? Colors.success : value >= 60 ? Colors.warning : value > 0 ? Colors.error : Colors.border)
-                  : Colors.primary;
+                  ? (value >= 85 ? colors.success : value >= 60 ? colors.warning : value > 0 ? colors.error : colors.border)
+                  : colors.primary;
 
                 return (
                   <View key={idx} style={styles.chartColumn}>
@@ -295,15 +297,15 @@ export default function AnalyticsScreen() {
 
             <View style={styles.chartLegend}>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: Colors.success }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
                 <Text style={styles.legendText}>Tốt (≥85%)</Text>
               </View>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: Colors.warning }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.warning }]} />
                 <Text style={styles.legendText}>Khá (60-84%)</Text>
               </View>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: Colors.error }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.error }]} />
                 <Text style={styles.legendText}>Cần luyện thêm ({"<"}60%)</Text>
               </View>
             </View>
@@ -323,12 +325,12 @@ export default function AnalyticsScreen() {
             <View style={styles.summaryRow}>
               <View style={styles.summaryColumn}>
                 <Text style={styles.summaryHeader}>Độ chuẩn xác trung bình</Text>
-                <Text style={[styles.summaryNumber, { color: Colors.primary }]}>{avgOverallScore}%</Text>
+                <Text style={[styles.summaryNumber, { color: colors.primary }]}>{avgOverallScore}%</Text>
               </View>
               <View style={styles.verticalDivider} />
               <View style={styles.summaryColumn}>
                 <Text style={styles.summaryHeader}>Hoạt động trong tháng</Text>
-                <Text style={[styles.summaryNumber, { color: Colors.success }]}>
+                <Text style={[styles.summaryNumber, { color: colors.success }]}>
                   {activities.length} ngày
                 </Text>
               </View>
@@ -354,14 +356,14 @@ export default function AnalyticsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+const getStyles = (colors: any) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
   loader: { flex: 1, justifyContent: 'center' },
   container: { padding: 16, gap: 16 },
 
   // Streak Banner
   streakBanner: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
@@ -372,14 +374,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   streakLeft: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingRight: 16,
     borderRightWidth: 1,
-    borderRightColor: Colors.border,
+    borderRightColor: colors.border,
   },
   streakNumber: {
     fontSize: 36,
@@ -388,7 +390,7 @@ const styles = StyleSheet.create({
   },
   streakUnit: {
     fontSize: 10,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '600',
     marginTop: 2,
   },
@@ -410,7 +412,7 @@ const styles = StyleSheet.create({
   streakText: {
     flex: 1,
     fontSize: 13,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 18,
   },
 
@@ -421,7 +423,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   kpiCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     width: (width - 32 - 12) / 2,
     borderRadius: 16,
     padding: 16,
@@ -432,7 +434,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   kpiIconWrapper: {
     width: 40,
@@ -445,17 +447,17 @@ const styles = StyleSheet.create({
   kpiValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   kpiLabel: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 4,
   },
 
   // Chart Panel
   chartPanel: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -464,7 +466,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   chartHeader: {
     flexDirection: 'row',
@@ -475,11 +477,11 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   metricToggle: {
     flexDirection: 'row',
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 8,
     padding: 2,
   },
@@ -489,7 +491,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   toggleBtnActive: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -498,11 +500,11 @@ const styles = StyleSheet.create({
   },
   toggleBtnText: {
     fontSize: 11,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontWeight: '600',
   },
   toggleBtnTextActive: {
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
 
@@ -522,7 +524,7 @@ const styles = StyleSheet.create({
   barTrack: {
     height: 130,
     width: 22,
-    backgroundColor: Colors.surfaceAlt,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 12,
     justifyContent: 'flex-end',
     alignItems: 'center',
@@ -537,18 +539,18 @@ const styles = StyleSheet.create({
     top: -20,
     fontSize: 9,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     width: 40,
     textAlign: 'center',
   },
   dayLabel: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     marginTop: 8,
     fontWeight: '500',
   },
   dayLabelToday: {
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
 
@@ -559,7 +561,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     justifyContent: 'center',
   },
   legendItem: {
@@ -574,12 +576,12 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 10,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
 
   // Activity summary
   activitySummaryPanel: {
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -588,12 +590,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   sectionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     marginBottom: 16,
   },
   summaryRow: {
@@ -607,7 +609,7 @@ const styles = StyleSheet.create({
   },
   summaryHeader: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: colors.textMuted,
     fontWeight: '600',
   },
   summaryNumber: {
@@ -617,19 +619,19 @@ const styles = StyleSheet.create({
   },
   verticalDivider: {
     width: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: colors.border,
     height: '100%',
   },
 
   actionBanner: {
-    backgroundColor: Colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     borderRadius: 12,
     padding: 12,
     gap: 10,
   },
   actionBannerText: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 18,
   },
   actionBannerBtn: {
@@ -637,7 +639,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     paddingVertical: 8,
     borderRadius: 8,
     alignSelf: 'flex-start',
@@ -655,13 +657,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
   },
   customHeaderTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
   },
   backBtn: {
     padding: 4,

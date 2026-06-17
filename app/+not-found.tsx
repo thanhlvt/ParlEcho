@@ -1,8 +1,10 @@
 import { Link, Stack } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../constants/Colors';
+import { useTheme } from '../providers/ThemeProvider';
 
 export default function NotFoundScreen() {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
   return (
     <>
       <Stack.Screen options={{ title: 'Không tìm thấy' }} />
@@ -18,9 +20,9 @@ export default function NotFoundScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: Colors.background },
-  title: { fontSize: 18, fontWeight: '600', color: Colors.textPrimary, marginBottom: 20 },
-  button: { backgroundColor: Colors.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: colors.background },
+  title: { fontSize: 18, fontWeight: '600', color: colors.textPrimary, marginBottom: 20 },
+  button: { backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 },
   buttonText: { color: '#FFF', fontSize: 15, fontWeight: '600' },
 });
