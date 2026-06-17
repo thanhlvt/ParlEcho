@@ -113,6 +113,7 @@ export class LiveClient {
     voice?: string;
     speakingStyle?: string;
     conversationMethod?: string;
+    accent?: string;
   }) {
     this.cb.onStateChange('connecting');
 
@@ -124,6 +125,7 @@ export class LiveClient {
         voice_id: opts.voice,
         speaking_style: opts.speakingStyle,
         conversation_method: opts.conversationMethod,
+        accent: opts.accent,
       },
     });
 

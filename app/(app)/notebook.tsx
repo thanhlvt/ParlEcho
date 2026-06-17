@@ -11,6 +11,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -37,6 +38,7 @@ export default function NotebookScreen() {
   // Filters
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [filterLang, setFilterLang] = useState<FilterLang>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // TTS states
   const [speakingItemId, setSpeakingItemId] = useState<string | null>(null);
@@ -135,7 +137,10 @@ export default function NotebookScreen() {
   const filteredItems = items.filter(item => {
     const typeMatch = filterType === 'all' || item.type === filterType;
     const langMatch = filterLang === 'all' || item.language_id === filterLang;
-    return typeMatch && langMatch;
+    const searchMatch =
+      item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.translation && item.translation.toLowerCase().includes(searchQuery.toLowerCase()));
+    return typeMatch && langMatch && searchMatch;
   });
 
   return (
@@ -153,6 +158,25 @@ export default function NotebookScreen() {
 
       {/* Filter bar */}
       <View style={styles.filterContainer}>
+        {/* Search Input */}
+        <View style={styles.searchBarContainer}>
+          <Ionicons name="search" size={18} color={Colors.textMuted} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Tìm kiếm từ vựng, mẫu câu..."
+            placeholderTextColor={Colors.textMuted}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {searchQuery ? (
+            <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={8}>
+              <Ionicons name="close-circle" size={16} color={Colors.textMuted} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
         {/* Language selector */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
           <Pressable
@@ -222,8 +246,24 @@ export default function NotebookScreen() {
         <ActivityIndicator style={styles.loader} color={Colors.primary} size="large" />
       ) : filteredItems.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📚</Text>
-          <Text style={styles.emptyText}>Chưa có mục nào được lưu ở bộ lọc này.</Text>
+          <Text style={styles.emptyIcon}>{items.length === 0 ? '📚' : '🔍'}</Text>
+          <Text style={styles.emptyText}>
+            {items.length === 0
+              ? 'Chưa có mục nào được lưu trong Sổ tay.'
+              : 'Không tìm thấy mục nào khớp với tìm kiếm.'}
+          </Text>
+          {items.length > 0 && (
+            <TouchableOpacity
+              style={styles.resetBtn}
+              onPress={() => {
+                setSearchQuery('');
+                setFilterType('all');
+                setFilterLang('all');
+              }}
+            >
+              <Text style={styles.resetBtnText}>Xóa bộ lọc</Text>
+            </TouchableOpacity>
+          )}
         </View>
       ) : (
         <FlatList
@@ -363,5 +403,40 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     padding: 4,
+  },
+
+  // Search Bar styles
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: Colors.textPrimary,
+    padding: 0,
+  },
+  resetBtn: {
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  resetBtnText: {
+    color: Colors.primary,
+    fontWeight: '600',
+    fontSize: 13,
   },
 });

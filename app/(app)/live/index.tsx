@@ -86,6 +86,7 @@ export default function LiveScreen() {
   const [voice, setVoice] = useState<VoiceId>('Kore');
   const [speakingStyle, setSpeakingStyle] = useState<SpeakingStyleId>('casual');
   const [conversationMethod, setConversationMethod] = useState<ConversationMethodId>('free_talk');
+  const [accent, setAccent] = useState<'en-US' | 'en-UK'>('en-US');
   const [topic, setTopic] = useState('');
   const [liveState, setLiveState] = useState<LiveState>('idle');
   const [turns, setTurns] = useState<LiveTurn[]>([]);
@@ -228,7 +229,7 @@ export default function LiveScreen() {
     });
 
     clientRef.current = client;
-    await client.start({ languageId, topic: topic.trim(), voice, speakingStyle, conversationMethod });
+    await client.start({ languageId, topic: topic.trim(), voice, speakingStyle, conversationMethod, accent });
   }
 
   // ── End session ─────────────────────────────────────────────────────
@@ -395,6 +396,33 @@ export default function LiveScreen() {
                 </TouchableOpacity>
               ))}
             </View>
+
+            {/* Accent selector (English only) */}
+            {languageId === 'en' && (
+              <View style={styles.sectionWrap}>
+                <Text style={styles.sectionLabel}>Chất giọng (Accent)</Text>
+                <View style={styles.accentRow}>
+                  <TouchableOpacity
+                    style={[styles.accentBtn, accent === 'en-US' && styles.accentBtnActive]}
+                    onPress={() => setAccent('en-US')}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.accentBtnText, accent === 'en-US' && styles.accentBtnTextActive]}>
+                      🇺🇸 Anh-Mỹ (en-US)
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.accentBtn, accent === 'en-UK' && styles.accentBtnActive]}
+                    onPress={() => setAccent('en-UK')}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.accentBtnText, accent === 'en-UK' && styles.accentBtnTextActive]}>
+                      🇬🇧 Anh-Anh (en-UK)
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
 
             {/* Voice selector */}
             <View style={styles.sectionWrap}>
@@ -597,6 +625,17 @@ const styles = StyleSheet.create({
   langBtnActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
   langBtnText: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary },
   langBtnTextActive: { color: Colors.primary },
+  accentRow: { flexDirection: 'row', gap: 12, marginTop: 4 },
+  accentBtn: {
+    flex: 1,
+    paddingHorizontal: 16, paddingVertical: 12,
+    borderRadius: 14, borderWidth: 2, borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+  },
+  accentBtnActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
+  accentBtnText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  accentBtnTextActive: { color: Colors.primary },
   topicWrap: { alignSelf: 'stretch', gap: 6 },
   topicLabel: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
   topicInput: {

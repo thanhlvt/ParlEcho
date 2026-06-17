@@ -39,6 +39,7 @@ Deno.serve(async (req: Request) => {
       voice_id,
       speaking_style = 'casual',
       conversation_method = 'free_talk',
+      accent = 'en-US',
     } = await req.json().catch(() => ({}));
     const voice = voice_id ?? VOICE_BY_LANG[language_id] ?? 'Kore';
 
@@ -58,8 +59,18 @@ Deno.serve(async (req: Request) => {
     const stylePrompt = STYLE_PROMPTS[speaking_style] || STYLE_PROMPTS.casual;
     const methodPrompt = METHOD_PROMPTS[conversation_method] || METHOD_PROMPTS.free_talk;
 
+    let accentPrompt = '';
+    if (language_id === 'en') {
+      if (accent === 'en-UK') {
+        accentPrompt = 'You must speak with a British English accent (en-UK), using British pronunciation, spelling, and vocabulary. ';
+      } else {
+        accentPrompt = 'You must speak with an American English accent (en-US), using American pronunciation, spelling, and vocabulary. ';
+      }
+    }
+
     const systemInstruction =
       `You are a friendly ${langLabel} conversation partner helping a Vietnamese learner practice spoken ${langLabel}. ` +
+      accentPrompt +
       `Your speaking style: ${stylePrompt} ` +
       `Your conversational approach: ${methodPrompt} ` +
       `${topicLine} ` +

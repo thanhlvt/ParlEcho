@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -34,6 +35,10 @@ export default function PracticeIndexScreen() {
   const [scenarios, setScenarios] = useState<ScenarioWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // Filter & Search states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
 
   useFocusEffect(
     useCallback(() => {
@@ -77,6 +82,15 @@ export default function PracticeIndexScreen() {
     setLoading(false);
   }
 
+  // Filter scenarios based on search query and selected level
+  const filteredScenarios = scenarios.filter((s) => {
+    const matchSearch =
+      s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (s.description && s.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchLevel = selectedLevel === 'all' || s.level === selectedLevel;
+    return matchSearch && matchLevel;
+  });
+
   return (
     <SafeAreaView style={styles.safe}>
       {/* Header */}
@@ -92,13 +106,111 @@ export default function PracticeIndexScreen() {
         </View>
       </View>
 
+      {/* Search Bar */}
+      <View style={styles.searchBarContainer}>
+        <Ionicons name="search" size={20} color={Colors.textMuted} style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Tìm kiếm bài học..."
+          placeholderTextColor={Colors.textMuted}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {searchQuery ? (
+          <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={8}>
+            <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      {/* Level Filters */}
+      <View style={{ marginBottom: 4 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.levelScroll}>
+          <TouchableOpacity
+            style={[
+              styles.levelChip,
+              selectedLevel === 'all' && styles.levelChipActiveAll,
+            ]}
+            onPress={() => setSelectedLevel('all')}
+          >
+            <Text style={[styles.levelChipText, selectedLevel === 'all' && styles.levelChipTextActive]}>
+              Tất cả
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.levelChip,
+              selectedLevel === 'beginner' && styles.levelChipActiveBeginner,
+            ]}
+            onPress={() => setSelectedLevel('beginner')}
+          >
+            <Text style={[
+              styles.levelChipText,
+              { color: selectedLevel === 'beginner' ? '#fff' : Colors.success },
+              selectedLevel === 'beginner' && styles.levelChipTextActive
+            ]}>
+              Cơ bản
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.levelChip,
+              selectedLevel === 'intermediate' && styles.levelChipActiveIntermediate,
+            ]}
+            onPress={() => setSelectedLevel('intermediate')}
+          >
+            <Text style={[
+              styles.levelChipText,
+              { color: selectedLevel === 'intermediate' ? '#fff' : Colors.warning },
+              selectedLevel === 'intermediate' && styles.levelChipTextActive
+            ]}>
+              Trung cấp
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.levelChip,
+              selectedLevel === 'advanced' && styles.levelChipActiveAdvanced,
+            ]}
+            onPress={() => setSelectedLevel('advanced')}
+          >
+            <Text style={[
+              styles.levelChipText,
+              { color: selectedLevel === 'advanced' ? '#fff' : Colors.error },
+              selectedLevel === 'advanced' && styles.levelChipTextActive
+            ]}>
+              Nâng cao
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+
       {loading ? (
         <ActivityIndicator style={styles.loader} color={Colors.primary} />
       ) : scenarios.length === 0 ? (
         <EmptyState error={fetchError} lang={activeLang} onRetry={fetchData} />
+      ) : filteredScenarios.length === 0 ? (
+        <View style={styles.emptyFiltered}>
+          <Text style={styles.emptyFilteredIcon}>🔍</Text>
+          <Text style={styles.emptyFilteredTitle}>Không tìm thấy bài học</Text>
+          <Text style={styles.emptyFilteredText}>
+            Không có kịch bản nào khớp với bộ lọc và từ khóa của bạn.
+          </Text>
+          <TouchableOpacity
+            style={styles.resetBtn}
+            onPress={() => {
+              setSearchQuery('');
+              setSelectedLevel('all');
+            }}
+          >
+            <Text style={styles.resetBtnText}>Xóa bộ lọc</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <ScrollView contentContainerStyle={styles.list}>
-          {scenarios.map((s) => (
+          {filteredScenarios.map((s) => (
             <ScenarioCard
               key={s.id}
               scenario={s}
@@ -264,4 +376,100 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   retryBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+
+  // New Search & Level Filters styles
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: Colors.textPrimary,
+    padding: 0,
+  },
+  levelScroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    gap: 8,
+  },
+  levelChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: Colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  levelChipActiveAll: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  levelChipActiveBeginner: {
+    backgroundColor: Colors.success,
+    borderColor: Colors.success,
+  },
+  levelChipActiveIntermediate: {
+    backgroundColor: Colors.warning,
+    borderColor: Colors.warning,
+  },
+  levelChipActiveAdvanced: {
+    backgroundColor: Colors.error,
+    borderColor: Colors.error,
+  },
+  levelChipText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+  },
+  levelChipTextActive: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  emptyFiltered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    marginTop: 32,
+  },
+  emptyFilteredIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  emptyFilteredTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 8,
+  },
+  emptyFilteredText: {
+    fontSize: 14,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  resetBtn: {
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  resetBtnText: {
+    color: Colors.primary,
+    fontWeight: '600',
+    fontSize: 13,
+  },
 });
