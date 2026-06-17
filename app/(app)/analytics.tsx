@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useSidebar } from './_layout';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -17,6 +17,7 @@ import { Colors } from '../../constants/Colors';
 import { supabase } from '../../lib/supabase';
 import { DailyActivity } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
+import { NotebookPieChart } from '../../components/analytics/NotebookPieChart';
 
 const { width } = Dimensions.get('window');
 
@@ -29,23 +30,42 @@ export default function AnalyticsScreen() {
   const [activities, setActivities] = useState<DailyActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [chartMetric, setChartMetric] = useState<ChartMetric>('score');
+  const [savedCounts, setSavedCounts] = useState({ word: 0, phrase: 0, mistake: 0 });
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchAnalytics();
+    }, [user?.id])
+  );
 
   async function fetchAnalytics() {
     if (!user) return;
     try {
       // Get past 30 days of activities
-      const { data, error } = await supabase
-        .from('daily_activity')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('activity_date', { ascending: true });
+      const [actRes, savedRes] = await Promise.all([
+        supabase
+          .from('daily_activity')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('activity_date', { ascending: true }),
+        supabase
+          .from('saved_items')
+          .select('type')
+          .eq('user_id', user.id),
+      ]);
 
-      if (error) throw error;
-      setActivities(data ?? []);
+      if (actRes.error) throw actRes.error;
+      setActivities(actRes.data ?? []);
+
+      if (savedRes.data) {
+        const counts = { word: 0, phrase: 0, mistake: 0 };
+        savedRes.data.forEach((item) => {
+          if (item.type === 'word' || item.type === 'phrase' || item.type === 'mistake') {
+            counts[item.type as 'word' | 'phrase' | 'mistake']++;
+          }
+        });
+        setSavedCounts(counts);
+      }
     } catch (err) {
       console.error(err);
       Alert.alert('Lỗi', 'Không thể tải thống kê tiến độ.');
@@ -288,6 +308,13 @@ export default function AnalyticsScreen() {
               </View>
             </View>
           </View>
+
+          {/* Notebook Pie Chart */}
+          <NotebookPieChart
+            wordCount={savedCounts.word}
+            phraseCount={savedCounts.phrase}
+            mistakeCount={savedCounts.mistake}
+          />
 
           {/* Activity Heatmap Grid / Calendar summary */}
           <View style={styles.activitySummaryPanel}>

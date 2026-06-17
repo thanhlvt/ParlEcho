@@ -69,13 +69,35 @@ export default function ReviewScreen() {
 
   async function saveWord(word: string) {
     if (!user || !conv) return;
-    const { error } = await supabase.from('saved_items').insert({
-      user_id: user.id,
-      language_id: conv.language_id,
-      type: 'word',
-      content: word,
-    });
-    if (!error) Alert.alert('Đã lưu', `"${word}" đã thêm vào sổ tay.`);
+    try {
+      const cleanWord = word.trim();
+      if (!cleanWord) return;
+
+      const { data: existing, error: checkError } = await supabase
+        .from('saved_items')
+        .select('id')
+        .eq('user_id', user.id)
+        .ilike('content', cleanWord)
+        .limit(1);
+
+      if (checkError) throw checkError;
+      if (existing && existing.length > 0) {
+        Alert.alert('Thông báo', `"${cleanWord}" đã tồn tại trong Sổ tay.`);
+        return;
+      }
+
+      const { error } = await supabase.from('saved_items').insert({
+        user_id: user.id,
+        language_id: conv.language_id,
+        type: 'word',
+        content: cleanWord,
+      });
+      if (error) throw error;
+      Alert.alert('Đã lưu', `"${cleanWord}" đã thêm vào sổ tay.`);
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Lỗi', 'Không thể lưu từ vựng.');
+    }
   }
 
   if (loading) {

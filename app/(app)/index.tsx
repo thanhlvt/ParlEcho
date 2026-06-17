@@ -2,19 +2,24 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
+  Alert,
   Dimensions,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../../constants/Colors';
 import { supabase } from '../../lib/supabase';
 import { DailyActivity, LanguageId, Profile } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { useSidebar } from './_layout';
+import { ProgressRing } from '../../components/analytics/ProgressRing';
 
 const { width } = Dimensions.get('window');
 
@@ -69,6 +74,13 @@ export default function HomeScreen() {
   const [activities, setActivities] = useState<DailyActivity[]>([]);
   const [activeLang, setActiveLang] = useState<LanguageId>('en');
 
+  // Daily Goal states
+  const [goalType, setGoalType] = useState<'lines' | 'minutes'>('lines');
+  const [goalTarget, setGoalTarget] = useState<number>(10);
+  const [isGoalModalVisible, setIsGoalModalVisible] = useState(false);
+  const [tempGoalType, setTempGoalType] = useState<'lines' | 'minutes'>('lines');
+  const [tempGoalTarget, setTempGoalTarget] = useState<number>(10);
+
   useFocusEffect(
     useCallback(() => {
       if (!user) return;
@@ -78,6 +90,25 @@ export default function HomeScreen() {
 
   async function fetchData() {
     if (!user) return;
+
+    // Load goals from AsyncStorage
+    try {
+      const storedType = await AsyncStorage.getItem(`goal_type_${user.id}`);
+      const storedTarget = await AsyncStorage.getItem(`goal_target_${user.id}`);
+      if (storedType) {
+        setGoalType(storedType as 'lines' | 'minutes');
+      } else {
+        setGoalType('lines');
+      }
+      if (storedTarget) {
+        setGoalTarget(parseInt(storedTarget, 10));
+      } else {
+        setGoalTarget(10); // mặc định 10 câu
+      }
+    } catch (e) {
+      console.warn('Error reading goal settings:', e);
+    }
+
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 13);
     const since = cutoff.toISOString().split('T')[0];
@@ -106,11 +137,36 @@ export default function HomeScreen() {
     }
   }
 
+  async function saveDailyGoal(type: 'lines' | 'minutes', target: number) {
+    if (!user) return;
+    try {
+      await AsyncStorage.setItem(`goal_type_${user.id}`, type);
+      await AsyncStorage.setItem(`goal_target_${user.id}`, target.toString());
+      setGoalType(type);
+      setGoalTarget(target);
+      setIsGoalModalVisible(false);
+    } catch (e) {
+      console.warn('Error saving goal:', e);
+    }
+  }
+
+  function openGoalSettings() {
+    setTempGoalType(goalType);
+    setTempGoalTarget(goalTarget);
+    setIsGoalModalVisible(true);
+  }
+
   const today = new Date().toISOString().split('T')[0];
   const todayAct = activities.find((a) => a.activity_date === today) ?? null;
   const streak = computeStreak(activities);
   const weekData = buildWeekData(activities);
   const displayName = profile?.name ?? user?.email?.split('@')[0] ?? 'bạn';
+
+  // Compute daily goal progress
+  const currentProgress = goalType === 'lines'
+    ? (todayAct?.lines_practiced ?? 0)
+    : (todayAct?.minutes_practiced ?? 0);
+  const goalProgress = goalTarget > 0 ? Math.min(currentProgress / goalTarget, 1) : 0;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -138,6 +194,33 @@ export default function HomeScreen() {
                 </Text>
               </TouchableOpacity>
             ))}
+          </View>
+        </View>
+
+        {/* Daily Goal Card */}
+        <View style={styles.goalCard}>
+          <View style={styles.goalCardLeft}>
+            <ProgressRing
+              size={68}
+              progress={goalProgress}
+              strokeWidth={8}
+              color={Colors.primary}
+              backgroundColor={Colors.surfaceAlt}
+            >
+              <Text style={styles.goalPercentText}>
+                {Math.round(goalProgress * 100)}%
+              </Text>
+            </ProgressRing>
+          </View>
+          <View style={styles.goalCardRight}>
+            <Text style={styles.goalTitle}>Mục tiêu hôm nay</Text>
+            <Text style={styles.goalProgressText}>
+              Đã hoàn thành <Text style={{ fontWeight: '800', color: Colors.primary }}>{currentProgress}</Text> / {goalTarget} {goalType === 'lines' ? 'câu' : 'phút'}
+            </Text>
+            <TouchableOpacity style={styles.goalSetupBtn} onPress={openGoalSettings} activeOpacity={0.7} hitSlop={8}>
+              <Ionicons name="settings-outline" size={14} color={Colors.primary} />
+              <Text style={styles.goalSetupBtnText}>Thiết lập mục tiêu</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -206,6 +289,106 @@ export default function HomeScreen() {
         </View>
 
       </ScrollView>
+
+      {/* Goal Setting Modal */}
+      <Modal
+        visible={isGoalModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsGoalModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Mục tiêu hàng ngày</Text>
+            
+            {/* Goal Type Selector */}
+            <Text style={styles.modalLabel}>Đo lường tiến độ theo</Text>
+            <View style={styles.typeSelector}>
+              <TouchableOpacity
+                style={[
+                  styles.typeBtn,
+                  tempGoalType === 'lines' && styles.typeBtnActive,
+                ]}
+                onPress={() => {
+                  setTempGoalType('lines');
+                  setTempGoalTarget(10);
+                }}
+              >
+                <Text style={[styles.typeBtnText, tempGoalType === 'lines' && styles.typeBtnTextActive]}>
+                  Số câu đã nói
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.typeBtn,
+                  tempGoalType === 'minutes' && styles.typeBtnActive,
+                ]}
+                onPress={() => {
+                  setTempGoalType('minutes');
+                  setTempGoalTarget(15);
+                }}
+              >
+                <Text style={[styles.typeBtnText, tempGoalType === 'minutes' && styles.typeBtnTextActive]}>
+                  Số phút luyện tập
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Target Value Adjuster */}
+            <Text style={styles.modalLabel}>Đặt chỉ tiêu hàng ngày</Text>
+            <View style={styles.adjusterRow}>
+              <TouchableOpacity
+                style={styles.adjustBtn}
+                onPress={() => setTempGoalTarget(prev => Math.max(1, prev - (tempGoalType === 'lines' ? 5 : 5)))}
+              >
+                <Ionicons name="remove" size={20} color={Colors.textPrimary} />
+              </TouchableOpacity>
+              
+              <TextInput
+                style={styles.targetInput}
+                value={tempGoalTarget.toString()}
+                keyboardType="number-pad"
+                onChangeText={(text) => {
+                  const val = parseInt(text.replace(/[^0-9]/g, ''), 10);
+                  setTempGoalTarget(isNaN(val) ? 0 : val);
+                }}
+              />
+
+              <TouchableOpacity
+                style={styles.adjustBtn}
+                onPress={() => setTempGoalTarget(prev => prev + (tempGoalType === 'lines' ? 5 : 5))}
+              >
+                <Ionicons name="add" size={20} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.adjusterUnit}>
+              {tempGoalType === 'lines' ? 'câu luyện mỗi ngày' : 'phút học tập mỗi ngày'}
+            </Text>
+
+            {/* Modal Actions */}
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => setIsGoalModalVisible(false)}
+              >
+                <Text style={styles.cancelBtnText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.saveBtn}
+                onPress={() => {
+                  if (tempGoalTarget > 0) {
+                    saveDailyGoal(tempGoalType, tempGoalTarget);
+                  } else {
+                    Alert.alert('Lỗi', 'Mục tiêu phải lớn hơn 0.');
+                  }
+                }}
+              >
+                <Text style={styles.saveBtnText}>Lưu</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -396,4 +579,187 @@ const styles = StyleSheet.create({
   },
   comingSoonTitle: { fontSize: 13, fontWeight: '600', color: Colors.textMuted, marginBottom: 4 },
   comingSoonItem: { fontSize: 14, color: Colors.textSecondary },
+
+  // Daily Goal Card styles
+  goalCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  goalCardLeft: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  goalCardRight: {
+    flex: 1,
+  },
+  goalPercentText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  goalTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  goalProgressText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 8,
+  },
+  goalSetupBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  goalSetupBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.primary,
+  },
+
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  typeSelector: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: 12,
+    padding: 4,
+    gap: 4,
+    marginBottom: 16,
+  },
+  typeBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  typeBtnActive: {
+    backgroundColor: Colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  typeBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textMuted,
+  },
+  typeBtnTextActive: {
+    color: Colors.primary,
+    fontWeight: '700',
+  },
+  adjusterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    marginTop: 8,
+  },
+  adjustBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: Colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  targetInput: {
+    width: 80,
+    height: 44,
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: 10,
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  adjusterUnit: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  cancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  cancelBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  saveBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+  },
+  saveBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fff',
+  },
 });

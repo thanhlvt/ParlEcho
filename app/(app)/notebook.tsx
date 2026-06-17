@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
-import { Stack } from 'expo-router';
+import { Stack, useFocusEffect } from 'expo-router';
 import { useSidebar } from './_layout';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -47,12 +47,15 @@ export default function NotebookScreen() {
   const [practiceItem, setPracticeItem] = useState<SavedItem | null>(null);
   const [isFlashcardMode, setIsFlashcardMode] = useState(false);
 
-  useEffect(() => {
-    fetchItems();
-    return () => {
-      Speech.stop();
-    };
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchItems();
+      return () => {
+        Speech.stop();
+        setSpeakingItemId(null);
+      };
+    }, [user?.id])
+  );
 
   async function fetchItems() {
     if (!user) return;

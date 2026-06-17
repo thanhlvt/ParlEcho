@@ -66,7 +66,7 @@ export default function ShadowingScreen() {
 
   async function handleToggleSaveLine(line: ScenarioLine) {
     if (!user || !scenario) return;
-    const existing = savedItems.find(item => item.content === line.text && item.type === 'phrase');
+    const existing = savedItems.find(item => item.content.toLowerCase().trim() === line.text.toLowerCase().trim() && item.type === 'phrase');
     if (existing) {
       try {
         const { error } = await supabase.from('saved_items').delete().eq('id', existing.id);
@@ -102,7 +102,7 @@ export default function ShadowingScreen() {
     const cleanWord = word.trim();
     if (!cleanWord) return;
 
-    const existing = savedItems.find(item => item.content.toLowerCase() === cleanWord.toLowerCase() && item.type === 'word');
+    const existing = savedItems.find(item => item.content.toLowerCase().trim() === cleanWord.toLowerCase() && item.type === 'word');
     if (existing) {
       Alert.alert('Thông tin', `Từ "${cleanWord}" đã có trong Sổ tay.`);
       return;

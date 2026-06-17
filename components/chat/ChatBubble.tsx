@@ -34,6 +34,21 @@ export function ChatBubble({
   async function handleSavePhrase() {
     if (!user) return;
     try {
+      // Check duplicate
+      const { data: existing, error: checkError } = await supabase
+        .from('saved_items')
+        .select('id')
+        .eq('user_id', user.id)
+        .ilike('content', message.text.trim())
+        .limit(1);
+
+      if (checkError) throw checkError;
+      if (existing && existing.length > 0) {
+        Alert.alert('Thông báo', 'Mẫu câu này đã tồn tại trong Sổ tay.');
+        setSavedPhrase(true);
+        return;
+      }
+
       const isOptimistic = message.id.startsWith('opt-') || message.id.startsWith('ai-');
       const { error } = await supabase.from('saved_items').insert({
         user_id: user.id,
@@ -55,6 +70,21 @@ export function ChatBubble({
   async function handleSaveCorrection(c: { original: string; fixed: string; explanation: string }, index: number) {
     if (!user) return;
     try {
+      // Check duplicate
+      const { data: existing, error: checkError } = await supabase
+        .from('saved_items')
+        .select('id')
+        .eq('user_id', user.id)
+        .ilike('content', c.fixed.trim())
+        .limit(1);
+
+      if (checkError) throw checkError;
+      if (existing && existing.length > 0) {
+        Alert.alert('Thông báo', 'Lỗi sai này đã tồn tại trong Sổ tay.');
+        setSavedCorrections(prev => ({ ...prev, [index]: true }));
+        return;
+      }
+
       const isOptimistic = message.id.startsWith('opt-') || message.id.startsWith('ai-');
       const { error } = await supabase.from('saved_items').insert({
         user_id: user.id,
