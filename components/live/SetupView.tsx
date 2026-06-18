@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
 import { LanguageId } from '../../lib/types';
 import {
+  AccentId,
   CONVERSATION_METHODS,
   ConversationMethodId,
   SPEAKING_STYLES,
@@ -26,8 +27,8 @@ interface SetupViewProps {
   toggleSidebar: () => void;
   languageId: LanguageId;
   setLanguageId: (lang: LanguageId) => void;
-  accent: 'en-US' | 'en-UK';
-  setAccent: (accent: 'en-US' | 'en-UK') => void;
+  accent: AccentId;
+  setAccent: (accent: AccentId) => void;
   voice: VoiceId;
   setVoice: (voice: VoiceId) => void;
   speakingStyle: SpeakingStyleId;

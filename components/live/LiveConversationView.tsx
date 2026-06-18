@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { RefObject } from 'react';
 import { FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
@@ -14,7 +15,7 @@ function formatTime(sec: number) {
 }
 
 interface LiveConversationViewProps {
-  flatRef: React.RefObject<FlatList<LiveTurn> | null>;
+  flatRef: RefObject<FlatList<LiveTurn> | null>;
   turns: LiveTurn[];
   liveState: LiveState;
   isPaused: boolean;

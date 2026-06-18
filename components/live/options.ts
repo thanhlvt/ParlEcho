@@ -33,3 +33,5 @@ export const CONVERSATION_METHODS = [
 export type ConversationMethodId = (typeof CONVERSATION_METHODS)[number]['id'];
 
 export type ViewState = 'setup' | 'connecting' | 'live' | 'saving';
+
+export type AccentId = 'en-US' | 'en-UK';

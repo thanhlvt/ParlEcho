@@ -21,6 +21,7 @@ import { supabase } from '../../lib/supabase';
 import { LanguageId, LiveAudioSegment, LiveTurn } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import {
+  AccentId,
   ConversationMethodId,
   SESSION_LIMIT_MINUTES,
   SpeakingStyleId,
@@ -37,7 +38,7 @@ export function useLiveSession() {
   const [voice, setVoice] = useState<VoiceId>('Kore');
   const [speakingStyle, setSpeakingStyle] = useState<SpeakingStyleId>('casual');
   const [conversationMethod, setConversationMethod] = useState<ConversationMethodId>('free_talk');
-  const [accent, setAccent] = useState<'en-US' | 'en-UK'>('en-US');
+  const [accent, setAccent] = useState<AccentId>('en-US');
   const [topic, setTopic] = useState('');
   const [liveState, setLiveState] = useState<LiveState>('idle');
   const [turns, setTurns] = useState<LiveTurn[]>([]);
