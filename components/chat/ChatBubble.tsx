@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { useTheme } from '../../providers/ThemeProvider';
 import { LanguageId, Message } from '../../lib/types';
 import { CorrectionRow } from './CorrectionRow';
@@ -43,19 +43,19 @@ export function ChatBubble({ message, languageId, expanded, onToggleExpand }: Ch
     try {
       setIsPlaying(true);
       // A prior Live session leaves the native audio session claimed for recording —
-      // switch back to normal playback mode here, otherwise expo-av can fail to
+      // switch back to normal playback mode here, otherwise expo-audio can fail to
       // acquire audio focus (AudioFocusNotAcquiredException on Android).
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
+      await setAudioModeAsync({
+        allowsRecording: false,
+        playsInSilentMode: true,
+        shouldPlayInBackground: false,
       });
-      const { sound } = await Audio.Sound.createAsync({ uri: message.audio_url });
-      await sound.playAsync();
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
+      const player = createAudioPlayer(message.audio_url);
+      player.play();
+      player.addListener('playbackStatusUpdate', (status) => {
+        if (status.didJustFinish) {
           setIsPlaying(false);
-          sound.unloadAsync();
+          player.remove();
         }
       });
     } catch (err) {

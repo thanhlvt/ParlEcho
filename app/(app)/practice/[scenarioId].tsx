@@ -1,4 +1,11 @@
-import { Audio } from 'expo-av';
+import {
+  AudioPlayer,
+  createAudioPlayer,
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+  useAudioRecorder,
+} from 'expo-audio';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
@@ -31,9 +38,9 @@ export default function ShadowingScreen() {
   const [results, setResults] = useState<Record<string, PronounceApiResponse>>({});
   const [recordedUris, setRecordedUris] = useState<Record<string, string>>({});
 
-  const recordingRef = useRef<Audio.Recording | null>(null);
-  const soundRef = useRef<Audio.Sound | null>(null);
-  const userSoundRef = useRef<Audio.Sound | null>(null);
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const soundRef = useRef<AudioPlayer | null>(null);
+  const userSoundRef = useRef<AudioPlayer | null>(null);
 
   const fetchData = useCallback(async () => {
     const [scenRes, linesRes, savedRes] = await Promise.all([
@@ -52,8 +59,8 @@ export default function ShadowingScreen() {
   useEffect(() => {
     fetchData();
     return () => {
-      soundRef.current?.unloadAsync();
-      userSoundRef.current?.unloadAsync();
+      soundRef.current?.remove();
+      userSoundRef.current?.remove();
     };
   }, [fetchData]);
 
@@ -150,7 +157,7 @@ export default function ShadowingScreen() {
   // ── TTS playback ────────────────────────────────────────────────────
   async function handlePlay(line: ScenarioLine) {
     if (soundRef.current) {
-      await soundRef.current.unloadAsync();
+      soundRef.current.remove();
       soundRef.current = null;
     }
     // Toggle off
@@ -169,16 +176,16 @@ export default function ShadowingScreen() {
     }
 
     try {
-      const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
-      soundRef.current = sound;
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          sound.unloadAsync();
+      const player = createAudioPlayer(audioUrl);
+      soundRef.current = player;
+      player.addListener('playbackStatusUpdate', (status) => {
+        if (status.didJustFinish) {
+          player.remove();
           soundRef.current = null;
           setPlayingLineId(null);
         }
       });
-      await sound.playAsync();
+      player.play();
     } catch {
       setPlayingLineId(null);
     }
@@ -186,8 +193,8 @@ export default function ShadowingScreen() {
 
   // ── Recording ───────────────────────────────────────────────────────
   async function handleStartRecord(lineId: string) {
-    const { status } = await Audio.requestPermissionsAsync();
-    if (status !== 'granted') {
+    const { granted } = await requestRecordingPermissionsAsync();
+    if (!granted) {
       Alert.alert(
         'Cần quyền microphone',
         'Vào Cài đặt → ParlEcho → Microphone để cho phép ghi âm.',
@@ -197,36 +204,32 @@ export default function ShadowingScreen() {
 
     // Stop any playing sound before recording
     if (soundRef.current) {
-      await soundRef.current.unloadAsync();
+      soundRef.current.remove();
       soundRef.current = null;
       setPlayingLineId(null);
     }
 
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: true,
-      playsInSilentModeIOS: true,
+    await setAudioModeAsync({
+      allowsRecording: true,
+      playsInSilentMode: true,
     });
 
-    const { recording } = await Audio.Recording.createAsync(
-      Audio.RecordingOptionsPresets.HIGH_QUALITY,
-    );
-    recordingRef.current = recording;
+    await recorder.prepareToRecordAsync();
+    recorder.record();
     setRecordingLineId(lineId);
   }
 
   async function handleStopRecord(line: ScenarioLine) {
-    const rec = recordingRef.current;
-    if (!rec) return;
+    if (!recorder.isRecording) return;
 
     setRecordingLineId(null);
     setProcessingLineId(line.id);
 
     try {
-      await rec.stopAndUnloadAsync();
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
-      recordingRef.current = null;
+      await recorder.stop();
+      await setAudioModeAsync({ allowsRecording: false });
 
-      const uri = rec.getURI();
+      const uri = recorder.uri;
       if (!uri) throw new Error('Không lấy được file ghi âm');
 
       // Save URI so user can replay their recording
@@ -285,7 +288,7 @@ export default function ShadowingScreen() {
   // ── User recording playback ─────────────────────────────────────────
   async function handlePlayUserRecording(lineId: string, uri: string) {
     if (userSoundRef.current) {
-      await userSoundRef.current.unloadAsync();
+      userSoundRef.current.remove();
       userSoundRef.current = null;
     }
     if (playingUserLineId === lineId) {
@@ -294,17 +297,17 @@ export default function ShadowingScreen() {
     }
     setPlayingUserLineId(lineId);
     try {
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
-      const { sound } = await Audio.Sound.createAsync({ uri });
-      userSoundRef.current = sound;
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          sound.unloadAsync();
+      await setAudioModeAsync({ allowsRecording: false });
+      const player = createAudioPlayer(uri);
+      userSoundRef.current = player;
+      player.addListener('playbackStatusUpdate', (status) => {
+        if (status.didJustFinish) {
+          player.remove();
           userSoundRef.current = null;
           setPlayingUserLineId(null);
         }
       });
-      await sound.playAsync();
+      player.play();
     } catch {
       setPlayingUserLineId(null);
     }

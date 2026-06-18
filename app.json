@@ -26,7 +26,10 @@
         "backgroundColor": "#5B4CF5"
       },
       "package": "com.parlechho.app",
-      "permissions": ["android.permission.RECORD_AUDIO", "android.permission.MODIFY_AUDIO_SETTINGS"]
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -35,12 +38,6 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-av",
-        {
-          "microphonePermission": "ParlEcho cần microphone để ghi âm giọng nói luyện phát âm."
-        }
-      ],
       "expo-font",
       "expo-dev-client",
       [
@@ -48,7 +45,14 @@
         {
           "microphonePermission": "ParlEcho cần microphone để hội thoại trực tiếp với AI."
         }
-      ]
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "ParlEcho cần microphone để ghi âm giọng nói luyện phát âm."
+        }
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

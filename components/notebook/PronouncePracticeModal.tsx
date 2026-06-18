@@ -10,7 +10,14 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
+import {
+  AudioPlayer,
+  createAudioPlayer,
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+  useAudioRecorder,
+} from 'expo-audio';
 import { supabase } from '../../lib/supabase';
 import { useTheme } from '../../providers/ThemeProvider';
 import { SavedItem, PronounceApiResponse } from '../../lib/types';
@@ -36,33 +43,31 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
   const [isPlayingUser, setIsPlayingUser] = useState(false);
   const [pronounceResult, setPronounceResult] = useState<PronounceApiResponse | null>(null);
 
-  const recordingRef = useRef<Audio.Recording | null>(null);
-  const userSoundRef = useRef<Audio.Sound | null>(null);
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const userSoundRef = useRef<AudioPlayer | null>(null);
 
   useEffect(() => {
     return () => {
-      userSoundRef.current?.unloadAsync();
+      userSoundRef.current?.remove();
     };
   }, []);
 
   async function startRecording() {
     if (!item) return;
     try {
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
+      const { granted } = await requestRecordingPermissionsAsync();
+      if (!granted) {
         Alert.alert('Quyền ghi âm', 'Vui lòng cấp quyền micro để luyện phát âm.');
         return;
       }
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
 
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
-      recordingRef.current = recording;
+      await recorder.prepareToRecordAsync();
+      recorder.record();
       setIsRecording(true);
       setPronounceResult(null);
       setRecordedUri(null);
@@ -74,19 +79,16 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
 
   async function stopRecording() {
     if (!item || !user) return;
-
-    const rec = recordingRef.current;
-    if (!rec) return;
+    if (!recorder.isRecording) return;
 
     setIsRecording(false);
     setIsProcessing(true);
 
     try {
-      await rec.stopAndUnloadAsync();
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
-      recordingRef.current = null;
+      await recorder.stop();
+      await setAudioModeAsync({ allowsRecording: false });
 
-      const uri = rec.getURI();
+      const uri = recorder.uri;
       if (!uri) throw new Error('Không lấy được file ghi âm');
       setRecordedUri(uri);
 
@@ -200,7 +202,7 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
   async function playUserRecording() {
     if (!recordedUri) return;
     if (userSoundRef.current) {
-      await userSoundRef.current.unloadAsync();
+      userSoundRef.current.remove();
       userSoundRef.current = null;
     }
     if (isPlayingUser) {
@@ -210,16 +212,16 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
 
     setIsPlayingUser(true);
     try {
-      const { sound } = await Audio.Sound.createAsync({ uri: recordedUri });
-      userSoundRef.current = sound;
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          sound.unloadAsync();
+      const player = createAudioPlayer(recordedUri);
+      userSoundRef.current = player;
+      player.addListener('playbackStatusUpdate', (status) => {
+        if (status.didJustFinish) {
+          player.remove();
           userSoundRef.current = null;
           setIsPlayingUser(false);
         }
       });
-      await sound.playAsync();
+      player.play();
     } catch (err) {
       console.error(err);
       setIsPlayingUser(false);

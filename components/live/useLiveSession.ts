@@ -1,5 +1,5 @@
 import { ExpoAudioStreamModule, useAudioRecorder } from '@siteed/audio-studio';
-import { Audio } from 'expo-av';
+import { requestRecordingPermissionsAsync } from 'expo-audio';
 import { LegacyEventEmitter } from 'expo-modules-core';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
@@ -138,8 +138,8 @@ export function useLiveSession() {
   // ── Start session ───────────────────────────────────────────────────
   async function startSession() {
     try {
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
+      const { granted } = await requestRecordingPermissionsAsync();
+      if (!granted) {
         Alert.alert(
           'Cần quyền microphone',
           'Vào Cài đặt → ParlEcho → Microphone để cho phép ghi âm.',

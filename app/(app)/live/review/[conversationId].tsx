@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
+import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -38,7 +38,7 @@ export default function ReviewScreen() {
   const [conv, setConv] = useState<ConversationWithReview | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [playingId, setPlayingId] = useState<string | null>(null);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const soundRef = useRef<AudioPlayer | null>(null);
 
   const fetchData = useCallback(async () => {
     const [convRes, msgRes] = await Promise.all([
@@ -72,14 +72,14 @@ export default function ReviewScreen() {
 
   useEffect(() => {
     return () => {
-      soundRef.current?.unloadAsync();
+      soundRef.current?.remove();
     };
   }, []);
 
   async function handlePlayAudio(messageId: string, audioUrl: string) {
     try {
       if (soundRef.current) {
-        await soundRef.current.unloadAsync();
+        soundRef.current.remove();
         soundRef.current = null;
       }
       if (playingId === messageId) {
@@ -89,19 +89,19 @@ export default function ReviewScreen() {
       setPlayingId(messageId);
       // The Live session leaves the native audio session claimed for recording
       // (mic capture + low-latency playback engine) — explicitly switch back to
-      // normal playback mode here, otherwise expo-av fails to acquire audio focus.
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
+      // normal playback mode here, otherwise expo-audio fails to acquire audio focus.
+      await setAudioModeAsync({
+        allowsRecording: false,
+        playsInSilentMode: true,
+        shouldPlayInBackground: false,
       });
-      const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
-      soundRef.current = sound;
-      await sound.playAsync();
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
+      const player = createAudioPlayer(audioUrl);
+      soundRef.current = player;
+      player.play();
+      player.addListener('playbackStatusUpdate', (status) => {
+        if (status.didJustFinish) {
           setPlayingId(null);
-          sound.unloadAsync();
+          player.remove();
           soundRef.current = null;
         }
       });
