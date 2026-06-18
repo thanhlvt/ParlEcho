@@ -52,7 +52,9 @@
           "microphonePermission": "ParlEcho cần microphone để ghi âm giọng nói luyện phát âm."
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-build-properties",
+      "./plugins/withAndroidCmakeVersion"
     ],
     "experiments": {
       "typedRoutes": true
