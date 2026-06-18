@@ -107,6 +107,18 @@ export default function LiveScreen() {
   const lastErrorMsgRef = useRef<string>('');
   const { startRecording, stopRecording } = useAudioRecorder();
 
+  const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
+
+  function togglePause() {
+    const next = !isPaused;
+    setIsPaused(next);
+    isPausedRef.current = next;
+    if (next) {
+      audioQueueRef.current?.clearBuffers();
+    }
+  }
+
   // Load active language from profile
   useFocusEffect(
     useCallback(() => {
@@ -141,7 +153,7 @@ export default function LiveScreen() {
     const sub = audioEmitter.current.addListener('AudioData', async (event: any) => {
       chunkCount++;
       if (chunkCount <= 3) console.log('[Live] AudioData chunk', chunkCount, 'encoded:', !!event?.encoded);
-      if (event?.encoded) {
+      if (event?.encoded && !isPausedRef.current) {
         clientRef.current?.sendAudioChunk(event.encoded as string);
       }
     });
@@ -201,6 +213,8 @@ export default function LiveScreen() {
     turnsRef.current = [];
     lastErrorMsgRef.current = '';
     setElapsedSec(0);
+    setIsPaused(false);
+    isPausedRef.current = false;
 
     const client = new LiveClient({
       onStateChange: (s) => {
@@ -210,6 +224,7 @@ export default function LiveScreen() {
           // Session timer
           timerRef.current = setInterval(() => {
             setElapsedSec((prev) => {
+              if (isPausedRef.current) return prev;
               if (prev >= SESSION_LIMIT_MINUTES * 60 - 1) {
                 // Auto-end when limit approaches
                 endSession();
@@ -237,6 +252,7 @@ export default function LiveScreen() {
         }
       },
       onAudioChunk: async (pcm24Base64) => {
+        if (isPausedRef.current) return;
         // Lazy-init AudioContext on first chunk to avoid audio session
         // conflict with mic recording that starts before AI responds
         if (!audioCtxRef.current) {
@@ -607,9 +623,13 @@ export default function LiveScreen() {
       {/* Header */}
       <View style={styles.liveHeader}>
         <View style={styles.liveIndicatorWrap}>
-          <View style={[styles.liveDot, isListening && styles.liveDotActive]} />
+          <View style={[
+            styles.liveDot,
+            isListening && !isPaused && styles.liveDotActive,
+            isPaused && styles.liveDotPaused
+          ]} />
           <Text style={styles.liveLabel}>
-            {isListening ? 'Đang kết nối' : 'Đang xử lý'}
+            {isPaused ? 'Đang tạm dừng' : isListening ? 'Đang kết nối' : 'Đang xử lý'}
           </Text>
         </View>
         <Text style={styles.timer}>{formatTime(elapsedSec)}</Text>
@@ -648,11 +668,26 @@ export default function LiveScreen() {
         )}
       />
 
-      {/* End button */}
+      {/* End / Control bar */}
       <View style={styles.endBar}>
+        <TouchableOpacity
+          style={[styles.pauseBtn, isPaused && styles.resumeBtn]}
+          onPress={togglePause}
+          activeOpacity={0.85}
+        >
+          <Ionicons
+            name={isPaused ? 'play' : 'pause'}
+            size={20}
+            color={isPaused ? '#fff' : colors.primary}
+          />
+          <Text style={[styles.pauseBtnText, isPaused && styles.resumeBtnText]}>
+            {isPaused ? 'Tiếp tục' : 'Tạm dừng'}
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.endBtn} onPress={endSession} activeOpacity={0.85}>
           <Ionicons name="stop-circle" size={22} color="#fff" />
-          <Text style={styles.endBtnText}>Kết thúc & Xem nhận xét</Text>
+          <Text style={styles.endBtnText}>Kết thúc</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -769,6 +804,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   liveIndicatorWrap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   liveDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.border },
   liveDotActive: { backgroundColor: colors.error },
+  liveDotPaused: { backgroundColor: colors.textMuted },
   liveLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
   timer: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, fontVariant: ['tabular-nums'] },
   langChip: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
@@ -792,13 +828,45 @@ const getStyles = (colors: any) => StyleSheet.create({
   turnTextAI: { color: colors.textPrimary },
 
   endBar: {
+    flexDirection: 'row',
+    gap: 12,
     padding: 16, paddingBottom: 24,
     borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border,
     backgroundColor: colors.surface,
   },
+  pauseBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    paddingVertical: 14,
+  },
+  pauseBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  resumeBtn: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  resumeBtnText: {
+    color: '#fff',
+  },
   endBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 10, backgroundColor: colors.error, borderRadius: 16, paddingVertical: 14,
+    flex: 1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: colors.error,
+    borderRadius: 16,
+    paddingVertical: 14,
   },
   endBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 });
