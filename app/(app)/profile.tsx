@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
 import { supabase } from '../../lib/supabase';
@@ -87,7 +87,7 @@ export default function ProfileScreen() {
         <Text style={styles.headerTitle}>Hồ sơ</Text>
         <View style={{ width: 32 }} />
       </View>
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         {/* Avatar */}
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initial}</Text>
@@ -153,7 +153,7 @@ export default function ProfileScreen() {
           <Ionicons name="log-out-outline" size={20} color={colors.error} />
           <Text style={styles.signOutText}>Đăng xuất</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -198,7 +198,7 @@ const getStyles = (colors: any) =>
       fontWeight: '700',
       color: colors.textPrimary,
     },
-    content: { padding: 24, alignItems: 'center' },
+    content: { padding: 24, paddingBottom: 40, alignItems: 'center' },
     avatar: {
       width: 80,
       height: 80,
