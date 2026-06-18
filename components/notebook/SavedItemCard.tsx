@@ -62,18 +62,25 @@ export const SavedItemCard: React.FC<SavedItemCardProps> = ({
       )}
 
       <View style={styles.cardActions}>
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={() => onSpeak(item)}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={speakingItemId === item.id ? 'stop-circle' : 'volume-high-outline'}
-            size={18}
-            color={colors.primary}
-          />
-          <Text style={styles.actionBtnText}>Nghe</Text>
-        </TouchableOpacity>
+        {(() => {
+          const isSpeaking = speakingItemId === item.id;
+          return (
+            <TouchableOpacity
+              style={[styles.actionBtn, isSpeaking && styles.actionBtnActive]}
+              onPress={() => onSpeak(item)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={isSpeaking ? 'pause-circle' : 'play-circle'}
+                size={18}
+                color={isSpeaking ? colors.surface : colors.primary}
+              />
+              <Text style={[styles.actionBtnText, isSpeaking && styles.actionBtnTextActive]}>
+                {isSpeaking ? 'Đang phát' : 'Nghe'}
+              </Text>
+            </TouchableOpacity>
+          );
+        })()}
 
         <TouchableOpacity
           style={styles.actionBtn}
@@ -171,13 +178,19 @@ const getStyles = (colors: any) =>
       alignItems: 'center',
       gap: 6,
       backgroundColor: colors.primaryLight,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 8,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 10,
+    },
+    actionBtnActive: {
+      backgroundColor: colors.primary,
     },
     actionBtnText: {
-      fontSize: 12,
+      fontSize: 13,
       color: colors.primary,
       fontWeight: '600',
+    },
+    actionBtnTextActive: {
+      color: colors.surface,
     },
   });

@@ -1,28 +1,21 @@
 import type { AudioPlayer } from 'expo-audio';
 
 /**
- * Tracks the single AudioPlayer currently playing anywhere in the app.
- * Starting a new playback (via setActiveAudio) always stops whatever else
- * was playing first — across screens and across players within the same
- * screen (e.g. TTS line vs. user recording vs. another chat bubble).
+ * Tracks whatever single audio/speech source is currently "active" anywhere in
+ * the app. Starting a new playback always stops whatever else was playing first —
+ * across screens, across players within the same screen, and across mechanisms
+ * (expo-audio AudioPlayer vs. expo-speech TTS).
  */
-let active: { player: AudioPlayer; onStop: () => void } | null = null;
+let active: { key: unknown; stop: () => void; onStop: () => void } | null = null;
 
 export function stopActiveAudio() {
   if (!active) return;
-  const { player, onStop } = active;
+  const { stop, onStop } = active;
   active = null;
-  // remove() only frees the native resource — it doesn't reliably halt playback
-  // by itself, so pause() first or the previous sound keeps audibly playing.
   try {
-    player.pause();
+    stop();
   } catch {
     // ignore
-  }
-  try {
-    player.remove();
-  } catch {
-    // already removed/unloaded — ignore
   }
   onStop();
 }
@@ -34,11 +27,41 @@ export function stopActiveAudio() {
  * devices (observed when switching screens mid-playback).
  */
 export function registerActiveAudio(player: AudioPlayer, onStop: () => void) {
-  active = { player, onStop };
+  active = {
+    key: player,
+    // remove() only frees the native resource — it doesn't reliably halt playback
+    // by itself, so pause() first or the previous sound keeps audibly playing.
+    stop: () => {
+      try {
+        player.pause();
+      } catch {
+        // ignore
+      }
+      try {
+        player.remove();
+      } catch {
+        // already removed/unloaded — ignore
+      }
+    },
+    onStop,
+  };
 }
 
 export function clearActiveAudio(player: AudioPlayer) {
-  if (active?.player === player) {
+  if (active?.key === player) {
+    active = null;
+  }
+}
+
+const SPEECH_KEY = Symbol('speech');
+
+/** Registers an expo-speech utterance (TTS) as the active audio. See registerActiveAudio(). */
+export function registerActiveSpeech(stop: () => void, onStop: () => void) {
+  active = { key: SPEECH_KEY, stop, onStop };
+}
+
+export function clearActiveSpeech() {
+  if (active?.key === SPEECH_KEY) {
     active = null;
   }
 }

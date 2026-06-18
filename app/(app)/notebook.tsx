@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
 import { Stack, useFocusEffect } from 'expo-router';
 import { useSidebar } from './_layout';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -24,6 +24,7 @@ import { useAuth } from '../../providers/AuthProvider';
 import { SavedItemCard } from '../../components/notebook/SavedItemCard';
 import { FlashcardModal } from '../../components/notebook/FlashcardModal';
 import { PronouncePracticeModal } from '../../components/notebook/PronouncePracticeModal';
+import { clearActiveSpeech, registerActiveSpeech, stopActiveAudio } from '../../lib/audioPlayback';
 
 type FilterType = 'all' | 'word' | 'phrase' | 'mistake';
 type FilterLang = 'all' | 'en' | 'ja';
@@ -44,6 +45,9 @@ export default function NotebookScreen() {
 
   // TTS states
   const [speakingItemId, setSpeakingItemId] = useState<string | null>(null);
+  // Mirrors speakingItemId synchronously — React state batching means a rapid second
+  // tap in the same tick would otherwise still read the stale value.
+  const speakingItemIdRef = useRef<string | null>(null);
 
   // Modal states
   const [practiceItem, setPracticeItem] = useState<SavedItem | null>(null);
@@ -73,7 +77,8 @@ export default function NotebookScreen() {
     useCallback(() => {
       fetchItems();
       return () => {
-        Speech.stop();
+        stopActiveAudio();
+        speakingItemIdRef.current = null;
         setSpeakingItemId(null);
       };
     }, [fetchItems]),
@@ -86,18 +91,19 @@ export default function NotebookScreen() {
 
   // ── Speech TTS ───────────────────────────────────────────────────────
   async function handleSpeak(item: SavedItem) {
-    if (speakingItemId === item.id) {
-      Speech.stop();
+    // Toggle off — checked against the ref (updated synchronously), not the React
+    // state, so a rapid second tap in the same tick still sees the up-to-date value.
+    if (speakingItemIdRef.current === item.id) {
+      stopActiveAudio();
+      speakingItemIdRef.current = null;
       setSpeakingItemId(null);
       return;
     }
 
-    setSpeakingItemId(item.id);
-    const options = {
-      language: item.language_id === 'ja' ? 'ja-JP' : 'en-US',
-      onDone: () => setSpeakingItemId(null),
-      onError: () => setSpeakingItemId(null),
-    };
+    // Stop whatever else is playing/speaking elsewhere in the app first — must run
+    // BEFORE setSpeakingItemId(item.id), since it synchronously fires the previous
+    // entry's onStop callback (which would otherwise overwrite this state to null).
+    stopActiveAudio();
 
     // Clean content to read only the main word (ignore translations/notes after delimiters)
     // 1. Split by common delimiters that have surrounding spaces (protect compound words like self-esteem)
@@ -107,7 +113,29 @@ export default function NotebookScreen() {
     // 3. Split by half-width and full-width open parentheses
     speakText = speakText.split(/[\(（]/)[0];
 
-    Speech.speak(speakText.trim(), options);
+    registerActiveSpeech(
+      () => Speech.stop(),
+      () => {
+        speakingItemIdRef.current = null;
+        setSpeakingItemId(null);
+      },
+    );
+    speakingItemIdRef.current = item.id;
+    setSpeakingItemId(item.id);
+
+    Speech.speak(speakText.trim(), {
+      language: item.language_id === 'ja' ? 'ja-JP' : 'en-US',
+      onDone: () => {
+        clearActiveSpeech();
+        speakingItemIdRef.current = null;
+        setSpeakingItemId(null);
+      },
+      onError: () => {
+        clearActiveSpeech();
+        speakingItemIdRef.current = null;
+        setSpeakingItemId(null);
+      },
+    });
   }
 
   // ── Delete Item ──────────────────────────────────────────────────────

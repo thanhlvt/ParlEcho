@@ -66,6 +66,9 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
         return;
       }
 
+      // Stop any audio/speech playing elsewhere before claiming the mic.
+      stopActiveAudio();
+
       await setAudioModeAsync({
         allowsRecording: true,
         playsInSilentMode: true,
