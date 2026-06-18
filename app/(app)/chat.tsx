@@ -6,7 +6,6 @@ import {
   Alert,
   FlatList,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -17,7 +16,7 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
 import { supabase } from '../../lib/supabase';
-import { ChatApiResponse, LanguageId, Message } from '../../lib/types';
+import { ChatApiResponse, LanguageId } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { ChatBubble, UIMessage } from '../../components/chat/ChatBubble';
 import { SwipeableRow } from '../../components/SwipeableRow';
@@ -41,7 +40,7 @@ export default function ChatScreen() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [loadingInit, setLoadingInit] = useState(true);
   const [historyConvs, setHistoryConvs] = useState<
-    Array<{ id: string; language_id: LanguageId; started_at: string }>
+    { id: string; language_id: LanguageId; started_at: string }[]
   >([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [openRowId, setOpenRowId] = useState<string | null>(null);
@@ -59,7 +58,7 @@ export default function ChatScreen() {
           if (data?.active_language_id) setLanguageId(data.active_language_id as LanguageId);
           setLoadingInit(false);
         });
-    }, [user?.id]),
+    }, [user]),
   );
 
   // ── Start conversation ──────────────────────────────────────────────
@@ -238,7 +237,11 @@ export default function ChatScreen() {
   function toggleExpanded(id: string) {
     setExpandedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   }

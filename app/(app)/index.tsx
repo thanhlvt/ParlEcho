@@ -83,14 +83,7 @@ export default function HomeScreen() {
   const [tempGoalType, setTempGoalType] = useState<'lines' | 'minutes'>('lines');
   const [tempGoalTarget, setTempGoalTarget] = useState<number>(10);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!user) return;
-      fetchData();
-    }, [user?.id]),
-  );
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     if (!user) return;
 
     // Load goals from AsyncStorage
@@ -130,7 +123,13 @@ export default function HomeScreen() {
       setActiveLang((profileRes.data.active_language_id as LanguageId) ?? 'en');
     }
     setActivities(actRes.data ?? []);
-  }
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [fetchData]),
+  );
 
   async function toggleLanguage(lang: LanguageId) {
     setActiveLang(lang);

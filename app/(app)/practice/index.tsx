@@ -38,13 +38,7 @@ export default function PracticeIndexScreen() {
     'all' | 'beginner' | 'intermediate' | 'advanced'
   >('all');
 
-  useFocusEffect(
-    useCallback(() => {
-      if (user) fetchData();
-    }, [user?.id]),
-  );
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     setFetchError(null);
@@ -78,7 +72,13 @@ export default function PracticeIndexScreen() {
 
     setScenarios(filtered);
     setLoading(false);
-  }
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [fetchData]),
+  );
 
   // Filter scenarios based on search query and selected level
   const filteredScenarios = scenarios.filter((s) => {

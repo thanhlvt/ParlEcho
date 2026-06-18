@@ -1,18 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, useRouter } from 'expo-router';
 import React, { createContext, useContext, useRef, useState } from 'react';
-import {
-  Animated,
-  Dimensions,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
 
-const { width, height } = Dimensions.get('window');
 const SIDEBAR_WIDTH = 280;
 
 // Create Sidebar Context

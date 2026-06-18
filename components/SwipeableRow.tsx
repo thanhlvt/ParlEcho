@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Animated, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../providers/ThemeProvider';
 
@@ -26,11 +26,19 @@ export function SwipeableRow({
   const translateX = useRef(new Animated.Value(0)).current;
   const isOpenRef = useRef(false);
 
+  const closeRow = useCallback(() => {
+    if (isOpenRef.current && onSwipeClose) {
+      onSwipeClose();
+    }
+    isOpenRef.current = false;
+    Animated.spring(translateX, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start();
+  }, [onSwipeClose, translateX]);
+
   React.useEffect(() => {
     if (!isOpen && isOpenRef.current) {
       closeRow();
     }
-  }, [isOpen]);
+  }, [isOpen, closeRow]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -75,14 +83,6 @@ export function SwipeableRow({
       },
     }),
   ).current;
-
-  function closeRow() {
-    if (isOpenRef.current && onSwipeClose) {
-      onSwipeClose();
-    }
-    isOpenRef.current = false;
-    Animated.spring(translateX, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start();
-  }
 
   function handleDeletePress() {
     closeRow();

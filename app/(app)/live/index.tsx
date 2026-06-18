@@ -137,7 +137,7 @@ export default function LiveScreen() {
         .then(({ data }) => {
           if (data?.active_language_id) setLanguageId(data.active_language_id as LanguageId);
         });
-    }, [user?.id]),
+    }, [user]),
   );
 
   // Cleanup on unmount
@@ -155,7 +155,6 @@ export default function LiveScreen() {
     if (view !== 'live') return;
 
     let chunkCount = 0;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sub = audioEmitter.current.addListener('AudioData', async (event: any) => {
       chunkCount++;
       if (chunkCount <= 3)
@@ -193,7 +192,7 @@ export default function LiveScreen() {
       audioCtxRef.current = null;
       audioQueueRef.current = null;
     };
-  }, [view]);
+  }, [view, startRecording, stopRecording]);
 
   // ── Start session ───────────────────────────────────────────────────
   async function startSession() {

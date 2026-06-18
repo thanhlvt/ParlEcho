@@ -49,17 +49,7 @@ export default function NotebookScreen() {
   const [practiceItem, setPracticeItem] = useState<SavedItem | null>(null);
   const [isFlashcardMode, setIsFlashcardMode] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchItems();
-      return () => {
-        Speech.stop();
-        setSpeakingItemId(null);
-      };
-    }, [user?.id]),
-  );
-
-  async function fetchItems() {
+  const fetchItems = useCallback(async () => {
     if (!user) return;
     try {
       const { data, error } = await supabase
@@ -77,7 +67,17 @@ export default function NotebookScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchItems();
+      return () => {
+        Speech.stop();
+        setSpeakingItemId(null);
+      };
+    }, [fetchItems]),
+  );
 
   function handleRefresh() {
     setRefreshing(true);

@@ -10,7 +10,8 @@
       "Bash(npx expo *)",
       "Bash(npx eslint *)",
       "Bash(npx prettier *)",
-      "Bash(sort -t'|' -k2 -rn)"
+      "Bash(sort -t'|' -k2 -rn)",
+      "Bash(npx tsc *)"
     ]
   }
 }

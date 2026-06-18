@@ -20,7 +20,7 @@ function RouteGuard() {
     } else if (session && inAuthGroup) {
       router.replace('/(app)');
     }
-  }, [session, loading, segments]);
+  }, [session, loading, segments, router]);
 
   return <Slot />;
 }

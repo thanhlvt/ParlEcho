@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useSidebar } from './_layout';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -34,13 +34,7 @@ export default function AnalyticsScreen() {
   const [chartMetric, setChartMetric] = useState<ChartMetric>('score');
   const [savedCounts, setSavedCounts] = useState({ word: 0, phrase: 0, mistake: 0 });
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchAnalytics();
-    }, [user?.id]),
-  );
-
-  async function fetchAnalytics() {
+  const fetchAnalytics = useCallback(async () => {
     if (!user) return;
     try {
       // Get past 30 days of activities
@@ -71,7 +65,13 @@ export default function AnalyticsScreen() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchAnalytics();
+    }, [fetchAnalytics]),
+  );
 
   // ── Calculate KPIs ───────────────────────────────────────────────────
   const totalLines = activities.reduce((sum, act) => sum + act.lines_practiced, 0);

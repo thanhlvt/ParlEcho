@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -39,11 +39,7 @@ export default function LiveHistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [openRowId, setOpenRowId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchSessions();
-  }, []);
-
-  async function fetchSessions() {
+  const fetchSessions = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
       .from('conversations')
@@ -62,7 +58,11 @@ export default function LiveHistoryScreen() {
       })),
     );
     setLoading(false);
-  }
+  }, [user]);
+
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
 
   function confirmDeleteSession(conversationId: string) {
     Alert.alert(

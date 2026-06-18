@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,13 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../../../providers/ThemeProvider';
 import { supabase } from '../../../../lib/supabase';
-import {
-  Conversation,
-  Correction,
-  FlaggedWord,
-  Message,
-  SegmentPronunciation,
-} from '../../../../lib/types';
+import { Conversation, Correction, Message, SegmentPronunciation } from '../../../../lib/types';
 import { useAuth } from '../../../../providers/AuthProvider';
 import { clearConversationAudio } from '../../../../lib/audioCache';
 
@@ -46,9 +40,35 @@ export default function ReviewScreen() {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
 
+  const fetchData = useCallback(async () => {
+    const [convRes, msgRes] = await Promise.all([
+      supabase.from('conversations').select('*').eq('id', conversationId).single(),
+      supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('sort_order'),
+    ]);
+
+    if (convRes.data) {
+      const summary = convRes.data.summary ?? {};
+      setConv({
+        ...convRes.data,
+        overall_feedback: summary.overall_feedback,
+        fluency_notes: summary.fluency_notes,
+        corrections: summary.corrections,
+        vocab_to_learn: summary.words_to_learn,
+        avg_pronunciation: summary.avg_pronunciation,
+        pronunciation: undefined, // pronunciation loaded from pronunciation_attempts below
+      });
+    }
+    setMessages(msgRes.data ?? []);
+    setLoading(false);
+  }, [conversationId]);
+
   useEffect(() => {
     fetchData();
-  }, [conversationId]);
+  }, [fetchData]);
 
   useEffect(() => {
     return () => {
@@ -97,32 +117,6 @@ export default function ReviewScreen() {
           : `Không thể phát lại ghi âm: ${message}`,
       );
     }
-  }
-
-  async function fetchData() {
-    const [convRes, msgRes] = await Promise.all([
-      supabase.from('conversations').select('*').eq('id', conversationId).single(),
-      supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('sort_order'),
-    ]);
-
-    if (convRes.data) {
-      const summary = convRes.data.summary ?? {};
-      setConv({
-        ...convRes.data,
-        overall_feedback: summary.overall_feedback,
-        fluency_notes: summary.fluency_notes,
-        corrections: summary.corrections,
-        vocab_to_learn: summary.words_to_learn,
-        avg_pronunciation: summary.avg_pronunciation,
-        pronunciation: undefined, // pronunciation loaded from pronunciation_attempts below
-      });
-    }
-    setMessages(msgRes.data ?? []);
-    setLoading(false);
   }
 
   async function saveWord(word: string) {
@@ -349,17 +343,6 @@ function CorrectionRow({ correction }: { correction: Correction }) {
   );
 }
 
-function FlaggedWordRow({ fw }: { fw: FlaggedWord }) {
-  const { colors } = useTheme();
-  const styles = getStyles(colors);
-  return (
-    <View style={styles.flagRow}>
-      <Text style={styles.flagWord}>{fw.word}</Text>
-      <Text style={styles.flagTip}>{fw.tip}</Text>
-    </View>
-  );
-}
-
 const getStyles = (colors: any) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.background },
@@ -439,10 +422,6 @@ const getStyles = (colors: any) =>
     transcriptRole: { fontSize: 11, fontWeight: '700', color: colors.textMuted },
     transcriptText: { fontSize: 14, color: colors.textPrimary, lineHeight: 20 },
     playBtn: { padding: 2 },
-
-    flagRow: { gap: 2 },
-    flagWord: { fontSize: 13, fontWeight: '700', color: colors.warning },
-    flagTip: { fontSize: 12, color: colors.textMuted },
 
     deleteBtn: {
       flexDirection: 'row',

@@ -1,16 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { supabase } from '../../../lib/supabase';
@@ -44,15 +35,7 @@ export default function ShadowingScreen() {
   const soundRef = useRef<Audio.Sound | null>(null);
   const userSoundRef = useRef<Audio.Sound | null>(null);
 
-  useEffect(() => {
-    fetchData();
-    return () => {
-      soundRef.current?.unloadAsync();
-      userSoundRef.current?.unloadAsync();
-    };
-  }, [scenarioId]);
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     const [scenRes, linesRes, savedRes] = await Promise.all([
       supabase.from('scenarios').select('*').eq('id', scenarioId).single(),
       supabase.from('scenario_lines').select('*').eq('scenario_id', scenarioId).order('sort_order'),
@@ -64,7 +47,15 @@ export default function ShadowingScreen() {
     setLines(linesRes.data ?? []);
     setSavedItems(savedRes.data ?? []);
     setLoading(false);
-  }
+  }, [scenarioId, user]);
+
+  useEffect(() => {
+    fetchData();
+    return () => {
+      soundRef.current?.unloadAsync();
+      userSoundRef.current?.unloadAsync();
+    };
+  }, [fetchData]);
 
   async function handleToggleSaveLine(line: ScenarioLine) {
     if (!user || !scenario) return;
