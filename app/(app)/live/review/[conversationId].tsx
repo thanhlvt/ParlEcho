@@ -17,6 +17,7 @@ import { supabase } from '../../../../lib/supabase';
 import { Conversation, Correction, Message, SegmentPronunciation } from '../../../../lib/types';
 import { useAuth } from '../../../../providers/AuthProvider';
 import { clearConversationAudio } from '../../../../lib/audioCache';
+import { clearActiveAudio, registerActiveAudio, stopActiveAudio } from '../../../../lib/audioPlayback';
 
 type ConversationWithReview = Conversation & {
   overall_feedback?: string;
@@ -39,6 +40,10 @@ export default function ReviewScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const soundRef = useRef<AudioPlayer | null>(null);
+  // Mirrors playingId synchronously — React state batching means a rapid second tap
+  // in the same tick would otherwise still read the stale value and start a new
+  // player instead of toggling playback off.
+  const playingIdRef = useRef<string | null>(null);
 
   const fetchData = useCallback(async () => {
     const [convRes, msgRes] = await Promise.all([
@@ -72,6 +77,7 @@ export default function ReviewScreen() {
 
   useEffect(() => {
     return () => {
+      soundRef.current?.pause();
       soundRef.current?.remove();
     };
   }, []);
@@ -79,14 +85,21 @@ export default function ReviewScreen() {
   async function handlePlayAudio(messageId: string, audioUrl: string) {
     try {
       if (soundRef.current) {
+        soundRef.current.pause();
         soundRef.current.remove();
         soundRef.current = null;
       }
-      if (playingId === messageId) {
+      if (playingIdRef.current === messageId) {
+        stopActiveAudio();
+        playingIdRef.current = null;
         setPlayingId(null);
         return;
       }
-      setPlayingId(messageId);
+      // Stop whatever else is playing elsewhere in the app BEFORE switching audio
+      // mode / creating the new player — tearing down the old one concurrently with
+      // loading a new one can make the new one silently fail to play (observed when
+      // switching screens fast, e.g. Practice -> Live history).
+      stopActiveAudio();
       // The Live session leaves the native audio session claimed for recording
       // (mic capture + low-latency playback engine) — explicitly switch back to
       // normal playback mode here, otherwise expo-audio fails to acquire audio focus.
@@ -97,9 +110,17 @@ export default function ReviewScreen() {
       });
       const player = createAudioPlayer(audioUrl);
       soundRef.current = player;
+      registerActiveAudio(player, () => {
+        playingIdRef.current = null;
+        setPlayingId(null);
+      });
+      playingIdRef.current = messageId;
+      setPlayingId(messageId);
       player.play();
       player.addListener('playbackStatusUpdate', (status) => {
         if (status.didJustFinish) {
+          clearActiveAudio(player);
+          playingIdRef.current = null;
           setPlayingId(null);
           player.remove();
           soundRef.current = null;
@@ -107,6 +128,7 @@ export default function ReviewScreen() {
       });
     } catch (err) {
       console.error('Play audio error:', err);
+      playingIdRef.current = null;
       setPlayingId(null);
       const message = err instanceof Error ? err.message : String(err);
       const isMissingFile = /no such file|not found|ENOENT/i.test(message);

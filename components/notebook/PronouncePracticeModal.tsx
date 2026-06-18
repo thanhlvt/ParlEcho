@@ -24,6 +24,7 @@ import { SavedItem, PronounceApiResponse } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { WordHighlight } from '../practice/WordHighlight';
 import { ScorePanel } from '../practice/ScorePanel';
+import { clearActiveAudio, registerActiveAudio, stopActiveAudio } from '../../lib/audioPlayback';
 
 interface PronouncePracticeModalProps {
   item: SavedItem | null;
@@ -45,9 +46,13 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
 
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const userSoundRef = useRef<AudioPlayer | null>(null);
+  // Mirrors isPlayingUser synchronously — React state batching means a rapid second
+  // tap in the same tick would otherwise still read the stale value.
+  const isPlayingUserRef = useRef(false);
 
   useEffect(() => {
     return () => {
+      userSoundRef.current?.pause();
       userSoundRef.current?.remove();
     };
   }, []);
@@ -202,28 +207,43 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
   async function playUserRecording() {
     if (!recordedUri) return;
     if (userSoundRef.current) {
+      userSoundRef.current.pause();
       userSoundRef.current.remove();
       userSoundRef.current = null;
     }
-    if (isPlayingUser) {
+    if (isPlayingUserRef.current) {
+      stopActiveAudio();
+      isPlayingUserRef.current = false;
       setIsPlayingUser(false);
       return;
     }
 
-    setIsPlayingUser(true);
     try {
+      // Stop whatever else is playing elsewhere in the app BEFORE creating the new
+      // player — tearing down the old one concurrently with loading a new one can
+      // make the new one silently fail to play (observed when switching screens fast).
+      stopActiveAudio();
       const player = createAudioPlayer(recordedUri);
       userSoundRef.current = player;
+      registerActiveAudio(player, () => {
+        isPlayingUserRef.current = false;
+        setIsPlayingUser(false);
+      });
+      isPlayingUserRef.current = true;
+      setIsPlayingUser(true);
       player.addListener('playbackStatusUpdate', (status) => {
         if (status.didJustFinish) {
+          clearActiveAudio(player);
           player.remove();
           userSoundRef.current = null;
+          isPlayingUserRef.current = false;
           setIsPlayingUser(false);
         }
       });
       player.play();
     } catch (err) {
       console.error(err);
+      isPlayingUserRef.current = false;
       setIsPlayingUser(false);
     }
   }

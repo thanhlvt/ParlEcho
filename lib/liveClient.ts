@@ -392,11 +392,14 @@ export class LiveClient {
       // Delay re-enabling mic until buffered audio finishes playing.
       // totalAudioMs = byte count / 48000 B/s (24 kHz 16-bit mono).
       // elapsedMs = time since first chunk arrived — already-played portion.
-      // +200 ms safety buffer for playback queue flush; no artificial minimum
-      // so the gate closes immediately if audio was short or already done.
+      // +500 ms safety buffer for playback queue flush + speaker/room echo decay
+      // (hardware AEC doesn't fully cancel the tail, so the mic can otherwise pick
+      // up the last fraction of a second of the AI's own voice as a "user" turn).
+      // A 300 ms floor guards the case where elapsedMs already exceeds totalAudioMs
+      // (slow/jittery network delivery), which would otherwise compute ~0 delay.
       const totalAudioMs = (this.aiAudioByteCount / 48000) * 1000;
       const elapsedMs = Date.now() - this.aiAudioStartTime;
-      const remainingMs = Math.max(0, totalAudioMs - elapsedMs + 200);
+      const remainingMs = Math.max(300, totalAudioMs - elapsedMs + 500);
       this.aiAudioByteCount = 0;
       setTimeout(() => {
         this.aiSpeaking = false;

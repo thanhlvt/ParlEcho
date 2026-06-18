@@ -15,6 +15,7 @@ import { supabase } from '../../../lib/supabase';
 import { PronounceApiResponse, Scenario, ScenarioLine } from '../../../lib/types';
 import { useAuth } from '../../../providers/AuthProvider';
 import { LineCard } from '../../../components/practice/LineCard';
+import { clearActiveAudio, registerActiveAudio, stopActiveAudio } from '../../../lib/audioPlayback';
 
 // ── Main screen ───────────────────────────────────────────────────────
 export default function ShadowingScreen() {
@@ -41,6 +42,11 @@ export default function ShadowingScreen() {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const soundRef = useRef<AudioPlayer | null>(null);
   const userSoundRef = useRef<AudioPlayer | null>(null);
+  // Mirror playingLineId/playingUserLineId synchronously — React state updates are
+  // batched, so two rapid taps in the same tick would both read the stale value and
+  // both try to start a new player instead of the second one toggling playback off.
+  const playingLineIdRef = useRef<string | null>(null);
+  const playingUserLineIdRef = useRef<string | null>(null);
 
   const fetchData = useCallback(async () => {
     const [scenRes, linesRes, savedRes] = await Promise.all([
@@ -59,7 +65,9 @@ export default function ShadowingScreen() {
   useEffect(() => {
     fetchData();
     return () => {
+      soundRef.current?.pause();
       soundRef.current?.remove();
+      userSoundRef.current?.pause();
       userSoundRef.current?.remove();
     };
   }, [fetchData]);
@@ -157,36 +165,51 @@ export default function ShadowingScreen() {
   // ── TTS playback ────────────────────────────────────────────────────
   async function handlePlay(line: ScenarioLine) {
     if (soundRef.current) {
+      soundRef.current.pause();
       soundRef.current.remove();
       soundRef.current = null;
     }
-    // Toggle off
-    if (playingLineId === line.id) {
+    // Toggle off — checked against the ref (updated synchronously below), not the
+    // React state, so a rapid second tap in the same tick still sees the up-to-date value.
+    if (playingLineIdRef.current === line.id) {
+      stopActiveAudio();
+      playingLineIdRef.current = null;
       setPlayingLineId(null);
       return;
     }
 
-    setPlayingLineId(line.id);
     const audioUrl = line.audio_url;
 
     if (!audioUrl) {
       Alert.alert('Chưa có audio', 'File audio chưa được tạo cho câu này.');
-      setPlayingLineId(null);
       return;
     }
 
     try {
+      // Stop whatever else is playing (incl. own recording playback) BEFORE creating
+      // the new player — tearing it down concurrently with loading a new one can
+      // make the new one silently fail to play (observed when switching screens fast).
+      stopActiveAudio();
       const player = createAudioPlayer(audioUrl);
       soundRef.current = player;
+      registerActiveAudio(player, () => {
+        playingLineIdRef.current = null;
+        setPlayingLineId(null);
+      });
+      playingLineIdRef.current = line.id;
+      setPlayingLineId(line.id);
       player.addListener('playbackStatusUpdate', (status) => {
         if (status.didJustFinish) {
+          clearActiveAudio(player);
           player.remove();
           soundRef.current = null;
+          playingLineIdRef.current = null;
           setPlayingLineId(null);
         }
       });
       player.play();
     } catch {
+      playingLineIdRef.current = null;
       setPlayingLineId(null);
     }
   }
@@ -204,10 +227,13 @@ export default function ShadowingScreen() {
 
     // Stop any playing sound before recording
     if (soundRef.current) {
+      soundRef.current.pause();
       soundRef.current.remove();
       soundRef.current = null;
+      playingLineIdRef.current = null;
       setPlayingLineId(null);
     }
+    stopActiveAudio();
 
     await setAudioModeAsync({
       allowsRecording: true,
@@ -288,27 +314,41 @@ export default function ShadowingScreen() {
   // ── User recording playback ─────────────────────────────────────────
   async function handlePlayUserRecording(lineId: string, uri: string) {
     if (userSoundRef.current) {
+      userSoundRef.current.pause();
       userSoundRef.current.remove();
       userSoundRef.current = null;
     }
-    if (playingUserLineId === lineId) {
+    if (playingUserLineIdRef.current === lineId) {
+      stopActiveAudio();
+      playingUserLineIdRef.current = null;
       setPlayingUserLineId(null);
       return;
     }
-    setPlayingUserLineId(lineId);
     try {
+      // Stop whatever else is playing (incl. the TTS line) BEFORE switching audio
+      // mode / creating the new player — see handlePlay() comment for why.
+      stopActiveAudio();
       await setAudioModeAsync({ allowsRecording: false });
       const player = createAudioPlayer(uri);
       userSoundRef.current = player;
+      registerActiveAudio(player, () => {
+        playingUserLineIdRef.current = null;
+        setPlayingUserLineId(null);
+      });
+      playingUserLineIdRef.current = lineId;
+      setPlayingUserLineId(lineId);
       player.addListener('playbackStatusUpdate', (status) => {
         if (status.didJustFinish) {
+          clearActiveAudio(player);
           player.remove();
           userSoundRef.current = null;
+          playingUserLineIdRef.current = null;
           setPlayingUserLineId(null);
         }
       });
       player.play();
     } catch {
+      playingUserLineIdRef.current = null;
       setPlayingUserLineId(null);
     }
   }

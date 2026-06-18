@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { useTheme } from '../../providers/ThemeProvider';
 import { LanguageId, Message } from '../../lib/types';
 import { CorrectionRow } from './CorrectionRow';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../providers/AuthProvider';
+import { clearActiveAudio, registerActiveAudio, stopActiveAudio } from '../../lib/audioPlayback';
 
 export type UIMessage = Pick<
   Message,
@@ -37,11 +38,38 @@ export function ChatBubble({ message, languageId, expanded, onToggleExpand }: Ch
   const [savedPhrase, setSavedPhrase] = useState(false);
   const [savedCorrections, setSavedCorrections] = useState<Record<number, boolean>>({});
   const [isPlaying, setIsPlaying] = useState(false);
+  const soundRef = useRef<AudioPlayer | null>(null);
+  // Mirrors isPlaying synchronously — React state batching means a rapid second tap
+  // in the same tick would otherwise still read the stale value and start a new
+  // player instead of toggling playback off.
+  const isPlayingRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      soundRef.current?.pause();
+      soundRef.current?.remove();
+    };
+  }, []);
 
   async function handlePlayAudio() {
-    if (!message.audio_url || isPlaying) return;
+    if (!message.audio_url) return;
+    if (isPlayingRef.current) {
+      stopActiveAudio();
+      isPlayingRef.current = false;
+      setIsPlaying(false);
+      return;
+    }
+    if (soundRef.current) {
+      soundRef.current.pause();
+      soundRef.current.remove();
+      soundRef.current = null;
+    }
     try {
-      setIsPlaying(true);
+      // Stop whatever else is playing elsewhere (other bubbles, Practice, Live
+      // history, Notebook…) BEFORE switching audio mode / creating the new player —
+      // tearing down the old one concurrently with loading a new one can make the
+      // new one silently fail to play (observed when switching screens fast).
+      stopActiveAudio();
       // A prior Live session leaves the native audio session claimed for recording —
       // switch back to normal playback mode here, otherwise expo-audio can fail to
       // acquire audio focus (AudioFocusNotAcquiredException on Android).
@@ -51,15 +79,26 @@ export function ChatBubble({ message, languageId, expanded, onToggleExpand }: Ch
         shouldPlayInBackground: false,
       });
       const player = createAudioPlayer(message.audio_url);
+      soundRef.current = player;
+      registerActiveAudio(player, () => {
+        isPlayingRef.current = false;
+        setIsPlaying(false);
+      });
+      isPlayingRef.current = true;
+      setIsPlaying(true);
       player.play();
       player.addListener('playbackStatusUpdate', (status) => {
         if (status.didJustFinish) {
+          clearActiveAudio(player);
+          isPlayingRef.current = false;
           setIsPlaying(false);
           player.remove();
+          soundRef.current = null;
         }
       });
     } catch (err) {
       console.error('Play audio error:', err);
+      isPlayingRef.current = false;
       setIsPlaying(false);
     }
   }
