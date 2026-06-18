@@ -64,6 +64,14 @@ export default function ReviewScreen() {
         return;
       }
       setPlayingId(messageId);
+      // The Live session leaves the native audio session claimed for recording
+      // (mic capture + low-latency playback engine) — explicitly switch back to
+      // normal playback mode here, otherwise expo-av fails to acquire audio focus.
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+      });
       const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
       soundRef.current = sound;
       await sound.playAsync();
@@ -77,7 +85,14 @@ export default function ReviewScreen() {
     } catch (err) {
       console.error('Play audio error:', err);
       setPlayingId(null);
-      Alert.alert('Lỗi', 'Không thể phát lại ghi âm. File có thể đã bị xoá khỏi máy.');
+      const message = err instanceof Error ? err.message : String(err);
+      const isMissingFile = /no such file|not found|ENOENT/i.test(message);
+      Alert.alert(
+        'Lỗi',
+        isMissingFile
+          ? 'Không tìm thấy file ghi âm. File có thể đã bị xoá khỏi máy.'
+          : `Không thể phát lại ghi âm: ${message}`,
+      );
     }
   }
 

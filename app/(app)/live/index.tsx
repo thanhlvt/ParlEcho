@@ -11,6 +11,7 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import { ExpoAudioStreamModule, useAudioRecorder } from '@siteed/audio-studio';
+import { Audio } from 'expo-av';
 import { LegacyEventEmitter } from 'expo-modules-core';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
@@ -102,6 +103,8 @@ export default function LiveScreen() {
   const audioCtxRef = useRef<InstanceType<typeof AudioContext> | null>(null);
   const audioQueueRef = useRef<AudioBufferQueueSourceNode | null>(null);
   const audioEmitter = useRef(new LegacyEventEmitter(ExpoAudioStreamModule));
+  const turnsRef = useRef<LiveTurn[]>([]);
+  const lastErrorMsgRef = useRef<string>('');
   const { startRecording, stopRecording } = useAudioRecorder();
 
   // Load active language from profile
@@ -175,8 +178,28 @@ export default function LiveScreen() {
 
   // ── Start session ───────────────────────────────────────────────────
   async function startSession() {
+    try {
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Cần quyền microphone',
+          'Vào Cài đặt → ParlEcho → Microphone để cho phép ghi âm.',
+        );
+        return;
+      }
+    } catch (err) {
+      console.error('[Live] Request permission error', err);
+      Alert.alert(
+        'Lỗi quyền micro',
+        'Không thể yêu cầu quyền ghi âm. Vui lòng cấp quyền trong Cài đặt thiết bị.',
+      );
+      return;
+    }
+
     setView('connecting');
     setTurns([]);
+    turnsRef.current = [];
+    lastErrorMsgRef.current = '';
     setElapsedSec(0);
 
     const client = new LiveClient({
@@ -198,8 +221,19 @@ export default function LiveScreen() {
         }
         if (s === 'error') {
           if (timerRef.current) clearInterval(timerRef.current);
-          setView('setup');
-          Alert.alert('Lỗi kết nối', 'Không thể kết nối Live API. Thử lại sau.');
+          // onError (with the real close reason) fires right after this, synchronously
+          // in the same tick — defer so lastErrorMsgRef is populated before we read it.
+          setTimeout(() => {
+            if (turnsRef.current.length > 0) {
+              // Connection dropped mid-conversation — don't discard what was already
+              // captured. Save & review the partial session instead of losing it.
+              Alert.alert('Mất kết nối', 'Kết nối tới AI bị ngắt giữa phiên. Đang lưu lại phần đã ghi được...');
+              endSession();
+            } else {
+              setView('setup');
+              Alert.alert('Lỗi kết nối', lastErrorMsgRef.current || 'Không thể kết nối Live API. Thử lại sau.');
+            }
+          }, 0);
         }
       },
       onAudioChunk: async (pcm24Base64) => {
@@ -225,10 +259,11 @@ export default function LiveScreen() {
         audioQueueRef.current?.clearBuffers();
       },
       onTranscriptUpdate: (t) => {
+        turnsRef.current = t;
         setTurns([...t]);
         setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 100);
       },
-      onError: (msg) => Alert.alert('Lỗi', msg),
+      onError: (msg) => { lastErrorMsgRef.current = msg; },
     });
 
     clientRef.current = client;

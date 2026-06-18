@@ -147,7 +147,9 @@ Deno.serve(async (req: Request) => {
                 text:
                   `This is a ${langHint} language learning audio recording. ` +
                   `Transcribe exactly what is spoken, including any mistakes or incomplete words. ` +
-                  `Do NOT correct errors. Return only the raw transcription text, nothing else.`,
+                  `Do NOT correct errors. Return only the raw transcription text, nothing else. ` +
+                  `If the recording contains no audible speech (silence, noise, or background sound only), ` +
+                  `return an empty string and nothing else — do not describe the audio or repeat these instructions.`,
               },
             ],
           }],
@@ -160,8 +162,14 @@ Deno.serve(async (req: Request) => {
     }
 
     const geminiData = await geminiResp.json();
-    const recognized_text: string =
+    let recognized_text: string =
       (geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim();
+
+    // Safety net: on silent/empty audio, Gemini sometimes echoes the instruction
+    // prompt itself instead of returning an empty string. Detect and discard that.
+    if (/language learning audio recording/i.test(recognized_text)) {
+      recognized_text = '';
+    }
 
     // Tính điểm bằng Levenshtein
     const scores = computeScores(recognized_text, reference_text);

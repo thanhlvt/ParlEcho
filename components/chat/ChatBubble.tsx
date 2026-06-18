@@ -39,6 +39,14 @@ export function ChatBubble({
     if (!message.audio_url || isPlaying) return;
     try {
       setIsPlaying(true);
+      // A prior Live session leaves the native audio session claimed for recording —
+      // switch back to normal playback mode here, otherwise expo-av can fail to
+      // acquire audio focus (AudioFocusNotAcquiredException on Android).
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+      });
       const { sound } = await Audio.Sound.createAsync({ uri: message.audio_url });
       await sound.playAsync();
       sound.setOnPlaybackStatusUpdate((status) => {

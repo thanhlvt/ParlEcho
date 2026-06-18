@@ -20,6 +20,7 @@ import { supabase } from '../../lib/supabase';
 import { ChatApiResponse, LanguageId, Message } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { ChatBubble, UIMessage } from '../../components/chat/ChatBubble';
+import { SwipeableRow } from '../../components/SwipeableRow';
 import { useSidebar } from './_layout';
 
 type ViewState = 'start' | 'chat' | 'history';
@@ -43,6 +44,7 @@ export default function ChatScreen() {
     Array<{ id: string; language_id: LanguageId; started_at: string }>
   >([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [openRowId, setOpenRowId] = useState<string | null>(null);
 
   // Load active language from profile when screen focuses
   useFocusEffect(
@@ -111,12 +113,30 @@ export default function ChatScreen() {
     setHistoryLoading(false);
   }
 
+  function confirmDeleteConversation(id: string) {
+    Alert.alert('Xoá cuộc hội thoại', 'Bạn có chắc chắn muốn xoá toàn bộ cuộc hội thoại này không?', [
+      { text: 'Huỷ', style: 'cancel' },
+      { text: 'Xoá', style: 'destructive', onPress: () => deleteConversation(id) },
+    ]);
+  }
+
+  async function deleteConversation(id: string) {
+    try {
+      const { error } = await supabase.from('conversations').delete().eq('id', id);
+      if (error) throw error;
+      setHistoryConvs((prev) => prev.filter((c) => c.id !== id));
+    } catch (err) {
+      console.error('[Chat] Delete conversation error:', err);
+      Alert.alert('Lỗi', 'Không thể xoá cuộc hội thoại.');
+    }
+  }
+
   // ── Resume conversation ─────────────────────────────────────────────
   async function resumeConversation(convId: string, lang: LanguageId) {
     setSending(true);
     const { data } = await supabase
       .from('messages')
-      .select('id, role, text, translation, furigana, romaji, corrections, hints')
+      .select('id, role, text, translation, furigana, romaji, corrections, hints, audio_url')
       .eq('conversation_id', convId)
       .order('sort_order');
 
@@ -132,6 +152,7 @@ export default function ChatScreen() {
         romaji: m.romaji as string | null,
         corrections: m.corrections as typeof messages[0]['corrections'],
         hints: m.hints as string[] | null,
+        audio_url: m.audio_url as string | null,
       })),
     );
     setExpandedIds(new Set());
@@ -157,6 +178,7 @@ export default function ChatScreen() {
       romaji: null,
       corrections: null,
       hints: null,
+      audio_url: null,
       pending: false,
     };
     setMessages((prev) => [...prev, userMsg]);
@@ -191,6 +213,7 @@ export default function ChatScreen() {
         romaji: resp.romaji ?? null,
         corrections: resp.corrections?.length ? resp.corrections : null,
         hints: resp.hints?.length ? resp.hints : null,
+        audio_url: null,
       };
 
       setMessages((prev) => [...prev, aiMsg]);
@@ -307,34 +330,46 @@ export default function ChatScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.historyList}
             renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.historyCard}
-                activeOpacity={0.75}
-                onPress={() => resumeConversation(item.id, item.language_id)}
-                disabled={sending}
+              <SwipeableRow
+                onDelete={() => confirmDeleteConversation(item.id)}
+                borderRadius={14}
+                isOpen={openRowId === item.id}
+                onSwipeOpen={() => setOpenRowId(item.id)}
+                onSwipeClose={() => {
+                  if (openRowId === item.id) {
+                    setOpenRowId(null);
+                  }
+                }}
               >
-                <View style={styles.historyCardLeft}>
-                  <Text style={styles.historyLang}>
-                    {item.language_id === 'en' ? '🇺🇸' : '🇯🇵'}
-                  </Text>
-                  <View>
-                    <Text style={styles.historyDate}>
-                      {new Date(item.started_at).toLocaleDateString('vi-VN', {
-                        day: '2-digit', month: '2-digit', year: 'numeric',
-                      })}
+                <TouchableOpacity
+                  style={styles.historyCard}
+                  activeOpacity={1}
+                  onPress={() => resumeConversation(item.id, item.language_id)}
+                  disabled={sending}
+                >
+                  <View style={styles.historyCardLeft}>
+                    <Text style={styles.historyLang}>
+                      {item.language_id === 'en' ? '🇺🇸' : '🇯🇵'}
                     </Text>
-                    <Text style={styles.historyTime}>
-                      {new Date(item.started_at).toLocaleTimeString('vi-VN', {
-                        hour: '2-digit', minute: '2-digit',
-                      })}
-                    </Text>
+                    <View>
+                      <Text style={styles.historyDate}>
+                        {new Date(item.started_at).toLocaleDateString('vi-VN', {
+                          day: '2-digit', month: '2-digit', year: 'numeric',
+                        })}
+                      </Text>
+                      <Text style={styles.historyTime}>
+                        {new Date(item.started_at).toLocaleTimeString('vi-VN', {
+                          hour: '2-digit', minute: '2-digit',
+                        })}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-                <View style={styles.historyResume}>
-                  <Text style={styles.historyResumeText}>Tiếp tục</Text>
-                  <Ionicons name="chevron-forward" size={14} color={colors.primary} />
-                </View>
-              </TouchableOpacity>
+                  <View style={styles.historyResume}>
+                    <Text style={styles.historyResumeText}>Tiếp tục</Text>
+                    <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+                  </View>
+                </TouchableOpacity>
+              </SwipeableRow>
             )}
           />
         )}

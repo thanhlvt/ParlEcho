@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   StyleSheet,
   Text,
@@ -14,6 +15,8 @@ import { useTheme } from '../../../providers/ThemeProvider';
 import { supabase } from '../../../lib/supabase';
 import { Conversation } from '../../../lib/types';
 import { useAuth } from '../../../providers/AuthProvider';
+import { clearConversationAudio } from '../../../lib/audioCache';
+import { SwipeableRow } from '../../../components/SwipeableRow';
 
 type SessionItem = Conversation & { overall_feedback?: string; avg_pronunciation?: number | null };
 
@@ -34,6 +37,7 @@ export default function LiveHistoryScreen() {
   const router = useRouter();
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [openRowId, setOpenRowId] = useState<string | null>(null);
 
   useEffect(() => { fetchSessions(); }, []);
 
@@ -56,6 +60,37 @@ export default function LiveHistoryScreen() {
       })),
     );
     setLoading(false);
+  }
+
+  function confirmDeleteSession(conversationId: string) {
+    Alert.alert('Xoá phiên hội thoại', 'Bạn có chắc chắn muốn xoá toàn bộ dữ liệu ghi âm và kết quả của phiên hội thoại này không?', [
+      { text: 'Huỷ', style: 'cancel' },
+      { text: 'Xoá', style: 'destructive', onPress: () => deleteSession(conversationId) },
+    ]);
+  }
+
+  async function deleteSession(conversationId: string) {
+    try {
+      await clearConversationAudio(conversationId);
+
+      const { data: messagesToDelete } = await supabase
+        .from('messages')
+        .select('id')
+        .eq('conversation_id', conversationId);
+
+      const msgIds = messagesToDelete?.map((m) => m.id) ?? [];
+      if (msgIds.length > 0) {
+        await supabase.from('pronunciation_attempts').delete().in('message_id', msgIds);
+      }
+
+      const { error } = await supabase.from('conversations').delete().eq('id', conversationId);
+      if (error) throw error;
+
+      setSessions((prev) => prev.filter((s) => s.id !== conversationId));
+    } catch (err: any) {
+      console.error('[LiveHistory] Delete session error:', err);
+      Alert.alert('Lỗi', 'Không thể xoá phiên hội thoại: ' + err.message);
+    }
   }
 
   if (loading) {
@@ -94,41 +129,52 @@ export default function LiveHistoryScreen() {
           const langFlag = item.language_id === 'en' ? '🇺🇸' : '🇯🇵';
 
           return (
-            <TouchableOpacity
-              style={styles.card}
-              activeOpacity={0.75}
-              onPress={() =>
-                router.push({
-                  pathname: '/live/review/[conversationId]',
-                  params: { conversationId: item.id },
-                })
-              }
+            <SwipeableRow
+              onDelete={() => confirmDeleteSession(item.id)}
+              isOpen={openRowId === item.id}
+              onSwipeOpen={() => setOpenRowId(item.id)}
+              onSwipeClose={() => {
+                if (openRowId === item.id) {
+                  setOpenRowId(null);
+                }
+              }}
             >
-              <View style={styles.cardTop}>
-                <View style={styles.cardMeta}>
-                  <Text style={styles.cardLang}>{langFlag}</Text>
-                  <Text style={styles.cardDate}>{formatDate(item.started_at)}</Text>
-                  <Text style={styles.cardTime}>{formatTime(item.started_at)}</Text>
-                </View>
-                {score != null && (
-                  <View style={styles.scoreWrap}>
-                    <Text style={[styles.scoreNum, { color: scoreColor }]}>{Math.round(score)}</Text>
-                    <Text style={styles.scoreLabel}>phát âm</Text>
+              <TouchableOpacity
+                style={styles.card}
+                activeOpacity={1}
+                onPress={() =>
+                  router.push({
+                    pathname: '/live/review/[conversationId]',
+                    params: { conversationId: item.id },
+                  })
+                }
+              >
+                <View style={styles.cardTop}>
+                  <View style={styles.cardMeta}>
+                    <Text style={styles.cardLang}>{langFlag}</Text>
+                    <Text style={styles.cardDate}>{formatDate(item.started_at)}</Text>
+                    <Text style={styles.cardTime}>{formatTime(item.started_at)}</Text>
                   </View>
+                  {score != null && (
+                    <View style={styles.scoreWrap}>
+                      <Text style={[styles.scoreNum, { color: scoreColor }]}>{Math.round(score)}</Text>
+                      <Text style={styles.scoreLabel}>phát âm</Text>
+                    </View>
+                  )}
+                </View>
+                {item.overall_feedback ? (
+                  <Text style={styles.feedback} numberOfLines={2}>
+                    {item.overall_feedback}
+                  </Text>
+                ) : (
+                  <Text style={styles.noFeedback}>Không có nhận xét</Text>
                 )}
-              </View>
-              {item.overall_feedback ? (
-                <Text style={styles.feedback} numberOfLines={2}>
-                  {item.overall_feedback}
-                </Text>
-              ) : (
-                <Text style={styles.noFeedback}>Không có nhận xét</Text>
-              )}
-              <View style={styles.cardFooter}>
-                <Text style={styles.viewText}>Xem nhận xét</Text>
-                <Ionicons name="chevron-forward" size={14} color={colors.primary} />
-              </View>
-            </TouchableOpacity>
+                <View style={styles.cardFooter}>
+                  <Text style={styles.viewText}>Xem nhận xét</Text>
+                  <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+                </View>
+              </TouchableOpacity>
+            </SwipeableRow>
           );
         }}
       />

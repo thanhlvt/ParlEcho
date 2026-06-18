@@ -73,7 +73,26 @@ Deno.serve(async (req: Request) => {
       const cleaned = rawText.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '').trim();
       parsed = JSON.parse(cleaned);
     } catch {
-      parsed = { reply: rawText, translation: '', corrections: [], hints: [] };
+      // Model sometimes prepends/duplicates plain text before the JSON block —
+      // fall back to extracting the outermost {...} object from the raw text.
+      const start = rawText.indexOf('{');
+      const end = rawText.lastIndexOf('}');
+      try {
+        if (start === -1 || end === -1 || end < start) throw new Error('no json object found');
+        parsed = JSON.parse(rawText.slice(start, end + 1));
+      } catch {
+        parsed = { reply: rawText, translation: '', corrections: [], hints: [] };
+      }
+    }
+
+    // Defensive guard against stale corrections: the model occasionally re-reports
+    // a mistake from an earlier turn instead of analysing only the latest message.
+    // A correction is only valid if its "original" text actually occurs in the
+    // message the user just sent — otherwise it can't be a mistake from this turn.
+    if (Array.isArray(parsed.corrections)) {
+      parsed.corrections = parsed.corrections.filter(
+        (c) => c?.original && message.includes(c.original),
+      );
     }
 
     // Lấy sort_order tiếp theo
@@ -157,11 +176,13 @@ Always respond with ONLY valid JSON — no markdown, no preamble, no trailing te
   "reply": "your response in ${lang}",
   "translation": "Vietnamese translation of your reply",
   ${jpExtra}
-  "corrections": [{"original": "exact user mistake", "fixed": "correct form", "explanation": "brief explanation in Vietnamese"}]
+  "corrections": [{"original": "exact mistake from the user's LATEST message only", "fixed": "correct form", "explanation": "brief explanation in Vietnamese"}]
 }
 
 Rules:
-- corrections: [] if the user made no mistakes.
+- corrections must ONLY cover mistakes in the user's latest message (the final message in this request) — never re-report or reference mistakes from earlier messages in the conversation history.
+- corrections: [] if the user's latest message has no mistakes, even if earlier messages did.
 - Keep replies natural, encouraging, appropriately short for conversation practice.
+- Output the JSON object exactly once. Do not restate, summarize, or repeat any part of your answer outside of that single JSON object — no leading text, no trailing text, no second JSON block.
 - Never break JSON structure.`;
 }
