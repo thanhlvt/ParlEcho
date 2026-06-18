@@ -5,9 +5,7 @@ import { createClient, SupabaseClient, User } from 'https://esm.sh/@supabase/sup
  * supabase client dùng service_role key — bypass RLS, dùng cho mọi DB write trong function.
  * Không bao giờ tin user_id do client truyền trong body.
  */
-export async function verifyUser(
-  req: Request,
-): Promise<{ user: User; supabase: SupabaseClient }> {
+export async function verifyUser(req: Request): Promise<{ user: User; supabase: SupabaseClient }> {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) throw new Error('Missing Authorization header');
 

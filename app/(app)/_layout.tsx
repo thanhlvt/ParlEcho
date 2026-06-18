@@ -35,7 +35,7 @@ export default function AppLayout() {
   const styles = getStyles(colors);
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  
+
   // Animated values for smooth sliding & backdrop fade
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -208,7 +208,12 @@ export default function AppLayout() {
                     <Ionicons name={item.icon} size={22} color={colors.primary} />
                   </View>
                   <Text style={styles.menuItemLabel}>{item.label}</Text>
-                  <Ionicons name="chevron-forward" size={14} color={colors.textMuted} style={{ marginLeft: 'auto' }} />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={14}
+                    color={colors.textMuted}
+                    style={{ marginLeft: 'auto' }}
+                  />
                 </TouchableOpacity>
               ))}
             </View>
@@ -224,88 +229,89 @@ export default function AppLayout() {
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 99,
-  },
-  backdropFill: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  sidebar: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    width: SIDEBAR_WIDTH,
-    backgroundColor: colors.surface,
-    zIndex: 100,
-    shadowColor: '#000',
-    shadowOffset: { width: 4, height: 0 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 16,
-    paddingTop: 48,
-    display: 'flex',
-  },
-  sidebarHeader: {
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    position: 'relative',
-  },
-  sidebarLogo: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.primary,
-  },
-  sidebarSubtitle: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 4,
-    fontWeight: '500',
-  },
-  closeBtn: {
-    position: 'absolute',
-    right: 16,
-    top: 0,
-  },
-  menuList: {
-    paddingVertical: 16,
-    gap: 4,
-    flex: 1,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    gap: 12,
-  },
-  menuIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: colors.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  menuItemLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  sidebarFooter: {
-    padding: 20,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 11,
-    color: colors.textMuted,
-    fontWeight: '600',
-  },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 99,
+    },
+    backdropFill: {
+      flex: 1,
+      backgroundColor: '#000',
+    },
+    sidebar: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      left: 0,
+      width: SIDEBAR_WIDTH,
+      backgroundColor: colors.surface,
+      zIndex: 100,
+      shadowColor: '#000',
+      shadowOffset: { width: 4, height: 0 },
+      shadowOpacity: 0.15,
+      shadowRadius: 16,
+      elevation: 16,
+      paddingTop: 48,
+      display: 'flex',
+    },
+    sidebarHeader: {
+      paddingHorizontal: 20,
+      paddingBottom: 24,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+      position: 'relative',
+    },
+    sidebarLogo: {
+      fontSize: 22,
+      fontWeight: '800',
+      color: colors.primary,
+    },
+    sidebarSubtitle: {
+      fontSize: 12,
+      color: colors.textMuted,
+      marginTop: 4,
+      fontWeight: '500',
+    },
+    closeBtn: {
+      position: 'absolute',
+      right: 16,
+      top: 0,
+    },
+    menuList: {
+      paddingVertical: 16,
+      gap: 4,
+      flex: 1,
+    },
+    menuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      gap: 12,
+    },
+    menuIconWrapper: {
+      width: 36,
+      height: 36,
+      borderRadius: 8,
+      backgroundColor: colors.primaryLight,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    menuItemLabel: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.textPrimary,
+    },
+    sidebarFooter: {
+      padding: 20,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+      alignItems: 'center',
+    },
+    footerText: {
+      fontSize: 11,
+      color: colors.textMuted,
+      fontWeight: '600',
+    },
+  });

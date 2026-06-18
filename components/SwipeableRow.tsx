@@ -50,7 +50,7 @@ export function SwipeableRow({
         const base = isOpenRef.current ? -DELETE_WIDTH : 0;
         const dx = base + gesture.dx;
         const shouldOpen = dx < -DELETE_WIDTH / 2;
-        
+
         if (shouldOpen) {
           if (!isOpenRef.current && onSwipeOpen) {
             onSwipeOpen();

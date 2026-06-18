@@ -20,9 +20,21 @@ export default function NotFoundScreen() {
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: colors.background },
-  title: { fontSize: 18, fontWeight: '600', color: colors.textPrimary, marginBottom: 20 },
-  button: { backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 },
-  buttonText: { color: '#FFF', fontSize: 15, fontWeight: '600' },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 20,
+      backgroundColor: colors.background,
+    },
+    title: { fontSize: 18, fontWeight: '600', color: colors.textPrimary, marginBottom: 20 },
+    button: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+    },
+    buttonText: { color: '#FFF', fontSize: 15, fontWeight: '600' },
+  });

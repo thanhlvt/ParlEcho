@@ -79,9 +79,7 @@ export function LineCard({
       {line.romaji ? <Text style={styles.romaji}>{line.romaji}</Text> : null}
 
       {/* Translation */}
-      {line.translation ? (
-        <Text style={styles.translation}>{line.translation}</Text>
-      ) : null}
+      {line.translation ? <Text style={styles.translation}>{line.translation}</Text> : null}
 
       {/* Score result */}
       {result ? <ScorePanel result={result} /> : null}
@@ -118,11 +116,7 @@ export function LineCard({
                 <Text style={styles.recordBtnText}>Dừng</Text>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity
-                style={styles.recordBtn}
-                onPress={onRecord}
-                activeOpacity={0.8}
-              >
+              <TouchableOpacity style={styles.recordBtn} onPress={onRecord} activeOpacity={0.8}>
                 <Ionicons name="mic" size={18} color="#fff" />
                 <Text style={styles.recordBtnText}>{result ? 'Thử lại' : 'Ghi âm'}</Text>
               </TouchableOpacity>
@@ -152,89 +146,90 @@ export function LineCard({
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  // Cards
-  card: {
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardPartner: { backgroundColor: colors.surfaceAlt },
-  cardUser: { backgroundColor: colors.surface },
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    // Cards
+    card: {
+      borderRadius: 16,
+      padding: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    cardPartner: { backgroundColor: colors.surfaceAlt },
+    cardUser: { backgroundColor: colors.surface },
 
-  speakerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  speakerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  speakerEmoji: {
-    fontSize: 14,
-  },
-  speakerLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.textMuted,
-  },
-  lineNum: { fontSize: 11, color: colors.border },
+    speakerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 10,
+    },
+    speakerBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    speakerEmoji: {
+      fontSize: 14,
+    },
+    speakerLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.textMuted,
+    },
+    lineNum: { fontSize: 11, color: colors.border },
 
-  lineText: {
-    fontSize: 18,
-    color: colors.textPrimary,
-    lineHeight: 28,
-    marginBottom: 6,
-  },
-  furigana: { fontSize: 13, color: colors.textMuted, marginBottom: 2 },
-  romaji: {
-    fontSize: 13,
-    color: colors.textMuted,
-    fontStyle: 'italic',
-    marginBottom: 6,
-  },
-  translation: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    paddingTop: 8,
-    marginTop: 4,
-    marginBottom: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-  },
+    lineText: {
+      fontSize: 18,
+      color: colors.textPrimary,
+      lineHeight: 28,
+      marginBottom: 6,
+    },
+    furigana: { fontSize: 13, color: colors.textMuted, marginBottom: 2 },
+    romaji: {
+      fontSize: 13,
+      color: colors.textMuted,
+      fontStyle: 'italic',
+      marginBottom: 6,
+    },
+    translation: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      paddingTop: 8,
+      marginTop: 4,
+      marginBottom: 10,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+    },
 
-  // Actions
-  actions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 8,
-    flexWrap: 'wrap',
-  },
-  playBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.primaryLight,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  playBtnText: { fontSize: 13, color: colors.primary, fontWeight: '600' },
-  replayBtnActive: { backgroundColor: colors.primary },
-  recordBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  recordBtnText: { fontSize: 13, color: '#fff', fontWeight: '600' },
-});
+    // Actions
+    actions: {
+      flexDirection: 'row',
+      gap: 10,
+      marginTop: 8,
+      flexWrap: 'wrap',
+    },
+    playBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: colors.primaryLight,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+    },
+    playBtnText: { fontSize: 13, color: colors.primary, fontWeight: '600' },
+    replayBtnActive: { backgroundColor: colors.primary },
+    recordBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+    },
+    recordBtnText: { fontSize: 13, color: '#fff', fontWeight: '600' },
+  });

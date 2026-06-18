@@ -165,9 +165,8 @@ export default function HomeScreen() {
   const displayName = profile?.name ?? user?.email?.split('@')[0] ?? 'bạn';
 
   // Compute daily goal progress
-  const currentProgress = goalType === 'lines'
-    ? (todayAct?.lines_practiced ?? 0)
-    : (todayAct?.minutes_practiced ?? 0);
+  const currentProgress =
+    goalType === 'lines' ? (todayAct?.lines_practiced ?? 0) : (todayAct?.minutes_practiced ?? 0);
   const goalProgress = goalTarget > 0 ? Math.min(currentProgress / goalTarget, 1) : 0;
 
   return (
@@ -176,7 +175,12 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
+            <TouchableOpacity
+              onPress={toggleSidebar}
+              activeOpacity={0.7}
+              style={{ padding: 4 }}
+              hitSlop={8}
+            >
               <Ionicons name="menu" size={28} color={colors.textPrimary} />
             </TouchableOpacity>
             <View>
@@ -209,17 +213,22 @@ export default function HomeScreen() {
               color={colors.primary}
               backgroundColor={colors.surfaceAlt}
             >
-              <Text style={styles.goalPercentText}>
-                {Math.round(goalProgress * 100)}%
-              </Text>
+              <Text style={styles.goalPercentText}>{Math.round(goalProgress * 100)}%</Text>
             </ProgressRing>
           </View>
           <View style={styles.goalCardRight}>
             <Text style={styles.goalTitle}>Mục tiêu hôm nay</Text>
             <Text style={styles.goalProgressText}>
-              Đã hoàn thành <Text style={{ fontWeight: '800', color: colors.primary }}>{currentProgress}</Text> / {goalTarget} {goalType === 'lines' ? 'câu' : 'phút'}
+              Đã hoàn thành{' '}
+              <Text style={{ fontWeight: '800', color: colors.primary }}>{currentProgress}</Text> /{' '}
+              {goalTarget} {goalType === 'lines' ? 'câu' : 'phút'}
             </Text>
-            <TouchableOpacity style={styles.goalSetupBtn} onPress={openGoalSettings} activeOpacity={0.7} hitSlop={8}>
+            <TouchableOpacity
+              style={styles.goalSetupBtn}
+              onPress={openGoalSettings}
+              activeOpacity={0.7}
+              hitSlop={8}
+            >
               <Ionicons name="settings-outline" size={14} color={colors.primary} />
               <Text style={styles.goalSetupBtnText}>Thiết lập mục tiêu</Text>
             </TouchableOpacity>
@@ -289,7 +298,6 @@ export default function HomeScreen() {
             onPress={() => router.push('/(app)/analytics')}
           />
         </View>
-
       </ScrollView>
 
       {/* Goal Setting Modal */}
@@ -302,35 +310,36 @@ export default function HomeScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Mục tiêu hàng ngày</Text>
-            
+
             {/* Goal Type Selector */}
             <Text style={styles.modalLabel}>Đo lường tiến độ theo</Text>
             <View style={styles.typeSelector}>
               <TouchableOpacity
-                style={[
-                  styles.typeBtn,
-                  tempGoalType === 'lines' && styles.typeBtnActive,
-                ]}
+                style={[styles.typeBtn, tempGoalType === 'lines' && styles.typeBtnActive]}
                 onPress={() => {
                   setTempGoalType('lines');
                   setTempGoalTarget(10);
                 }}
               >
-                <Text style={[styles.typeBtnText, tempGoalType === 'lines' && styles.typeBtnTextActive]}>
+                <Text
+                  style={[styles.typeBtnText, tempGoalType === 'lines' && styles.typeBtnTextActive]}
+                >
                   Số câu đã nói
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[
-                  styles.typeBtn,
-                  tempGoalType === 'minutes' && styles.typeBtnActive,
-                ]}
+                style={[styles.typeBtn, tempGoalType === 'minutes' && styles.typeBtnActive]}
                 onPress={() => {
                   setTempGoalType('minutes');
                   setTempGoalTarget(15);
                 }}
               >
-                <Text style={[styles.typeBtnText, tempGoalType === 'minutes' && styles.typeBtnTextActive]}>
+                <Text
+                  style={[
+                    styles.typeBtnText,
+                    tempGoalType === 'minutes' && styles.typeBtnTextActive,
+                  ]}
+                >
                   Số phút luyện tập
                 </Text>
               </TouchableOpacity>
@@ -341,11 +350,15 @@ export default function HomeScreen() {
             <View style={styles.adjusterRow}>
               <TouchableOpacity
                 style={styles.adjustBtn}
-                onPress={() => setTempGoalTarget(prev => Math.max(1, prev - (tempGoalType === 'lines' ? 5 : 5)))}
+                onPress={() =>
+                  setTempGoalTarget((prev) =>
+                    Math.max(1, prev - (tempGoalType === 'lines' ? 5 : 5)),
+                  )
+                }
               >
                 <Ionicons name="remove" size={20} color={colors.textPrimary} />
               </TouchableOpacity>
-              
+
               <TextInput
                 style={styles.targetInput}
                 value={tempGoalTarget.toString()}
@@ -358,7 +371,9 @@ export default function HomeScreen() {
 
               <TouchableOpacity
                 style={styles.adjustBtn}
-                onPress={() => setTempGoalTarget(prev => prev + (tempGoalType === 'lines' ? 5 : 5))}
+                onPress={() =>
+                  setTempGoalTarget((prev) => prev + (tempGoalType === 'lines' ? 5 : 5))
+                }
               >
                 <Ionicons name="add" size={20} color={colors.textPrimary} />
               </TouchableOpacity>
@@ -409,10 +424,19 @@ function WeeklyChart({
 
   return (
     <View style={styles.chartCard}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 12,
+        }}
+      >
         <Text style={styles.chartTitle}>7 ngày gần đây</Text>
         <TouchableOpacity onPress={onPressDetails} activeOpacity={0.7}>
-          <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>Xem chi tiết →</Text>
+          <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>
+            Xem chi tiết →
+          </Text>
         </TouchableOpacity>
       </View>
       <View style={styles.chartBars}>
@@ -421,9 +445,7 @@ function WeeklyChart({
           return (
             <View key={i} style={styles.chartCol}>
               <View style={styles.barContainer}>
-                {d.lines > 0 && (
-                  <Text style={styles.barValue}>{d.lines}</Text>
-                )}
+                {d.lines > 0 && <Text style={styles.barValue}>{d.lines}</Text>}
                 <View
                   style={[
                     styles.bar,
@@ -432,15 +454,13 @@ function WeeklyChart({
                       backgroundColor: d.isToday
                         ? colors.primary
                         : d.lines > 0
-                        ? colors.primary + '60'
-                        : colors.border,
+                          ? colors.primary + '60'
+                          : colors.border,
                     },
                   ]}
                 />
               </View>
-              <Text style={[styles.barLabel, d.isToday && styles.barLabelToday]}>
-                {d.label}
-              </Text>
+              <Text style={[styles.barLabel, d.isToday && styles.barLabelToday]}>{d.label}</Text>
             </View>
           );
         })}
@@ -478,294 +498,295 @@ function ActionCard({
 }
 
 // ── Styles ──────────────────────────────────────────────────────────────
-const getStyles = (colors: any) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 20, paddingBottom: 40, gap: 0 },
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 20, paddingBottom: 40, gap: 0 },
 
-  // Header
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-  },
-  greeting: { fontSize: 14, color: colors.textMuted },
-  userName: { fontSize: 22, fontWeight: '700', color: colors.textPrimary, marginTop: 2 },
-  langToggle: {
-    flexDirection: 'row',
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 12,
-    padding: 3,
-  },
-  langBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 9 },
-  langBtnActive: {
-    backgroundColor: colors.surface,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  langBtnText: { fontSize: 13, color: colors.textMuted, fontWeight: '500' },
-  langBtnTextActive: { color: colors.textPrimary, fontWeight: '700' },
+    // Header
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 20,
+    },
+    greeting: { fontSize: 14, color: colors.textMuted },
+    userName: { fontSize: 22, fontWeight: '700', color: colors.textPrimary, marginTop: 2 },
+    langToggle: {
+      flexDirection: 'row',
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 12,
+      padding: 3,
+    },
+    langBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 9 },
+    langBtnActive: {
+      backgroundColor: colors.surface,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    langBtnText: { fontSize: 13, color: colors.textMuted, fontWeight: '500' },
+    langBtnTextActive: { color: colors.textPrimary, fontWeight: '700' },
 
-  // Stats row
-  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
-  statCard: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 14,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  statCardStreak: { backgroundColor: '#FFF7ED' },
-  streakFire: { fontSize: 22, marginBottom: 2 },
-  streakNum: { fontSize: 24, fontWeight: '800', color: colors.warning },
-  statValue: { fontSize: 24, fontWeight: '800', color: colors.textPrimary },
-  statLabel: { fontSize: 11, color: colors.textMuted, marginTop: 2, textAlign: 'center' },
+    // Stats row
+    statsRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
+    statCard: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 14,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      elevation: 2,
+    },
+    statCardStreak: { backgroundColor: '#FFF7ED' },
+    streakFire: { fontSize: 22, marginBottom: 2 },
+    streakNum: { fontSize: 24, fontWeight: '800', color: colors.warning },
+    statValue: { fontSize: 24, fontWeight: '800', color: colors.textPrimary },
+    statLabel: { fontSize: 11, color: colors.textMuted, marginTop: 2, textAlign: 'center' },
 
-  // Weekly chart
-  chartCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  chartTitle: { fontSize: 13, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 },
-  chartBars: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
-  chartCol: { flex: 1, alignItems: 'center', gap: 4 },
-  barContainer: { width: '100%', alignItems: 'center', height: 72, justifyContent: 'flex-end' },
-  bar: { width: '70%', borderRadius: 4 },
-  barValue: { fontSize: 9, color: colors.textMuted, marginBottom: 2 },
-  barLabel: { fontSize: 10, color: colors.textMuted, fontWeight: '500' },
-  barLabelToday: { color: colors.primary, fontWeight: '800' },
-  chartSub: { fontSize: 11, color: colors.textMuted, marginTop: 10, textAlign: 'center' },
+    // Weekly chart
+    chartCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      elevation: 2,
+    },
+    chartTitle: { fontSize: 13, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 },
+    chartBars: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
+    chartCol: { flex: 1, alignItems: 'center', gap: 4 },
+    barContainer: { width: '100%', alignItems: 'center', height: 72, justifyContent: 'flex-end' },
+    bar: { width: '70%', borderRadius: 4 },
+    barValue: { fontSize: 9, color: colors.textMuted, marginBottom: 2 },
+    barLabel: { fontSize: 10, color: colors.textMuted, fontWeight: '500' },
+    barLabelToday: { color: colors.primary, fontWeight: '800' },
+    chartSub: { fontSize: 11, color: colors.textMuted, marginTop: 10, textAlign: 'center' },
 
-  // Actions
-  sectionTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 },
-  actions: { flexDirection: 'row', gap: 12, marginBottom: 20, flexWrap: 'wrap' },
-  actionCard: {
-    width: (width - 40 - 12) / 2,
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  actionIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  actionTitle: { fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 },
-  actionSubtitle: { fontSize: 12, color: colors.textMuted, lineHeight: 17 },
+    // Actions
+    sectionTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 },
+    actions: { flexDirection: 'row', gap: 12, marginBottom: 20, flexWrap: 'wrap' },
+    actionCard: {
+      width: (width - 40 - 12) / 2,
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 18,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    actionIcon: {
+      width: 52,
+      height: 52,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    actionTitle: { fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 },
+    actionSubtitle: { fontSize: 12, color: colors.textMuted, lineHeight: 17 },
 
-  // Coming soon
-  comingSoon: {
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 16,
-    padding: 18,
-    gap: 10,
-  },
-  comingSoonTitle: { fontSize: 13, fontWeight: '600', color: colors.textMuted, marginBottom: 4 },
-  comingSoonItem: { fontSize: 14, color: colors.textSecondary },
+    // Coming soon
+    comingSoon: {
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 16,
+      padding: 18,
+      gap: 10,
+    },
+    comingSoonTitle: { fontSize: 13, fontWeight: '600', color: colors.textMuted, marginBottom: 4 },
+    comingSoonItem: { fontSize: 14, color: colors.textSecondary },
 
-  // Daily Goal Card styles
-  goalCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    marginBottom: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  goalCardLeft: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  goalCardRight: {
-    flex: 1,
-  },
-  goalPercentText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: colors.textPrimary,
-  },
-  goalTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: 4,
-  },
-  goalProgressText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: 8,
-  },
-  goalSetupBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  goalSetupBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.primary,
-  },
+    // Daily Goal Card styles
+    goalCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 16,
+      marginBottom: 14,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    goalCardLeft: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    goalCardRight: {
+      flex: 1,
+    },
+    goalPercentText: {
+      fontSize: 16,
+      fontWeight: '800',
+      color: colors.textPrimary,
+    },
+    goalTitle: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.textPrimary,
+      marginBottom: 4,
+    },
+    goalProgressText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginBottom: 8,
+    },
+    goalSetupBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    goalSetupBtnText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.primary,
+    },
 
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  modalContent: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 24,
-    width: '100%',
-    maxWidth: 340,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  modalLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: 8,
-    marginTop: 12,
-  },
-  typeSelector: {
-    flexDirection: 'row',
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 12,
-    padding: 4,
-    gap: 4,
-    marginBottom: 16,
-  },
-  typeBtn: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  typeBtnActive: {
-    backgroundColor: colors.surface,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  typeBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textMuted,
-  },
-  typeBtnTextActive: {
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  adjusterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
-    marginTop: 8,
-  },
-  adjustBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  targetInput: {
-    width: 80,
-    height: 44,
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 10,
-    textAlign: 'center',
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  adjusterUnit: {
-    fontSize: 11,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-  },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cancelBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  saveBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-    backgroundColor: colors.primary,
-  },
-  saveBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#fff',
-  },
-});
+    // Modal styles
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.4)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    modalContent: {
+      backgroundColor: colors.surface,
+      borderRadius: 20,
+      padding: 24,
+      width: '100%',
+      maxWidth: 340,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 5,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.textPrimary,
+      textAlign: 'center',
+      marginBottom: 20,
+    },
+    modalLabel: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: 8,
+      marginTop: 12,
+    },
+    typeSelector: {
+      flexDirection: 'row',
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 12,
+      padding: 4,
+      gap: 4,
+      marginBottom: 16,
+    },
+    typeBtn: {
+      flex: 1,
+      paddingVertical: 8,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    typeBtnActive: {
+      backgroundColor: colors.surface,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    typeBtnText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.textMuted,
+    },
+    typeBtnTextActive: {
+      color: colors.primary,
+      fontWeight: '700',
+    },
+    adjusterRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 16,
+      marginTop: 8,
+    },
+    adjustBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: colors.surfaceAlt,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    targetInput: {
+      width: 80,
+      height: 44,
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 10,
+      textAlign: 'center',
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.textPrimary,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    adjusterUnit: {
+      fontSize: 11,
+      color: colors.textMuted,
+      textAlign: 'center',
+      marginTop: 8,
+      marginBottom: 16,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 16,
+    },
+    cancelBtn: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 12,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    cancelBtnText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    saveBtn: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 12,
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+    },
+    saveBtnText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: '#fff',
+    },
+  });

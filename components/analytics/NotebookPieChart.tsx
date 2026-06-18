@@ -9,11 +9,7 @@ interface NotebookPieChartProps {
   mistakeCount: number;
 }
 
-export function NotebookPieChart({
-  wordCount,
-  phraseCount,
-  mistakeCount,
-}: NotebookPieChartProps) {
+export function NotebookPieChart({ wordCount, phraseCount, mistakeCount }: NotebookPieChartProps) {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const total = wordCount + phraseCount + mistakeCount;
@@ -140,7 +136,9 @@ export function NotebookPieChart({
 
               {/* Phân khúc 1: Từ vựng */}
               {wordCount > 0 && (
-                <View style={[styles.absoluteSegment, { transform: [{ rotate: `${rotWord}deg` }] }]}>
+                <View
+                  style={[styles.absoluteSegment, { transform: [{ rotate: `${rotWord}deg` }] }]}
+                >
                   <ProgressRing
                     size={size}
                     progress={pWord}
@@ -153,7 +151,9 @@ export function NotebookPieChart({
 
               {/* Phân khúc 2: Mẫu câu */}
               {phraseCount > 0 && (
-                <View style={[styles.absoluteSegment, { transform: [{ rotate: `${rotPhrase}deg` }] }]}>
+                <View
+                  style={[styles.absoluteSegment, { transform: [{ rotate: `${rotPhrase}deg` }] }]}
+                >
                   <ProgressRing
                     size={size}
                     progress={pPhrase}
@@ -166,7 +166,9 @@ export function NotebookPieChart({
 
               {/* Phân khúc 3: Lỗi sai */}
               {mistakeCount > 0 && (
-                <View style={[styles.absoluteSegment, { transform: [{ rotate: `${rotMistake}deg` }] }]}>
+                <View
+                  style={[styles.absoluteSegment, { transform: [{ rotate: `${rotMistake}deg` }] }]}
+                >
                   <ProgressRing
                     size={size}
                     progress={pMistake}
@@ -207,93 +209,94 @@ export function NotebookPieChart({
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: 16,
-  },
-  chartContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    gap: 16,
-  },
-  donutWrapper: {
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  absoluteTrack: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
-  absoluteSegment: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-  },
-  centerText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textMuted,
-  },
-  centerValueContainer: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  centerCount: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.textPrimary,
-  },
-  centerLabel: {
-    fontSize: 10,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  legendContainer: {
-    flex: 1,
-    gap: 10,
-  },
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  colorIndicator: {
-    width: 6,
-    height: 24,
-    borderRadius: 3,
-  },
-  legendDetails: {
-    flex: 1,
-  },
-  legendLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  legendValue: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    title: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.textPrimary,
+      marginBottom: 16,
+    },
+    chartContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-around',
+      gap: 16,
+    },
+    donutWrapper: {
+      position: 'relative',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    absoluteTrack: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+    },
+    absoluteSegment: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+    },
+    centerText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textMuted,
+    },
+    centerValueContainer: {
+      position: 'absolute',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    centerCount: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: colors.textPrimary,
+    },
+    centerLabel: {
+      fontSize: 10,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
+    legendContainer: {
+      flex: 1,
+      gap: 10,
+    },
+    legendRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    colorIndicator: {
+      width: 6,
+      height: 24,
+      borderRadius: 3,
+    },
+    legendDetails: {
+      flex: 1,
+    },
+    legendLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.textPrimary,
+    },
+    legendValue: {
+      fontSize: 11,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
+  });

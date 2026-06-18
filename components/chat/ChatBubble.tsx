@@ -10,7 +10,15 @@ import { useAuth } from '../../providers/AuthProvider';
 
 export type UIMessage = Pick<
   Message,
-  'id' | 'role' | 'text' | 'translation' | 'furigana' | 'romaji' | 'corrections' | 'hints' | 'audio_url'
+  | 'id'
+  | 'role'
+  | 'text'
+  | 'translation'
+  | 'furigana'
+  | 'romaji'
+  | 'corrections'
+  | 'hints'
+  | 'audio_url'
 > & { pending?: boolean };
 
 interface ChatBubbleProps {
@@ -20,12 +28,7 @@ interface ChatBubbleProps {
   onToggleExpand: () => void;
 }
 
-export function ChatBubble({
-  message,
-  languageId,
-  expanded,
-  onToggleExpand,
-}: ChatBubbleProps) {
+export function ChatBubble({ message, languageId, expanded, onToggleExpand }: ChatBubbleProps) {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const isUser = message.role === 'user';
@@ -97,7 +100,10 @@ export function ChatBubble({
     }
   }
 
-  async function handleSaveCorrection(c: { original: string; fixed: string; explanation: string }, index: number) {
+  async function handleSaveCorrection(
+    c: { original: string; fixed: string; explanation: string },
+    index: number,
+  ) {
     if (!user) return;
     try {
       // Check duplicate
@@ -111,7 +117,7 @@ export function ChatBubble({
       if (checkError) throw checkError;
       if (existing && existing.length > 0) {
         Alert.alert('Thông báo', 'Lỗi sai này đã tồn tại trong Sổ tay.');
-        setSavedCorrections(prev => ({ ...prev, [index]: true }));
+        setSavedCorrections((prev) => ({ ...prev, [index]: true }));
         return;
       }
 
@@ -126,7 +132,7 @@ export function ChatBubble({
         source_message_id: isOptimistic ? null : message.id,
       });
       if (error) throw error;
-      setSavedCorrections(prev => ({ ...prev, [index]: true }));
+      setSavedCorrections((prev) => ({ ...prev, [index]: true }));
       Alert.alert('Thành công', 'Đã lưu lỗi sai vào Sổ tay.');
     } catch (err) {
       console.error(err);
@@ -145,15 +151,26 @@ export function ChatBubble({
       <View style={[styles.bubbleWrap, isUser && styles.bubbleWrapUser]}>
         {/* Main bubble */}
         <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleAI]}>
-          <Text style={[styles.bubbleText, isUser && styles.bubbleTextUser]}>
-            {message.text}
-          </Text>
+          <Text style={[styles.bubbleText, isUser && styles.bubbleTextUser]}>{message.text}</Text>
 
           {/* User Play Audio */}
           {isUser && message.audio_url ? (
-            <Pressable onPress={handlePlayAudio} style={{ marginTop: 8, alignSelf: 'flex-end', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Pressable
+              onPress={handlePlayAudio}
+              style={{
+                marginTop: 8,
+                alignSelf: 'flex-end',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
               <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Nghe lại</Text>
-              <Ionicons name={isPlaying ? "volume-high" : "volume-medium"} size={16} color="rgba(255,255,255,0.8)" />
+              <Ionicons
+                name={isPlaying ? 'volume-high' : 'volume-medium'}
+                size={16}
+                color="rgba(255,255,255,0.8)"
+              />
             </Pressable>
           ) : null}
 
@@ -176,7 +193,11 @@ export function ChatBubble({
               <View style={{ flexDirection: 'row', gap: 12 }}>
                 {message.audio_url ? (
                   <Pressable onPress={handlePlayAudio} style={styles.transBtn} hitSlop={8}>
-                    <Ionicons name={isPlaying ? "volume-high" : "volume-medium"} size={18} color={colors.primary} />
+                    <Ionicons
+                      name={isPlaying ? 'volume-high' : 'volume-medium'}
+                      size={18}
+                      color={colors.primary}
+                    />
                   </Pressable>
                 ) : null}
                 {message.translation ? (
@@ -187,12 +208,17 @@ export function ChatBubble({
                   </Pressable>
                 ) : null}
               </View>
-              
-              <Pressable onPress={handleSavePhrase} disabled={savedPhrase} style={styles.saveBubbleBtn} hitSlop={8}>
-                <Ionicons 
-                  name={savedPhrase ? 'bookmark' : 'bookmark-outline'} 
-                  size={15} 
-                  color={savedPhrase ? colors.primary : colors.textMuted} 
+
+              <Pressable
+                onPress={handleSavePhrase}
+                disabled={savedPhrase}
+                style={styles.saveBubbleBtn}
+                hitSlop={8}
+              >
+                <Ionicons
+                  name={savedPhrase ? 'bookmark' : 'bookmark-outline'}
+                  size={15}
+                  color={savedPhrase ? colors.primary : colors.textMuted}
                 />
               </Pressable>
             </View>
@@ -217,9 +243,9 @@ export function ChatBubble({
         {!isUser && expanded && message.corrections?.length ? (
           <View style={styles.corrPanel}>
             {message.corrections.map((c, i) => (
-              <CorrectionRow 
-                key={i} 
-                correction={c} 
+              <CorrectionRow
+                key={i}
+                correction={c}
                 onSave={() => handleSaveCorrection(c, i)}
                 isSaved={!!savedCorrections[i]}
               />
@@ -231,89 +257,95 @@ export function ChatBubble({
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  bubbleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 8,
-    maxWidth: '90%',
-    alignSelf: 'flex-start',
-  },
-  bubbleRowUser: { alignSelf: 'flex-end', flexDirection: 'row-reverse' },
-  avatarDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  bubbleWrap: { gap: 4, flex: 1 },
-  bubbleWrapUser: { alignItems: 'flex-end' },
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    bubbleRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: 8,
+      maxWidth: '90%',
+      alignSelf: 'flex-start',
+    },
+    bubbleRowUser: { alignSelf: 'flex-end', flexDirection: 'row-reverse' },
+    avatarDot: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.surfaceAlt,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    bubbleWrap: { gap: 4, flex: 1 },
+    bubbleWrapUser: { alignItems: 'flex-end' },
 
-  // ── Bubble
-  bubble: {
-    borderRadius: 18,
-    padding: 14,
-    maxWidth: '100%',
-  },
-  bubbleUser: {
-    backgroundColor: colors.primary,
-    borderBottomRightRadius: 4,
-  },
-  bubbleAI: {
-    backgroundColor: colors.surface,
-    borderBottomLeftRadius: 4,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.06,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
-  },
-  bubbleText: { fontSize: 15, color: colors.textPrimary, lineHeight: 22 },
-  bubbleTextUser: { color: '#fff' },
-  furigana: { fontSize: 12, color: colors.textMuted, marginTop: 6 },
-  romaji: { fontSize: 12, color: colors.textMuted, fontStyle: 'italic', marginTop: 2 },
-  transBtn: {},
-  transBtnText: { fontSize: 12, color: colors.primary, fontWeight: '600' },
-  translationText: { fontSize: 13, color: colors.textSecondary, marginTop: 4, fontStyle: 'italic' },
-  bubbleActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 8,
-    gap: 8,
-    minWidth: 100,
-  },
-  saveBubbleBtn: {
-    padding: 4,
-  },
+    // ── Bubble
+    bubble: {
+      borderRadius: 18,
+      padding: 14,
+      maxWidth: '100%',
+    },
+    bubbleUser: {
+      backgroundColor: colors.primary,
+      borderBottomRightRadius: 4,
+    },
+    bubbleAI: {
+      backgroundColor: colors.surface,
+      borderBottomLeftRadius: 4,
+      ...Platform.select({
+        ios: {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.06,
+          shadowRadius: 4,
+        },
+        android: {
+          elevation: 1,
+        },
+      }),
+    },
+    bubbleText: { fontSize: 15, color: colors.textPrimary, lineHeight: 22 },
+    bubbleTextUser: { color: '#fff' },
+    furigana: { fontSize: 12, color: colors.textMuted, marginTop: 6 },
+    romaji: { fontSize: 12, color: colors.textMuted, fontStyle: 'italic', marginTop: 2 },
+    transBtn: {},
+    transBtnText: { fontSize: 12, color: colors.primary, fontWeight: '600' },
+    translationText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginTop: 4,
+      fontStyle: 'italic',
+    },
+    bubbleActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 8,
+      gap: 8,
+      minWidth: 100,
+    },
+    saveBubbleBtn: {
+      padding: 4,
+    },
 
-  // ── Corrections
-  corrChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    alignSelf: 'flex-start',
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  corrChipText: { fontSize: 12, color: colors.textSecondary, fontWeight: '600' },
-  corrPanel: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 12,
-    gap: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
-});
+    // ── Corrections
+    corrChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      alignSelf: 'flex-start',
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+    },
+    corrChipText: { fontSize: 12, color: colors.textSecondary, fontWeight: '600' },
+    corrPanel: {
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      padding: 12,
+      gap: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+  });

@@ -47,24 +47,28 @@ export default function ProfileScreen() {
           setTotalLines(sum);
         }
       });
-      
+
     getAudioCacheSize().then(setAudioCacheSize);
   }, [user]);
 
   const handleClearCache = () => {
-    Alert.alert('Xoá dữ liệu ghi âm', 'Bạn có chắc chắn muốn xoá toàn bộ dữ liệu ghi âm của các phiên Live đã lưu trên máy không?', [
-      { text: 'Huỷ', style: 'cancel' },
-      { 
-        text: 'Xoá', 
-        style: 'destructive', 
-        onPress: async () => {
-          await clearAllAudioCache();
-          const newSize = await getAudioCacheSize();
-          setAudioCacheSize(newSize);
-          Alert.alert('Đã xoá', 'Toàn bộ dữ liệu ghi âm đã được xoá.');
-        }
-      },
-    ]);
+    Alert.alert(
+      'Xoá dữ liệu ghi âm',
+      'Bạn có chắc chắn muốn xoá toàn bộ dữ liệu ghi âm của các phiên Live đã lưu trên máy không?',
+      [
+        { text: 'Huỷ', style: 'cancel' },
+        {
+          text: 'Xoá',
+          style: 'destructive',
+          onPress: async () => {
+            await clearAllAudioCache();
+            const newSize = await getAudioCacheSize();
+            setAudioCacheSize(newSize);
+            Alert.alert('Đã xoá', 'Toàn bộ dữ liệu ghi âm đã được xoá.');
+          },
+        },
+      ],
+    );
   };
 
   const initial = (profile?.name ?? user?.email ?? '?')[0].toUpperCase();
@@ -72,7 +76,12 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
+        <TouchableOpacity
+          onPress={toggleSidebar}
+          activeOpacity={0.7}
+          style={{ padding: 4 }}
+          hitSlop={8}
+        >
           <Ionicons name="menu" size={28} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Hồ sơ</Text>
@@ -93,10 +102,10 @@ export default function ProfileScreen() {
             label="Ngôn ngữ đang học"
             value={profile?.active_language_id === 'ja' ? '🇯🇵 Tiếng Nhật' : '🇺🇸 Tiếng Anh'}
           />
-          <SettingRow 
-            icon="trophy-outline" 
-            label="Tổng số câu đã luyện" 
-            value={totalLines.toString()} 
+          <SettingRow
+            icon="trophy-outline"
+            label="Tổng số câu đã luyện"
+            value={totalLines.toString()}
           />
           <SettingRow
             icon="book-outline"
@@ -124,10 +133,7 @@ export default function ProfileScreen() {
             {(['light', 'dark', 'system'] as const).map((mode) => (
               <TouchableOpacity
                 key={mode}
-                style={[
-                  styles.themeToggleBtn,
-                  themeMode === mode && styles.themeToggleBtnActive,
-                ]}
+                style={[styles.themeToggleBtn, themeMode === mode && styles.themeToggleBtnActive]}
                 onPress={() => setThemeMode(mode)}
               >
                 <Text
@@ -136,9 +142,7 @@ export default function ProfileScreen() {
                     themeMode === mode && styles.themeToggleTextActive,
                   ]}
                 >
-                  {mode === 'light' ? '☀️ Sáng'
-                    : mode === 'dark' ? '🌙 Tối'
-                    : '🤖 Tự động'}
+                  {mode === 'light' ? '☀️ Sáng' : mode === 'dark' ? '🌙 Tối' : '🤖 Tự động'}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -178,115 +182,116 @@ function SettingRow({
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 8,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  content: { padding: 24, alignItems: 'center' },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  avatarText: { fontSize: 32, fontWeight: '700', color: '#FFF' },
-  name: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
-  email: { fontSize: 14, color: colors.textMuted, marginBottom: 32 },
-  section: {
-    alignSelf: 'stretch',
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  settingIcon: { marginRight: 12 },
-  settingLabel: { flex: 1, fontSize: 15, color: colors.textPrimary },
-  settingValue: { fontSize: 14, color: colors.textMuted },
-  signOutBtn: {
-    alignSelf: 'stretch',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.error + '40',
-  },
-  signOutText: { fontSize: 16, fontWeight: '600', color: colors.error },
-  themeSection: {
-    alignSelf: 'stretch',
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  themeTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: 12,
-  },
-  themeToggleGroup: {
-    flexDirection: 'row',
-    backgroundColor: colors.background,
-    borderRadius: 12,
-    padding: 4,
-    gap: 4,
-  },
-  themeToggleBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  themeToggleBtnActive: {
-    backgroundColor: colors.surface,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  themeToggleText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  themeToggleTextActive: {
-    color: colors.primary,
-    fontWeight: '700',
-  },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 8,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.textPrimary,
+    },
+    content: { padding: 24, alignItems: 'center' },
+    avatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    avatarText: { fontSize: 32, fontWeight: '700', color: '#FFF' },
+    name: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
+    email: { fontSize: 14, color: colors.textMuted, marginBottom: 32 },
+    section: {
+      alignSelf: 'stretch',
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      overflow: 'hidden',
+      marginBottom: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    settingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    settingIcon: { marginRight: 12 },
+    settingLabel: { flex: 1, fontSize: 15, color: colors.textPrimary },
+    settingValue: { fontSize: 14, color: colors.textMuted },
+    signOutBtn: {
+      alignSelf: 'stretch',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.error + '40',
+    },
+    signOutText: { fontSize: 16, fontWeight: '600', color: colors.error },
+    themeSection: {
+      alignSelf: 'stretch',
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    themeTitle: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.textPrimary,
+      marginBottom: 12,
+    },
+    themeToggleGroup: {
+      flexDirection: 'row',
+      backgroundColor: colors.background,
+      borderRadius: 12,
+      padding: 4,
+      gap: 4,
+    },
+    themeToggleBtn: {
+      flex: 1,
+      paddingVertical: 10,
+      alignItems: 'center',
+      borderRadius: 8,
+    },
+    themeToggleBtnActive: {
+      backgroundColor: colors.surface,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    themeToggleText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    themeToggleTextActive: {
+      color: colors.primary,
+      fontWeight: '700',
+    },
+  });

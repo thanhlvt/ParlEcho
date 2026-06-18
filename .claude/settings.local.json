@@ -4,7 +4,13 @@
       "WebFetch(domain:ai.google.dev)",
       "Bash(node scripts/generate-scenarios-sql.mjs scripts/scenarios/daily-life/01_phone-restaurant-reservation.json --out supabase/seed_daily_life.sql)",
       "Bash(node scripts/generate-scenarios-sql.mjs scripts/scenarios/daily-life/02_taxi-grab-call.json --out supabase/seed_daily_life_02.sql)",
-      "Bash(node scripts/generate-scenarios-sql.mjs scripts/scenarios/postal-delivery/01_receive-parcel.json --out supabase/seed_postal_delivery_01.sql)"
+      "Bash(node scripts/generate-scenarios-sql.mjs scripts/scenarios/postal-delivery/01_receive-parcel.json --out supabase/seed_postal_delivery_01.sql)",
+      "Bash(grep -E \"import.*from.*\\\\\\\\./\" app/_layout.tsx app/\\\\\\(app\\\\\\)/_layout.tsx)",
+      "Bash(grep -E \"^\\\\s*\\\\-\\\\-.*TODO|^\\\\s*\\\\/\\\\*.*TODO\" supabase/functions/*/index.ts)",
+      "Bash(npx expo *)",
+      "Bash(npx eslint *)",
+      "Bash(npx prettier *)",
+      "Bash(sort -t'|' -k2 -rn)"
     ]
   }
 }

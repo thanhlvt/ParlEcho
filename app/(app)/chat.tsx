@@ -114,10 +114,14 @@ export default function ChatScreen() {
   }
 
   function confirmDeleteConversation(id: string) {
-    Alert.alert('Xoá cuộc hội thoại', 'Bạn có chắc chắn muốn xoá toàn bộ cuộc hội thoại này không?', [
-      { text: 'Huỷ', style: 'cancel' },
-      { text: 'Xoá', style: 'destructive', onPress: () => deleteConversation(id) },
-    ]);
+    Alert.alert(
+      'Xoá cuộc hội thoại',
+      'Bạn có chắc chắn muốn xoá toàn bộ cuộc hội thoại này không?',
+      [
+        { text: 'Huỷ', style: 'cancel' },
+        { text: 'Xoá', style: 'destructive', onPress: () => deleteConversation(id) },
+      ],
+    );
   }
 
   async function deleteConversation(id: string) {
@@ -150,7 +154,7 @@ export default function ChatScreen() {
         translation: m.translation as string | null,
         furigana: m.furigana as string | null,
         romaji: m.romaji as string | null,
-        corrections: m.corrections as typeof messages[0]['corrections'],
+        corrections: m.corrections as (typeof messages)[0]['corrections'],
         hints: m.hints as string[] | null,
         audio_url: m.audio_url as string | null,
       })),
@@ -252,7 +256,12 @@ export default function ChatScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
+          <TouchableOpacity
+            onPress={toggleSidebar}
+            activeOpacity={0.7}
+            style={{ padding: 4 }}
+            hitSlop={8}
+          >
             <Ionicons name="menu" size={28} color={colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.historyBtn} onPress={loadHistory} activeOpacity={0.7}>
@@ -354,12 +363,15 @@ export default function ChatScreen() {
                     <View>
                       <Text style={styles.historyDate}>
                         {new Date(item.started_at).toLocaleDateString('vi-VN', {
-                          day: '2-digit', month: '2-digit', year: 'numeric',
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
                         })}
                       </Text>
                       <Text style={styles.historyTime}>
                         {new Date(item.started_at).toLocaleTimeString('vi-VN', {
-                          hour: '2-digit', minute: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
                         })}
                       </Text>
                     </View>
@@ -435,10 +447,7 @@ export default function ChatScreen() {
             blurOnSubmit={false}
           />
           <TouchableOpacity
-            style={[
-              styles.sendBtn,
-              (!input.trim() || sending) && styles.sendBtnDisabled,
-            ]}
+            style={[styles.sendBtn, (!input.trim() || sending) && styles.sendBtnDisabled]}
             onPress={sendMessage}
             disabled={!input.trim() || sending}
             activeOpacity={0.8}
@@ -456,146 +465,158 @@ export default function ChatScreen() {
 }
 
 // ── Styles ────────────────────────────────────────────────────────────
-const getStyles = (colors: any) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
 
-  // ── Start screen
-  startContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-    gap: 16,
-  },
-  iconWrap: {
-    width: 96,
-    height: 96,
-    backgroundColor: colors.primaryLight,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  startTitle: { fontSize: 26, fontWeight: '800', color: colors.textPrimary },
-  startSubtitle: {
-    fontSize: 14,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 21,
-  },
-  langRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  langBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  langBtnActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-  langBtnText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
-  langBtnTextActive: { color: colors.primary },
-  startBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: colors.primary,
-    borderRadius: 16,
-    paddingHorizontal: 28,
-    paddingVertical: 16,
-    marginTop: 8,
-    width: '100%',
-    justifyContent: 'center',
-  },
-  startBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+    // ── Start screen
+    startContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 32,
+      gap: 16,
+    },
+    iconWrap: {
+      width: 96,
+      height: 96,
+      backgroundColor: colors.primaryLight,
+      borderRadius: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 4,
+    },
+    startTitle: { fontSize: 26, fontWeight: '800', color: colors.textPrimary },
+    startSubtitle: {
+      fontSize: 14,
+      color: colors.textMuted,
+      textAlign: 'center',
+      lineHeight: 21,
+    },
+    langRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
+    langBtn: {
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderRadius: 14,
+      borderWidth: 2,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    langBtnActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+    langBtnText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
+    langBtnTextActive: { color: colors.primary },
+    startBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: colors.primary,
+      borderRadius: 16,
+      paddingHorizontal: 28,
+      paddingVertical: 16,
+      marginTop: 8,
+      width: '100%',
+      justifyContent: 'center',
+    },
+    startBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 
-  // ── Chat header
-  chatHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  chatHeaderCenter: { flex: 1, alignItems: 'center' },
-  chatHeaderTitle: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
-  chatHeaderSub: { fontSize: 12, color: colors.textMuted },
+    // ── Chat header
+    chatHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    chatHeaderCenter: { flex: 1, alignItems: 'center' },
+    chatHeaderTitle: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
+    chatHeaderSub: { fontSize: 12, color: colors.textMuted },
 
-  // ── Message list
-  messageList: { padding: 16, gap: 12 },
-  emptyChat: { alignItems: 'center', paddingTop: 48 },
-  emptyChatText: { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
+    // ── Message list
+    messageList: { padding: 16, gap: 12 },
+    emptyChat: { alignItems: 'center', paddingTop: 48 },
+    emptyChatText: { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
 
+    // ── Input bar
+    inputBar: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    textInput: {
+      flex: 1,
+      minHeight: 44,
+      maxHeight: 120,
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 22,
+      paddingHorizontal: 18,
+      paddingTop: Platform.OS === 'ios' ? 12 : 10,
+      paddingBottom: 10,
+      fontSize: 15,
+      color: colors.textPrimary,
+    },
+    sendBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    sendBtnDisabled: { backgroundColor: colors.border },
 
-
-  // ── Input bar
-  inputBar: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  textInput: {
-    flex: 1,
-    minHeight: 44,
-    maxHeight: 120,
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 22,
-    paddingHorizontal: 18,
-    paddingTop: Platform.OS === 'ios' ? 12 : 10,
-    paddingBottom: 10,
-    fontSize: 15,
-    color: colors.textPrimary,
-  },
-  sendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sendBtnDisabled: { backgroundColor: colors.border },
-
-  // ── History
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-  historyBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 20, backgroundColor: colors.primaryLight,
-  },
-  historyBtnText: { fontSize: 13, fontWeight: '600', color: colors.primary },
-  historyHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: colors.surface,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
-  },
-  historyTitle: { fontSize: 16, fontWeight: '700', color: colors.textPrimary },
-  historyList: { padding: 16, gap: 10 },
-  historyEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  historyEmptyText: { fontSize: 14, color: colors.textMuted },
-  historyCard: {
-    backgroundColor: colors.surface, borderRadius: 14, padding: 14,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
-  },
-  historyCardLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  historyLang: { fontSize: 24 },
-  historyDate: { fontSize: 13, fontWeight: '600', color: colors.textPrimary },
-  historyTime: { fontSize: 12, color: colors.textMuted },
-  historyResume: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  historyResumeText: { fontSize: 12, fontWeight: '600', color: colors.primary },
-});
+    // ── History
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingTop: 8,
+    },
+    historyBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+      backgroundColor: colors.primaryLight,
+    },
+    historyBtnText: { fontSize: 13, fontWeight: '600', color: colors.primary },
+    historyHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      backgroundColor: colors.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    historyTitle: { fontSize: 16, fontWeight: '700', color: colors.textPrimary },
+    historyList: { padding: 16, gap: 10 },
+    historyEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+    historyEmptyText: { fontSize: 14, color: colors.textMuted },
+    historyCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      padding: 14,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    historyCardLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    historyLang: { fontSize: 24 },
+    historyDate: { fontSize: 13, fontWeight: '600', color: colors.textPrimary },
+    historyTime: { fontSize: 12, color: colors.textMuted },
+    historyResume: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    historyResumeText: { fontSize: 12, fontWeight: '600', color: colors.primary },
+  });

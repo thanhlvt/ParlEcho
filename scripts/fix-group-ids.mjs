@@ -62,7 +62,9 @@ for (const filePath of FILES) {
   }
 
   writeFileSync(filePath, result, 'utf8');
-  console.log(`✓  ${filePath} — ${matches.length} group IDs reassigned (${makeGroupId(counter - matches.length)} … ${makeGroupId(counter - 1)})`);
+  console.log(
+    `✓  ${filePath} — ${matches.length} group IDs reassigned (${makeGroupId(counter - matches.length)} … ${makeGroupId(counter - 1)})`,
+  );
 }
 
 console.log(`\nDone. IDs used: ${makeGroupId(START_ID)} → ${makeGroupId(counter - 1)}`);

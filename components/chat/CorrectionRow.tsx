@@ -20,7 +20,12 @@ export function CorrectionRow({ correction, onSave, isSaved }: CorrectionRowProp
           <Text style={styles.corrLabel}>Sai</Text>
           <Text style={styles.corrOriginal}>{correction.original}</Text>
         </View>
-        <Ionicons name="arrow-forward" size={14} color={colors.textMuted} style={{ marginTop: 2 }} />
+        <Ionicons
+          name="arrow-forward"
+          size={14}
+          color={colors.textMuted}
+          style={{ marginTop: 2 }}
+        />
         <View style={styles.corrAfter}>
           <Text style={styles.corrLabel}>Đúng</Text>
           <Text style={styles.corrFixed}>{correction.fixed}</Text>
@@ -42,19 +47,20 @@ export function CorrectionRow({ correction, onSave, isSaved }: CorrectionRowProp
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  corrContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  corrRow: { gap: 4, flex: 1 },
-  corrBefore: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  corrAfter: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  corrLabel: { fontSize: 10, fontWeight: '700', color: colors.textMuted, width: 28 },
-  corrOriginal: { fontSize: 13, color: colors.error, textDecorationLine: 'line-through' },
-  corrFixed: { fontSize: 13, color: colors.success, fontWeight: '600' },
-  corrExplain: { fontSize: 12, color: colors.textMuted, marginTop: 2, fontStyle: 'italic' },
-  saveBtn: { padding: 4, alignSelf: 'flex-start', marginTop: 2 },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    corrContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    corrRow: { gap: 4, flex: 1 },
+    corrBefore: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    corrAfter: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    corrLabel: { fontSize: 10, fontWeight: '700', color: colors.textMuted, width: 28 },
+    corrOriginal: { fontSize: 13, color: colors.error, textDecorationLine: 'line-through' },
+    corrFixed: { fontSize: 13, color: colors.success, fontWeight: '600' },
+    corrExplain: { fontSize: 12, color: colors.textMuted, marginTop: 2, fontStyle: 'italic' },
+    saveBtn: { padding: 4, alignSelf: 'flex-start', marginTop: 2 },
+  });

@@ -39,7 +39,9 @@ export default function LiveHistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [openRowId, setOpenRowId] = useState<string | null>(null);
 
-  useEffect(() => { fetchSessions(); }, []);
+  useEffect(() => {
+    fetchSessions();
+  }, []);
 
   async function fetchSessions() {
     if (!user) return;
@@ -63,10 +65,14 @@ export default function LiveHistoryScreen() {
   }
 
   function confirmDeleteSession(conversationId: string) {
-    Alert.alert('Xoá phiên hội thoại', 'Bạn có chắc chắn muốn xoá toàn bộ dữ liệu ghi âm và kết quả của phiên hội thoại này không?', [
-      { text: 'Huỷ', style: 'cancel' },
-      { text: 'Xoá', style: 'destructive', onPress: () => deleteSession(conversationId) },
-    ]);
+    Alert.alert(
+      'Xoá phiên hội thoại',
+      'Bạn có chắc chắn muốn xoá toàn bộ dữ liệu ghi âm và kết quả của phiên hội thoại này không?',
+      [
+        { text: 'Huỷ', style: 'cancel' },
+        { text: 'Xoá', style: 'destructive', onPress: () => deleteSession(conversationId) },
+      ],
+    );
   }
 
   async function deleteSession(conversationId: string) {
@@ -122,10 +128,13 @@ export default function LiveHistoryScreen() {
         renderItem={({ item }) => {
           const score = item.avg_pronunciation;
           const scoreColor =
-            score == null ? colors.textMuted
-              : score >= 80 ? colors.success
-              : score >= 60 ? colors.warning
-              : colors.error;
+            score == null
+              ? colors.textMuted
+              : score >= 80
+                ? colors.success
+                : score >= 60
+                  ? colors.warning
+                  : colors.error;
           const langFlag = item.language_id === 'en' ? '🇺🇸' : '🇯🇵';
 
           return (
@@ -157,7 +166,9 @@ export default function LiveHistoryScreen() {
                   </View>
                   {score != null && (
                     <View style={styles.scoreWrap}>
-                      <Text style={[styles.scoreNum, { color: scoreColor }]}>{Math.round(score)}</Text>
+                      <Text style={[styles.scoreNum, { color: scoreColor }]}>
+                        {Math.round(score)}
+                      </Text>
                       <Text style={styles.scoreLabel}>phát âm</Text>
                     </View>
                   )}
@@ -182,40 +193,41 @@ export default function LiveHistoryScreen() {
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  list: { padding: 16, gap: 12 },
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    list: { padding: 16, gap: 12 },
 
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32 },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary },
-  emptySub: { fontSize: 13, color: colors.textMuted, textAlign: 'center', lineHeight: 20 },
+    empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32 },
+    emptyTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary },
+    emptySub: { fontSize: 13, color: colors.textMuted, textAlign: 'center', lineHeight: 20 },
 
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 14,
-    gap: 6,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
-  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  cardLang: { fontSize: 16 },
-  cardDate: { fontSize: 13, fontWeight: '600', color: colors.textPrimary },
-  cardTime: { fontSize: 12, color: colors.textMuted },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 14,
+      gap: 6,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+    cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    cardLang: { fontSize: 16 },
+    cardDate: { fontSize: 13, fontWeight: '600', color: colors.textPrimary },
+    cardTime: { fontSize: 12, color: colors.textMuted },
 
-  scoreWrap: { alignItems: 'flex-end' },
-  scoreNum: { fontSize: 22, fontWeight: '800', lineHeight: 26 },
-  scoreLabel: { fontSize: 10, color: colors.textMuted, fontWeight: '500' },
+    scoreWrap: { alignItems: 'flex-end' },
+    scoreNum: { fontSize: 22, fontWeight: '800', lineHeight: 26 },
+    scoreLabel: { fontSize: 10, color: colors.textMuted, fontWeight: '500' },
 
-  feedback: { fontSize: 13, color: colors.textSecondary, lineHeight: 19 },
-  noFeedback: { fontSize: 13, color: colors.textMuted, fontStyle: 'italic' },
+    feedback: { fontSize: 13, color: colors.textSecondary, lineHeight: 19 },
+    noFeedback: { fontSize: 13, color: colors.textMuted, fontStyle: 'italic' },
 
-  cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    marginTop: 2,
-  },
-  viewText: { fontSize: 12, fontWeight: '600', color: colors.primary },
-});
+    cardFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+      marginTop: 2,
+    },
+    viewText: { fontSize: 12, fontWeight: '600', color: colors.primary },
+  });

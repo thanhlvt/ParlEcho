@@ -42,10 +42,7 @@ export default function LoginScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <Text style={styles.logo}>ParlEcho</Text>
           <Text style={styles.tagline}>Luyện nói EN & JP mỗi ngày</Text>
@@ -82,16 +79,13 @@ export default function LoginScreen() {
             onPress={handleLogin}
             disabled={loading}
           >
-            <Text style={styles.buttonText}>
-              {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
-            </Text>
+            <Text style={styles.buttonText}>{loading ? 'Đang đăng nhập...' : 'Đăng nhập'}</Text>
           </TouchableOpacity>
 
           <Link href="/(auth)/register" asChild>
             <TouchableOpacity style={styles.link}>
               <Text style={styles.linkText}>
-                Chưa có tài khoản?{' '}
-                <Text style={styles.linkBold}>Đăng ký ngay</Text>
+                Chưa có tài khoản? <Text style={styles.linkBold}>Đăng ký ngay</Text>
               </Text>
             </TouchableOpacity>
           </Link>
@@ -101,56 +95,57 @@ export default function LoginScreen() {
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
-  container: { flexGrow: 1, justifyContent: 'center', padding: 24 },
-  header: { alignItems: 'center', marginBottom: 48 },
-  logo: { fontSize: 36, fontWeight: '800', color: colors.primary, letterSpacing: -0.5 },
-  tagline: { fontSize: 15, color: colors.textMuted, marginTop: 6 },
-  form: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  error: {
-    backgroundColor: '#FEF2F2',
-    color: colors.error,
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 16,
-    fontSize: 14,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: 8,
-    marginTop: 12,
-  },
-  input: {
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-    color: colors.textPrimary,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: 14,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  buttonDisabled: { opacity: 0.65 },
-  buttonText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-  link: { alignItems: 'center', marginTop: 20, padding: 8 },
-  linkText: { color: colors.textMuted, fontSize: 14 },
-  linkBold: { color: colors.primary, fontWeight: '600' },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    flex: { flex: 1, backgroundColor: colors.background },
+    container: { flexGrow: 1, justifyContent: 'center', padding: 24 },
+    header: { alignItems: 'center', marginBottom: 48 },
+    logo: { fontSize: 36, fontWeight: '800', color: colors.primary, letterSpacing: -0.5 },
+    tagline: { fontSize: 15, color: colors.textMuted, marginTop: 6 },
+    form: {
+      backgroundColor: colors.surface,
+      borderRadius: 20,
+      padding: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 3,
+    },
+    error: {
+      backgroundColor: '#FEF2F2',
+      color: colors.error,
+      padding: 12,
+      borderRadius: 10,
+      marginBottom: 16,
+      fontSize: 14,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: 8,
+      marginTop: 12,
+    },
+    input: {
+      backgroundColor: colors.surfaceAlt,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 14,
+      fontSize: 16,
+      color: colors.textPrimary,
+    },
+    button: {
+      backgroundColor: colors.primary,
+      borderRadius: 14,
+      padding: 16,
+      alignItems: 'center',
+      marginTop: 24,
+    },
+    buttonDisabled: { opacity: 0.65 },
+    buttonText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+    link: { alignItems: 'center', marginTop: 20, padding: 8 },
+    linkText: { color: colors.textMuted, fontSize: 14 },
+    linkBold: { color: colors.primary, fontWeight: '600' },
+  });

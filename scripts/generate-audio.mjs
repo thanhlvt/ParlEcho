@@ -28,7 +28,9 @@ function loadEnvFile(path) {
       const m = line.match(/^\s*([^#=\s][^=]*?)\s*=\s*(.*?)\s*$/);
       if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
     }
-  } catch { /* file missing is fine */ }
+  } catch {
+    /* file missing is fine */
+  }
 }
 
 // Look for .env.scripts next to this script file, then fall back to project root .env
@@ -42,10 +44,10 @@ const GEMINI_KEY = process.env.GOOGLE_GENAI_API_KEY ?? '';
 if (!SUPABASE_URL || !SERVICE_KEY || !GEMINI_KEY) {
   console.error(
     '\nMissing required env vars:\n' +
-    (SUPABASE_URL ? '' : '  EXPO_PUBLIC_SUPABASE_URL (or SUPABASE_URL)\n') +
-    (SERVICE_KEY ? '' : '  SUPABASE_SERVICE_ROLE_KEY\n') +
-    (GEMINI_KEY ? '' : '  GOOGLE_GENAI_API_KEY\n') +
-    '\nCreate .env.scripts with these values and re-run.\n',
+      (SUPABASE_URL ? '' : '  EXPO_PUBLIC_SUPABASE_URL (or SUPABASE_URL)\n') +
+      (SERVICE_KEY ? '' : '  SUPABASE_SERVICE_ROLE_KEY\n') +
+      (GEMINI_KEY ? '' : '  GOOGLE_GENAI_API_KEY\n') +
+      '\nCreate .env.scripts with these values and re-run.\n',
   );
   process.exit(1);
 }
@@ -57,20 +59,28 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
 const VOICE = 'Kore';
 const BUCKET = 'tts';
-const DELAY_MS = 600;   // rate-limit: ~100 RPM free tier → ~1 req/600ms
+const DELAY_MS = 600; // rate-limit: ~100 RPM free tier → ~1 req/600ms
 
 // ── WAV builder (24 kHz, 16-bit, mono) ───────────────────────────────────
 function buildWav(pcm) {
-  const sampleRate = 24000, ch = 1, bits = 16;
+  const sampleRate = 24000,
+    ch = 1,
+    bits = 16;
   const byteRate = sampleRate * ch * (bits / 8);
   const buf = Buffer.alloc(44 + pcm.length);
-  buf.write('RIFF', 0); buf.writeUInt32LE(36 + pcm.length, 4);
-  buf.write('WAVE', 8); buf.write('fmt ', 12);
-  buf.writeUInt32LE(16, 16); buf.writeUInt16LE(1, 20);  // PCM
-  buf.writeUInt16LE(ch, 22); buf.writeUInt32LE(sampleRate, 24);
-  buf.writeUInt32LE(byteRate, 28); buf.writeUInt16LE(ch * bits / 8, 32);
+  buf.write('RIFF', 0);
+  buf.writeUInt32LE(36 + pcm.length, 4);
+  buf.write('WAVE', 8);
+  buf.write('fmt ', 12);
+  buf.writeUInt32LE(16, 16);
+  buf.writeUInt16LE(1, 20); // PCM
+  buf.writeUInt16LE(ch, 22);
+  buf.writeUInt32LE(sampleRate, 24);
+  buf.writeUInt32LE(byteRate, 28);
+  buf.writeUInt16LE((ch * bits) / 8, 32);
   buf.writeUInt16LE(bits, 34);
-  buf.write('data', 36); buf.writeUInt32LE(pcm.length, 40);
+  buf.write('data', 36);
+  buf.writeUInt32LE(pcm.length, 40);
   pcm.copy(buf, 44);
   return buf;
 }
@@ -96,7 +106,7 @@ async function callGeminiTts(text) {
 
   const json = await resp.json();
   const parts = json.candidates?.[0]?.content?.parts ?? [];
-  const audioPart = parts.find(p => p.inlineData?.mimeType?.startsWith('audio'));
+  const audioPart = parts.find((p) => p.inlineData?.mimeType?.startsWith('audio'));
   const pcmBase64 = audioPart?.inlineData?.data ?? '';
 
   if (!pcmBase64) {
@@ -131,7 +141,8 @@ async function main() {
 
   console.log(`Found ${lines.length} line(s) without audio.\n`);
 
-  let ok = 0, failed = 0;
+  let ok = 0,
+    failed = 0;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -151,7 +162,9 @@ async function main() {
       if (uploadErr) throw new Error(`Storage upload: ${uploadErr.message}`);
 
       // 3. Get public URL
-      const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(storagePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from(BUCKET).getPublicUrl(storagePath);
 
       // 4. Update scenario_lines.audio_url
       const { error: updateErr } = await supabase
@@ -169,7 +182,7 @@ async function main() {
     }
 
     // Rate limit delay between requests
-    if (i < lines.length - 1) await new Promise(r => setTimeout(r, DELAY_MS));
+    if (i < lines.length - 1) await new Promise((r) => setTimeout(r, DELAY_MS));
   }
 
   console.log(`\n──────────────────────────────────`);
@@ -177,4 +190,7 @@ async function main() {
   if (failed > 0) console.log(`Re-run the script to retry failed lines.`);
 }
 
-main().catch(err => { console.error(err); process.exit(1); });
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

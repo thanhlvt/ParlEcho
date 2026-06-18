@@ -1,5 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Modal, View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import { supabase } from '../../lib/supabase';
@@ -51,7 +60,7 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
       });
 
       const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
+        Audio.RecordingOptionsPresets.HIGH_QUALITY,
       );
       recordingRef.current = recording;
       setIsRecording(true);
@@ -136,7 +145,9 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
       }
 
       if (!scenarioLineId && !messageId) {
-        throw new Error('Chưa có tin nhắn hoặc hội thoại nào để đối chiếu trong cơ sở dữ liệu. Hãy chat với AI trước.');
+        throw new Error(
+          'Chưa có tin nhắn hoặc hội thoại nào để đối chiếu trong cơ sở dữ liệu. Hãy chat với AI trước.',
+        );
       }
 
       // Call edge function
@@ -216,12 +227,7 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
   }
 
   return (
-    <Modal
-      visible={!!item}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
-    >
+    <Modal visible={!!item} animationType="slide" transparent={true} onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
         <View style={styles.modalSheet}>
           <View style={styles.sheetHeader}>
@@ -299,122 +305,123 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
   );
 };
 
-const getStyles = (colors: any) => StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '85%',
-    minHeight: '50%',
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  sheetTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  sheetContent: {
-    padding: 16,
-    gap: 16,
-  },
-  practiceCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  practiceText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    lineHeight: 28,
-  },
-  practiceTranslation: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 8,
-    fontStyle: 'italic',
-  },
-  micControlRow: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
-    marginVertical: 16,
-  },
-  bigMicBtn: {
-    backgroundColor: colors.primary,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  bigMicBtnRecording: {
-    backgroundColor: colors.error,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: colors.error,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  bigMicBtnProcessing: {
-    backgroundColor: colors.textMuted,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  micBtnText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  replayBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  replayBtnActive: {
-    backgroundColor: colors.primary,
-  },
-  replayText: {
-    fontSize: 13,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalSheet: {
+      backgroundColor: colors.background,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      maxHeight: '85%',
+      minHeight: '50%',
+    },
+    sheetHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+    },
+    sheetTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.textPrimary,
+    },
+    sheetContent: {
+      padding: 16,
+      gap: 16,
+    },
+    practiceCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    practiceText: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: colors.textPrimary,
+      lineHeight: 28,
+    },
+    practiceTranslation: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 8,
+      fontStyle: 'italic',
+    },
+    micControlRow: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 16,
+      marginVertical: 16,
+    },
+    bigMicBtn: {
+      backgroundColor: colors.primary,
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+      elevation: 4,
+    },
+    bigMicBtnRecording: {
+      backgroundColor: colors.error,
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: colors.error,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+      elevation: 4,
+    },
+    bigMicBtnProcessing: {
+      backgroundColor: colors.textMuted,
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    micBtnText: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      fontWeight: '600',
+      marginTop: 8,
+    },
+    replayBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: colors.primaryLight,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: colors.primary,
+    },
+    replayBtnActive: {
+      backgroundColor: colors.primary,
+    },
+    replayText: {
+      fontSize: 13,
+      color: colors.primary,
+      fontWeight: '600',
+    },
+  });

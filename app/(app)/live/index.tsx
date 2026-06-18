@@ -36,7 +36,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useTheme } from '../../../providers/ThemeProvider';
-import { bytesToBase64, LiveClient, LiveState, pcmToWav, uploadLiveSegment } from '../../../lib/liveClient';
+import {
+  bytesToBase64,
+  LiveClient,
+  LiveState,
+  pcmToWav,
+  uploadLiveSegment,
+} from '../../../lib/liveClient';
 import { supabase } from '../../../lib/supabase';
 import { LanguageId, LiveAudioSegment, LiveTurn } from '../../../lib/types';
 import { useAuth } from '../../../providers/AuthProvider';
@@ -152,7 +158,8 @@ export default function LiveScreen() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sub = audioEmitter.current.addListener('AudioData', async (event: any) => {
       chunkCount++;
-      if (chunkCount <= 3) console.log('[Live] AudioData chunk', chunkCount, 'encoded:', !!event?.encoded);
+      if (chunkCount <= 3)
+        console.log('[Live] AudioData chunk', chunkCount, 'encoded:', !!event?.encoded);
       if (event?.encoded && !isPausedRef.current) {
         clientRef.current?.sendAudioChunk(event.encoded as string);
       }
@@ -180,7 +187,7 @@ export default function LiveScreen() {
 
     return () => {
       sub.remove();
-      stopRecording().catch(() => { });
+      stopRecording().catch(() => {});
       audioQueueRef.current?.stop();
       audioCtxRef.current?.close();
       audioCtxRef.current = null;
@@ -242,11 +249,17 @@ export default function LiveScreen() {
             if (turnsRef.current.length > 0) {
               // Connection dropped mid-conversation — don't discard what was already
               // captured. Save & review the partial session instead of losing it.
-              Alert.alert('Mất kết nối', 'Kết nối tới AI bị ngắt giữa phiên. Đang lưu lại phần đã ghi được...');
+              Alert.alert(
+                'Mất kết nối',
+                'Kết nối tới AI bị ngắt giữa phiên. Đang lưu lại phần đã ghi được...',
+              );
               endSession();
             } else {
               setView('setup');
-              Alert.alert('Lỗi kết nối', lastErrorMsgRef.current || 'Không thể kết nối Live API. Thử lại sau.');
+              Alert.alert(
+                'Lỗi kết nối',
+                lastErrorMsgRef.current || 'Không thể kết nối Live API. Thử lại sau.',
+              );
             }
           }, 0);
         }
@@ -279,11 +292,20 @@ export default function LiveScreen() {
         setTurns([...t]);
         setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 100);
       },
-      onError: (msg) => { lastErrorMsgRef.current = msg; },
+      onError: (msg) => {
+        lastErrorMsgRef.current = msg;
+      },
     });
 
     clientRef.current = client;
-    await client.start({ languageId, topic: topic.trim(), voice, speakingStyle, conversationMethod, accent });
+    await client.start({
+      languageId,
+      topic: topic.trim(),
+      voice,
+      speakingStyle,
+      conversationMethod,
+      accent,
+    });
   }
 
   // ── End session ─────────────────────────────────────────────────────
@@ -336,7 +358,9 @@ export default function LiveScreen() {
         const wavBytes = pcmToWav(seg.pcm, 16000, 16);
         const base64Wav = bytesToBase64(wavBytes);
         const localUri = `${localAudioDir}${seg.order}_user.wav`;
-        await FileSystem.writeAsStringAsync(localUri, base64Wav, { encoding: FileSystem.EncodingType.Base64 });
+        await FileSystem.writeAsStringAsync(localUri, base64Wav, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
         userAudioMap.set(seg.order, localUri);
       }
 
@@ -346,7 +370,9 @@ export default function LiveScreen() {
         const wavBytes = pcmToWav(seg.pcm, 24000, 16);
         const base64Wav = bytesToBase64(wavBytes);
         const localUri = `${localAudioDir}${seg.order}_ai.wav`;
-        await FileSystem.writeAsStringAsync(localUri, base64Wav, { encoding: FileSystem.EncodingType.Base64 });
+        await FileSystem.writeAsStringAsync(localUri, base64Wav, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
         aiAudioMap.set(seg.order, localUri);
       }
 
@@ -361,7 +387,8 @@ export default function LiveScreen() {
             role: t.role,
             sort_order: t.sort_order,
             text: t.text,
-            audio_url: t.role === 'user' ? userAudioMap.get(t.sort_order) : aiAudioMap.get(t.sort_order),
+            audio_url:
+              t.role === 'user' ? userAudioMap.get(t.sort_order) : aiAudioMap.get(t.sort_order),
           })),
         )
         .select('id, sort_order, role');
@@ -380,12 +407,7 @@ export default function LiveScreen() {
         if (!messageId) continue;
 
         try {
-          const storagePath = await uploadLiveSegment(
-            user.id,
-            conversationId,
-            seg.order,
-            seg.pcm,
-          );
+          const storagePath = await uploadLiveSegment(user.id, conversationId, seg.order, seg.pcm);
           audioSegments.push({
             message_id: messageId,
             audio_storage_path: storagePath,
@@ -424,7 +446,9 @@ export default function LiveScreen() {
 
   // ── Timer display ───────────────────────────────────────────────────
   function formatTime(sec: number) {
-    const m = Math.floor(sec / 60).toString().padStart(2, '0');
+    const m = Math.floor(sec / 60)
+      .toString()
+      .padStart(2, '0');
     const s = (sec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   }
@@ -435,7 +459,12 @@ export default function LiveScreen() {
       <SafeAreaView style={styles.safe}>
         {/* Topbar with Drawer trigger and History link */}
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
+          <TouchableOpacity
+            onPress={toggleSidebar}
+            activeOpacity={0.7}
+            style={{ padding: 4 }}
+            hitSlop={8}
+          >
             <Ionicons name="menu" size={28} color={colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity
@@ -470,7 +499,9 @@ export default function LiveScreen() {
                   onPress={() => setLanguageId(lang)}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.langBtnText, languageId === lang && styles.langBtnTextActive]}>
+                  <Text
+                    style={[styles.langBtnText, languageId === lang && styles.langBtnTextActive]}
+                  >
                     {lang === 'en' ? '🇺🇸 English' : '🇯🇵 Japanese'}
                   </Text>
                 </TouchableOpacity>
@@ -487,7 +518,12 @@ export default function LiveScreen() {
                     onPress={() => setAccent('en-US')}
                     activeOpacity={0.8}
                   >
-                    <Text style={[styles.accentBtnText, accent === 'en-US' && styles.accentBtnTextActive]}>
+                    <Text
+                      style={[
+                        styles.accentBtnText,
+                        accent === 'en-US' && styles.accentBtnTextActive,
+                      ]}
+                    >
                       🇺🇸 Anh-Mỹ (en-US)
                     </Text>
                   </TouchableOpacity>
@@ -496,7 +532,12 @@ export default function LiveScreen() {
                     onPress={() => setAccent('en-UK')}
                     activeOpacity={0.8}
                   >
-                    <Text style={[styles.accentBtnText, accent === 'en-UK' && styles.accentBtnTextActive]}>
+                    <Text
+                      style={[
+                        styles.accentBtnText,
+                        accent === 'en-UK' && styles.accentBtnTextActive,
+                      ]}
+                    >
                       🇬🇧 Anh-Anh (en-UK)
                     </Text>
                   </TouchableOpacity>
@@ -515,10 +556,14 @@ export default function LiveScreen() {
                     onPress={() => setVoice(v.id)}
                     activeOpacity={0.8}
                   >
-                    <Text style={[styles.voiceChipName, voice === v.id && styles.voiceChipNameActive]}>
+                    <Text
+                      style={[styles.voiceChipName, voice === v.id && styles.voiceChipNameActive]}
+                    >
                       {v.id}
                     </Text>
-                    <Text style={[styles.voiceChipDesc, voice === v.id && styles.voiceChipDescActive]}>
+                    <Text
+                      style={[styles.voiceChipDesc, voice === v.id && styles.voiceChipDescActive]}
+                    >
                       {v.desc}
                     </Text>
                   </TouchableOpacity>
@@ -538,7 +583,12 @@ export default function LiveScreen() {
                     activeOpacity={0.8}
                   >
                     <Text style={styles.optionChipIcon}>{s.icon}</Text>
-                    <Text style={[styles.optionChipLabel, speakingStyle === s.id && styles.optionChipLabelActive]}>
+                    <Text
+                      style={[
+                        styles.optionChipLabel,
+                        speakingStyle === s.id && styles.optionChipLabelActive,
+                      ]}
+                    >
                       {s.label}
                     </Text>
                   </TouchableOpacity>
@@ -553,12 +603,20 @@ export default function LiveScreen() {
                 {CONVERSATION_METHODS.map((m) => (
                   <TouchableOpacity
                     key={m.id}
-                    style={[styles.optionChip, conversationMethod === m.id && styles.optionChipActive]}
+                    style={[
+                      styles.optionChip,
+                      conversationMethod === m.id && styles.optionChipActive,
+                    ]}
                     onPress={() => setConversationMethod(m.id)}
                     activeOpacity={0.8}
                   >
                     <Text style={styles.optionChipIcon}>{m.icon}</Text>
-                    <Text style={[styles.optionChipLabel, conversationMethod === m.id && styles.optionChipLabelActive]}>
+                    <Text
+                      style={[
+                        styles.optionChipLabel,
+                        conversationMethod === m.id && styles.optionChipLabelActive,
+                      ]}
+                    >
                       {m.label}
                     </Text>
                   </TouchableOpacity>
@@ -623,19 +681,19 @@ export default function LiveScreen() {
       {/* Header */}
       <View style={styles.liveHeader}>
         <View style={styles.liveIndicatorWrap}>
-          <View style={[
-            styles.liveDot,
-            isListening && !isPaused && styles.liveDotActive,
-            isPaused && styles.liveDotPaused
-          ]} />
+          <View
+            style={[
+              styles.liveDot,
+              isListening && !isPaused && styles.liveDotActive,
+              isPaused && styles.liveDotPaused,
+            ]}
+          />
           <Text style={styles.liveLabel}>
             {isPaused ? 'Đang tạm dừng' : isListening ? 'Đang kết nối' : 'Đang xử lý'}
           </Text>
         </View>
         <Text style={styles.timer}>{formatTime(elapsedSec)}</Text>
-        <Text style={styles.langChip}>
-          {languageId === 'en' ? '🇺🇸 EN' : '🇯🇵 JP'}
-        </Text>
+        <Text style={styles.langChip}>{languageId === 'en' ? '🇺🇸 EN' : '🇯🇵 JP'}</Text>
       </View>
 
       {/* Transcript */}
@@ -654,14 +712,15 @@ export default function LiveScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <View style={[
-            styles.turnRow,
-            item.role === 'user' ? styles.turnRowUser : styles.turnRowAI,
-          ]}>
-            <Text style={[
-              styles.turnText,
-              item.role === 'user' ? styles.turnTextUser : styles.turnTextAI,
-            ]}>
+          <View
+            style={[styles.turnRow, item.role === 'user' ? styles.turnRowUser : styles.turnRowAI]}
+          >
+            <Text
+              style={[
+                styles.turnText,
+                item.role === 'user' ? styles.turnTextUser : styles.turnTextAI,
+              ]}
+            >
               {item.text}
             </Text>
           </View>
@@ -695,178 +754,241 @@ export default function LiveScreen() {
 }
 
 // ── Styles ────────────────────────────────────────────────────────────
-const getStyles = (colors: any) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
 
-  // Setup
-  setupContainer: { alignItems: 'center', padding: 28, gap: 16, paddingBottom: 40 },
-  iconWrap: {
-    width: 96, height: 96, borderRadius: 28,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 4,
-  },
-  setupTitle: { fontSize: 26, fontWeight: '800', color: colors.textPrimary },
-  setupSub: { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 21 },
-  langRow: { flexDirection: 'row', gap: 12, marginTop: 4 },
-  langBtn: {
-    paddingHorizontal: 20, paddingVertical: 12,
-    borderRadius: 14, borderWidth: 2, borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  langBtnActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-  langBtnText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
-  langBtnTextActive: { color: colors.primary },
-  accentRow: { flexDirection: 'row', gap: 12, marginTop: 4 },
-  accentBtn: {
-    flex: 1,
-    paddingHorizontal: 16, paddingVertical: 12,
-    borderRadius: 14, borderWidth: 2, borderColor: colors.border,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-  },
-  accentBtnActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-  accentBtnText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
-  accentBtnTextActive: { color: colors.primary },
-  topicWrap: { alignSelf: 'stretch', gap: 6 },
-  topicLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
-  topicInput: {
-    backgroundColor: colors.surface, borderRadius: 12,
-    paddingHorizontal: 16, paddingVertical: 12,
-    fontSize: 14, color: colors.textPrimary,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
-  },
-  notice: {
-    flexDirection: 'row', gap: 8, alignItems: 'flex-start',
-    backgroundColor: '#FFF7ED', borderRadius: 12, padding: 12, alignSelf: 'stretch',
-  },
-  noticeText: { flex: 1, fontSize: 12, color: colors.warning, lineHeight: 18 },
-  startBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: colors.primary, borderRadius: 16,
-    paddingHorizontal: 28, paddingVertical: 16,
-    width: '100%', justifyContent: 'center',
-  },
-  startBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+    // Setup
+    setupContainer: { alignItems: 'center', padding: 28, gap: 16, paddingBottom: 40 },
+    iconWrap: {
+      width: 96,
+      height: 96,
+      borderRadius: 28,
+      backgroundColor: colors.primaryLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 4,
+    },
+    setupTitle: { fontSize: 26, fontWeight: '800', color: colors.textPrimary },
+    setupSub: { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 21 },
+    langRow: { flexDirection: 'row', gap: 12, marginTop: 4 },
+    langBtn: {
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderRadius: 14,
+      borderWidth: 2,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    langBtnActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+    langBtnText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
+    langBtnTextActive: { color: colors.primary },
+    accentRow: { flexDirection: 'row', gap: 12, marginTop: 4 },
+    accentBtn: {
+      flex: 1,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 14,
+      borderWidth: 2,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+      alignItems: 'center',
+    },
+    accentBtnActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+    accentBtnText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+    accentBtnTextActive: { color: colors.primary },
+    topicWrap: { alignSelf: 'stretch', gap: 6 },
+    topicLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+    topicInput: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 14,
+      color: colors.textPrimary,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    notice: {
+      flexDirection: 'row',
+      gap: 8,
+      alignItems: 'flex-start',
+      backgroundColor: '#FFF7ED',
+      borderRadius: 12,
+      padding: 12,
+      alignSelf: 'stretch',
+    },
+    noticeText: { flex: 1, fontSize: 12, color: colors.warning, lineHeight: 18 },
+    startBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: colors.primary,
+      borderRadius: 16,
+      paddingHorizontal: 28,
+      paddingVertical: 16,
+      width: '100%',
+      justifyContent: 'center',
+    },
+    startBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 
-  // Option sections
-  sectionWrap: { alignSelf: 'stretch', gap: 8 },
-  sectionLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+    // Option sections
+    sectionWrap: { alignSelf: 'stretch', gap: 8 },
+    sectionLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
 
-  voiceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  voiceChip: {
-    alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8,
-    borderRadius: 12, borderWidth: 2, borderColor: colors.border,
-    backgroundColor: colors.surface, width: '23%',
-  },
-  voiceChipActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-  voiceChipName: { fontSize: 12, fontWeight: '700', color: colors.textSecondary, textAlign: 'center' },
-  voiceChipNameActive: { color: colors.primary },
-  voiceChipDesc: { fontSize: 10, color: colors.textMuted, marginTop: 2, textAlign: 'center' },
-  voiceChipDescActive: { color: colors.primary },
+    voiceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    voiceChip: {
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+      width: '23%',
+    },
+    voiceChipActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+    voiceChipName: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    voiceChipNameActive: { color: colors.primary },
+    voiceChipDesc: { fontSize: 10, color: colors.textMuted, marginTop: 2, textAlign: 'center' },
+    voiceChipDescActive: { color: colors.primary },
 
-  optionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  optionChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 12, paddingVertical: 9,
-    borderRadius: 12, borderWidth: 2, borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  optionChipActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-  optionChipIcon: { fontSize: 14 },
-  optionChipLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
-  optionChipLabelActive: { color: colors.primary },
+    optionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    optionChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 9,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    optionChipActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
+    optionChipIcon: { fontSize: 14 },
+    optionChipLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+    optionChipLabelActive: { color: colors.primary },
 
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-  historyBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 20, backgroundColor: colors.primaryLight,
-  },
-  historyBtnText: { fontSize: 13, fontWeight: '600', color: colors.primary },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingTop: 8,
+    },
+    historyBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+      backgroundColor: colors.primaryLight,
+    },
+    historyBtnText: { fontSize: 13, fontWeight: '600', color: colors.primary },
 
-  // Loading / saving
-  centerFull: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
-  connectingText: { fontSize: 15, color: colors.textMuted },
+    // Loading / saving
+    centerFull: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
+    connectingText: { fontSize: 15, color: colors.textMuted },
 
-  // Live
-  liveHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  liveIndicatorWrap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  liveDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.border },
-  liveDotActive: { backgroundColor: colors.error },
-  liveDotPaused: { backgroundColor: colors.textMuted },
-  liveLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
-  timer: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, fontVariant: ['tabular-nums'] },
-  langChip: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
+    // Live
+    liveHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    liveIndicatorWrap: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    liveDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.border },
+    liveDotActive: { backgroundColor: colors.error },
+    liveDotPaused: { backgroundColor: colors.textMuted },
+    liveLabel: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+    timer: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.textPrimary,
+      fontVariant: ['tabular-nums'],
+    },
+    langChip: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
 
-  transcriptList: { padding: 16, gap: 10, paddingBottom: 8 },
-  emptyTranscript: { paddingTop: 60, alignItems: 'center' },
-  emptyTranscriptText: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
+    transcriptList: { padding: 16, gap: 10, paddingBottom: 8 },
+    emptyTranscript: { paddingTop: 60, alignItems: 'center' },
+    emptyTranscriptText: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
 
-  turnRow: { maxWidth: '85%', borderRadius: 16, padding: 12 },
-  turnRowUser: {
-    alignSelf: 'flex-end', backgroundColor: colors.primary, borderBottomRightRadius: 4,
-  },
-  turnRowAI: {
-    alignSelf: 'flex-start', backgroundColor: colors.surface,
-    borderBottomLeftRadius: 4,
-    ...(Platform.OS !== 'android' && { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4 }),
-    elevation: 1,
-  },
-  turnText: { fontSize: 15, lineHeight: 22 },
-  turnTextUser: { color: '#fff' },
-  turnTextAI: { color: colors.textPrimary },
+    turnRow: { maxWidth: '85%', borderRadius: 16, padding: 12 },
+    turnRowUser: {
+      alignSelf: 'flex-end',
+      backgroundColor: colors.primary,
+      borderBottomRightRadius: 4,
+    },
+    turnRowAI: {
+      alignSelf: 'flex-start',
+      backgroundColor: colors.surface,
+      borderBottomLeftRadius: 4,
+      ...(Platform.OS !== 'android' && {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+      }),
+      elevation: 1,
+    },
+    turnText: { fontSize: 15, lineHeight: 22 },
+    turnTextUser: { color: '#fff' },
+    turnTextAI: { color: colors.textPrimary },
 
-  endBar: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 16, paddingBottom: 24,
-    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  pauseBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-    paddingVertical: 14,
-  },
-  pauseBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  resumeBtn: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  resumeBtnText: {
-    color: '#fff',
-  },
-  endBtn: {
-    flex: 1.5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: colors.error,
-    borderRadius: 16,
-    paddingVertical: 14,
-  },
-  endBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
-});
+    endBar: {
+      flexDirection: 'row',
+      gap: 12,
+      padding: 16,
+      paddingBottom: 24,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    pauseBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      borderRadius: 16,
+      backgroundColor: colors.surface,
+      paddingVertical: 14,
+    },
+    pauseBtnText: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    resumeBtn: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    resumeBtnText: {
+      color: '#fff',
+    },
+    endBtn: {
+      flex: 1.5,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+      backgroundColor: colors.error,
+      borderRadius: 16,
+      paddingVertical: 14,
+    },
+    endBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  });

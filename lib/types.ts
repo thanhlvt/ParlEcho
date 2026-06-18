@@ -184,10 +184,10 @@ export type PronounceApiResponse = {
 // ── Live conversation (Gemini Live API) ───────────────────────────────
 
 export type LiveTokenApiResponse = {
-  token: string;            // ephemeral token name (dạng "auth_tokens/xxx")
-  model: string;            // model để gửi trong WebSocket setup
-  expire_time: string;      // ISO timestamp
-  voice: string;            // voice name để gửi trong setup
+  token: string; // ephemeral token name (dạng "auth_tokens/xxx")
+  model: string; // model để gửi trong WebSocket setup
+  expire_time: string; // ISO timestamp
+  voice: string; // voice name để gửi trong setup
   system_instruction: string; // system instruction để gửi trong setup
 };
 

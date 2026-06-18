@@ -13,7 +13,8 @@ interface PronounceRequest {
 
 // ── Levenshtein scoring ───────────────────────────────────────────────
 function levenshtein(a: string, b: string): number {
-  const m = a.length, n = b.length;
+  const m = a.length,
+    n = b.length;
   const dp = Array.from({ length: m + 1 }, (_, i) =>
     Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)),
   );
@@ -36,7 +37,11 @@ function charSimilarity(a: string, b: string): number {
 
 function scoreWords(recognized: string, reference: string) {
   const normalize = (s: string) =>
-    s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').split(/\s+/).filter(Boolean);
+    s
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, '')
+      .split(/\s+/)
+      .filter(Boolean);
 
   const refWords = normalize(reference);
   const recWords = normalize(recognized);
@@ -45,10 +50,13 @@ function scoreWords(recognized: string, reference: string) {
     const recWord = recWords[i] ?? '';
     const score = charSimilarity(recWord, refWord);
     const error_type =
-      recWord === '' ? 'Omission'
-        : score < 60 ? 'Mispronunciation'
-        : score < 85 ? 'UnexpectedBreak'
-        : null;
+      recWord === ''
+        ? 'Omission'
+        : score < 60
+          ? 'Mispronunciation'
+          : score < 85
+            ? 'UnexpectedBreak'
+            : null;
     return { word: refWord, score, error_type };
   });
 }
@@ -57,7 +65,11 @@ function computeScores(recognized: string, reference: string) {
   const wordScores = scoreWords(recognized, reference);
 
   const normalize = (s: string) =>
-    s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').split(/\s+/).filter(Boolean);
+    s
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, '')
+      .split(/\s+/)
+      .filter(Boolean);
 
   const refWords = normalize(reference);
   const recWords = normalize(recognized);
@@ -69,18 +81,30 @@ function computeScores(recognized: string, reference: string) {
 
   const completeness_score =
     refWords.length > 0
-      ? Math.round((wordScores.filter((w) => w.error_type !== 'Omission').length / refWords.length) * 100)
+      ? Math.round(
+          (wordScores.filter((w) => w.error_type !== 'Omission').length / refWords.length) * 100,
+        )
       : 0;
 
   // fluency: phạt nếu số từ lệch nhiều so với câu mẫu
   const fluency_score =
     recWords.length > 0 && refWords.length > 0
-      ? Math.round((Math.min(recWords.length, refWords.length) / Math.max(recWords.length, refWords.length)) * 100)
+      ? Math.round(
+          (Math.min(recWords.length, refWords.length) /
+            Math.max(recWords.length, refWords.length)) *
+            100,
+        )
       : 0;
 
   const overall_score = Math.round((accuracy_score + fluency_score + completeness_score) / 3);
 
-  return { overall_score, accuracy_score, fluency_score, completeness_score, word_scores: wordScores };
+  return {
+    overall_score,
+    accuracy_score,
+    fluency_score,
+    completeness_score,
+    word_scores: wordScores,
+  };
 }
 
 // ── Main handler ──────────────────────────────────────────────────────
@@ -116,7 +140,10 @@ Deno.serve(async (req: Request) => {
       .download(audio_storage_path);
 
     if (dlErr || !audioBlob) {
-      return Response.json({ error: 'Audio file not found' }, { status: 404, headers: corsHeaders });
+      return Response.json(
+        { error: 'Audio file not found' },
+        { status: 404, headers: corsHeaders },
+      );
     }
 
     // Encode audio → base64 để gửi inline
@@ -135,24 +162,26 @@ Deno.serve(async (req: Request) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [
-              {
-                inlineData: {
-                  mimeType: audio_mime_type,
-                  data: audioBase64,
+          contents: [
+            {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: audio_mime_type,
+                    data: audioBase64,
+                  },
                 },
-              },
-              {
-                text:
-                  `This is a ${langHint} language learning audio recording. ` +
-                  `Transcribe exactly what is spoken, including any mistakes or incomplete words. ` +
-                  `Do NOT correct errors. Return only the raw transcription text, nothing else. ` +
-                  `If the recording contains no audible speech (silence, noise, or background sound only), ` +
-                  `return an empty string and nothing else — do not describe the audio or repeat these instructions.`,
-              },
-            ],
-          }],
+                {
+                  text:
+                    `This is a ${langHint} language learning audio recording. ` +
+                    `Transcribe exactly what is spoken, including any mistakes or incomplete words. ` +
+                    `Do NOT correct errors. Return only the raw transcription text, nothing else. ` +
+                    `If the recording contains no audible speech (silence, noise, or background sound only), ` +
+                    `return an empty string and nothing else — do not describe the audio or repeat these instructions.`,
+                },
+              ],
+            },
+          ],
         }),
       },
     );
@@ -162,8 +191,9 @@ Deno.serve(async (req: Request) => {
     }
 
     const geminiData = await geminiResp.json();
-    let recognized_text: string =
-      (geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim();
+    let recognized_text: string = (
+      geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+    ).trim();
 
     // Safety net: on silent/empty audio, Gemini sometimes echoes the instruction
     // prompt itself instead of returning an empty string. Detect and discard that.
@@ -238,9 +268,10 @@ Deno.serve(async (req: Request) => {
     if (todayAct) {
       const prevAvg = todayAct.avg_pronunciation_score ?? 0;
       const prevLines = todayAct.lines_practiced;
-      const newAvg = prevLines === 0
-        ? scores.overall_score
-        : Math.round((prevAvg * prevLines + (scores.overall_score ?? 0)) / (prevLines + 1));
+      const newAvg =
+        prevLines === 0
+          ? scores.overall_score
+          : Math.round((prevAvg * prevLines + (scores.overall_score ?? 0)) / (prevLines + 1));
       await supabase
         .from('daily_activity')
         .update({ lines_practiced: prevLines + 1, avg_pronunciation_score: newAvg })

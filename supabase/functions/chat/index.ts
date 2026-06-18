@@ -36,7 +36,10 @@ Deno.serve(async (req: Request) => {
       .single();
 
     if (convErr || !conversation) {
-      return Response.json({ error: 'Conversation not found' }, { status: 404, headers: corsHeaders });
+      return Response.json(
+        { error: 'Conversation not found' },
+        { status: 404, headers: corsHeaders },
+      );
     }
 
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
@@ -54,10 +57,7 @@ Deno.serve(async (req: Request) => {
         model: 'claude-sonnet-4-6',
         max_tokens: 1024,
         system: buildSystemPrompt(language_id, mode),
-        messages: [
-          ...history,
-          { role: 'user', content: message },
-        ],
+        messages: [...history, { role: 'user', content: message }],
       }),
     });
 
@@ -70,7 +70,10 @@ Deno.serve(async (req: Request) => {
 
     let parsed: ChatResponse;
     try {
-      const cleaned = rawText.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '').trim();
+      const cleaned = rawText
+        .replace(/^```[a-z]*\n?/, '')
+        .replace(/\n?```$/, '')
+        .trim();
       parsed = JSON.parse(cleaned);
     } catch {
       // Model sometimes prepends/duplicates plain text before the JSON block —

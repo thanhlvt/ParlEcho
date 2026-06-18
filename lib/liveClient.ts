@@ -19,21 +19,34 @@ import { supabase } from './supabase';
 import { LiveAudioSegment, LiveTokenApiResponse, LiveTurn } from './types';
 
 // WAV header mono 16-bit
-export function buildWavHeader(pcmByteLength: number, sampleRate = 16000, bitDepth = 16): Uint8Array {
+export function buildWavHeader(
+  pcmByteLength: number,
+  sampleRate = 16000,
+  bitDepth = 16,
+): Uint8Array {
   const numChannels = 1;
   const byteRate = sampleRate * numChannels * (bitDepth / 8);
   const blockAlign = numChannels * (bitDepth / 8);
 
   const header = new ArrayBuffer(44);
   const v = new DataView(header);
-  const w = (o: number, s: string) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  const w = (o: number, s: string) => {
+    for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i));
+  };
 
-  w(0, 'RIFF'); v.setUint32(4, 36 + pcmByteLength, true);
-  w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true);
-  v.setUint16(20, 1, true); v.setUint16(22, numChannels, true);
-  v.setUint32(24, sampleRate, true); v.setUint32(28, byteRate, true);
-  v.setUint16(32, blockAlign, true); v.setUint16(34, bitDepth, true);
-  w(36, 'data'); v.setUint32(40, pcmByteLength, true);
+  w(0, 'RIFF');
+  v.setUint32(4, 36 + pcmByteLength, true);
+  w(8, 'WAVE');
+  w(12, 'fmt ');
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true);
+  v.setUint16(22, numChannels, true);
+  v.setUint32(24, sampleRate, true);
+  v.setUint32(28, byteRate, true);
+  v.setUint16(32, blockAlign, true);
+  v.setUint16(34, bitDepth, true);
+  w(36, 'data');
+  v.setUint32(40, pcmByteLength, true);
 
   return new Uint8Array(header);
 }
@@ -64,7 +77,10 @@ function concat(arrays: Uint8Array[]): Uint8Array {
   const total = arrays.reduce((s, a) => s + a.length, 0);
   const out = new Uint8Array(total);
   let offset = 0;
-  for (const a of arrays) { out.set(a, offset); offset += a.length; }
+  for (const a of arrays) {
+    out.set(a, offset);
+    offset += a.length;
+  }
   return out;
 }
 
@@ -157,7 +173,12 @@ export class LiveClient {
     (this.ws as WebSocket & { binaryType: string }).binaryType = 'arraybuffer';
 
     this.ws.onopen = () => {
-      console.log('[LiveClient] WS opened, sending setup. model=', data.model, 'voice=', data.voice);
+      console.log(
+        '[LiveClient] WS opened, sending setup. model=',
+        data.model,
+        'voice=',
+        data.voice,
+      );
       this._send({
         setup: {
           model: data.model,
@@ -192,7 +213,11 @@ export class LiveClient {
           return;
         }
       } else {
-        console.warn('[LiveClient] Unknown frame type:', typeof ev.data, Object.prototype.toString.call(ev.data));
+        console.warn(
+          '[LiveClient] Unknown frame type:',
+          typeof ev.data,
+          Object.prototype.toString.call(ev.data),
+        );
         return;
       }
       console.log('[LiveClient] Message text:', text.substring(0, 200));
@@ -247,7 +272,11 @@ export class LiveClient {
    * Dừng phiên. Trả về data để UI persist + gọi /session-review.
    * Upload audio segments cần được thực hiện bởi UI sau khi nhận result.
    */
-  stop(): { turns: LiveTurn[]; rawUserSegments: Array<{ pcm: Uint8Array; text: string; order: number }>; rawAiSegments: Array<{ pcm: Uint8Array; text: string; order: number }> } {
+  stop(): {
+    turns: LiveTurn[];
+    rawUserSegments: Array<{ pcm: Uint8Array; text: string; order: number }>;
+    rawAiSegments: Array<{ pcm: Uint8Array; text: string; order: number }>;
+  } {
     if (this.ws) {
       // Only close if still open — server may have already closed with code=1000
       if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
@@ -309,7 +338,7 @@ export class LiveClient {
           // base64 → PCM byte count (Gemini outputs 24 kHz 16-bit mono = 48000 B/s)
           const bytes = Uint8Array.from(atob(inlineData.data), (c) => c.charCodeAt(0));
           this.aiPcmChunks.push(bytes);
-          this.aiAudioByteCount += Math.ceil(inlineData.data.length * 3 / 4);
+          this.aiAudioByteCount += Math.ceil((inlineData.data.length * 3) / 4);
           this.cb.onAudioChunk(inlineData.data);
         }
       }
@@ -342,8 +371,14 @@ export class LiveClient {
     // Empty serverContent {} = Gemini acknowledged receipt but produced no content.
     // This happens when the AI decides not to respond for a turn, or as a session keepalive.
     // Clear any stale aiSpeaking flag so the next user turn is not blocked.
-    if (!sc.interrupted && !sc.modelTurn && !sc.inputTranscription &&
-        !sc.outputTranscription && !sc.turnComplete && !sc.generationComplete) {
+    if (
+      !sc.interrupted &&
+      !sc.modelTurn &&
+      !sc.inputTranscription &&
+      !sc.outputTranscription &&
+      !sc.turnComplete &&
+      !sc.generationComplete
+    ) {
       if (this.aiSpeaking) {
         this.aiSpeaking = false;
         this.aiAudioByteCount = 0;
@@ -363,7 +398,9 @@ export class LiveClient {
       const elapsedMs = Date.now() - this.aiAudioStartTime;
       const remainingMs = Math.max(0, totalAudioMs - elapsedMs + 200);
       this.aiAudioByteCount = 0;
-      setTimeout(() => { this.aiSpeaking = false; }, remainingMs);
+      setTimeout(() => {
+        this.aiSpeaking = false;
+      }, remainingMs);
       this.cb.onTranscriptUpdate([...this.turns]);
     }
   }

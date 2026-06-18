@@ -32,8 +32,8 @@ function buildWavBuffer(pcmData: Uint8Array): Uint8Array {
   view.setUint32(4, 36 + dataLength, true);
   writeStr(8, 'WAVE');
   writeStr(12, 'fmt ');
-  view.setUint32(16, 16, true);          // PCM chunk size
-  view.setUint16(20, 1, true);           // PCM format
+  view.setUint32(16, 16, true); // PCM chunk size
+  view.setUint16(20, 1, true); // PCM format
   view.setUint16(22, numChannels, true);
   view.setUint32(24, sampleRate, true);
   view.setUint32(28, byteRate, true);
@@ -107,18 +107,19 @@ Deno.serve(async (req: Request) => {
 
     // Log structure for debugging (truncate data fields to avoid huge logs)
     const debugData = JSON.stringify(geminiData, (key, val) =>
-      key === 'data' && typeof val === 'string' ? `<base64 ${val.length}chars>` : val
+      key === 'data' && typeof val === 'string' ? `<base64 ${val.length}chars>` : val,
     );
     console.log('[tts] Gemini response structure:', debugData.substring(0, 1000));
 
     // Search all parts for inlineData audio (not just parts[0])
-    const parts: Array<Record<string, unknown>> =
-      geminiData.candidates?.[0]?.content?.parts ?? [];
-    const audioPart = parts.find(
-      (p) => (p.inlineData as Record<string, unknown> | undefined)?.mimeType?.toString().startsWith('audio'),
+    const parts: Array<Record<string, unknown>> = geminiData.candidates?.[0]?.content?.parts ?? [];
+    const audioPart = parts.find((p) =>
+      (p.inlineData as Record<string, unknown> | undefined)?.mimeType
+        ?.toString()
+        .startsWith('audio'),
     );
     const pcmBase64: string =
-      (audioPart?.inlineData as Record<string, unknown> | undefined)?.data as string ?? '';
+      ((audioPart?.inlineData as Record<string, unknown> | undefined)?.data as string) ?? '';
 
     if (!pcmBase64) {
       throw new Error(
@@ -144,7 +145,9 @@ Deno.serve(async (req: Request) => {
 
     if (uploadErr) throw uploadErr;
 
-    const { data: { publicUrl } } = supabase.storage.from('tts').getPublicUrl(fileName);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('tts').getPublicUrl(fileName);
 
     // Cache vào scenario_line nếu có
     if (scenario_line_id) {

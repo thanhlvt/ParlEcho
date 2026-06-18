@@ -25,11 +25,7 @@ export const SavedItemCard: React.FC<SavedItemCardProps> = ({
   const typeLabel =
     item.type === 'word' ? 'Từ vựng' : item.type === 'phrase' ? 'Mẫu câu' : 'Lỗi sai';
   const typeColor =
-    item.type === 'word'
-      ? '#3B82F6'
-      : item.type === 'phrase'
-      ? '#10B981'
-      : '#F59E0B';
+    item.type === 'word' ? '#3B82F6' : item.type === 'phrase' ? '#10B981' : '#F59E0B';
 
   const dateStr = new Date(item.created_at).toLocaleDateString('vi-VN', {
     day: '2-digit',
@@ -55,9 +51,7 @@ export const SavedItemCard: React.FC<SavedItemCardProps> = ({
 
       <Text style={styles.cardContent}>{item.content}</Text>
 
-      {item.translation && (
-        <Text style={styles.cardTranslation}>{item.translation}</Text>
-      )}
+      {item.translation && <Text style={styles.cardTranslation}>{item.translation}</Text>}
 
       {item.note && (
         <View style={styles.noteBox}>
@@ -102,87 +96,88 @@ export const SavedItemCard: React.FC<SavedItemCardProps> = ({
   );
 };
 
-const getStyles = (colors: any) => StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  badges: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  dateText: {
-    fontSize: 11,
-    color: colors.textMuted,
-  },
-  cardContent: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    lineHeight: 26,
-    marginBottom: 6,
-  },
-  cardTranslation: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 22,
-    marginBottom: 10,
-    fontStyle: 'italic',
-  },
-  noteBox: {
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
-  },
-  noteText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    lineHeight: 18,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-    paddingTop: 12,
-  },
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  actionBtnText: {
-    fontSize: 12,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    badges: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    badge: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    badgeText: {
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    dateText: {
+      fontSize: 11,
+      color: colors.textMuted,
+    },
+    cardContent: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.textPrimary,
+      lineHeight: 26,
+      marginBottom: 6,
+    },
+    cardTranslation: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      lineHeight: 22,
+      marginBottom: 10,
+      fontStyle: 'italic',
+    },
+    noteBox: {
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 8,
+      padding: 10,
+      marginBottom: 12,
+    },
+    noteText: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      lineHeight: 18,
+    },
+    cardActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+      paddingTop: 12,
+    },
+    actionBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: colors.primaryLight,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 8,
+    },
+    actionBtnText: {
+      fontSize: 12,
+      color: colors.primary,
+      fontWeight: '600',
+    },
+  });

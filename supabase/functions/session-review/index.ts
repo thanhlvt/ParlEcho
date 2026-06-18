@@ -58,7 +58,10 @@ async function analyzeGrammar(
 
   try {
     // Strip possible markdown fences (Claude sometimes wraps JSON in ```json ... ```)
-    const cleaned = raw.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '').trim();
+    const cleaned = raw
+      .replace(/^```[a-z]*\n?/, '')
+      .replace(/\n?```$/, '')
+      .trim();
     return JSON.parse(cleaned);
   } catch {
     return { overall_feedback: '', fluency_notes: '', corrections: [], vocab_to_learn: [] };
@@ -72,7 +75,11 @@ async function scorePronunciation(
   referenceText: string,
   languageId: string,
   geminiKey: string,
-): Promise<{ clarity: number; fluency: number; flagged_words: Array<{ word: string; tip: string }> }> {
+): Promise<{
+  clarity: number;
+  fluency: number;
+  flagged_words: Array<{ word: string; tip: string }>;
+}> {
   const lang = languageId === 'ja' ? 'Japanese' : 'English';
 
   const resp = await fetch(
@@ -81,20 +88,22 @@ async function scorePronunciation(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{
-          parts: [
-            { inlineData: { mimeType, data: audioBase64 } },
-            {
-              text:
-                `This is a ${lang} learner recording. Reference sentence: "${referenceText}"\n` +
-                `Score this recording and respond with ONLY valid JSON:\n` +
-                `{"clarity":85,"fluency":80,"flagged_words":[{"word":"example","tip":"how to improve"}]}\n` +
-                `clarity: overall pronunciation clarity 0-100. fluency: speaking flow 0-100. ` +
-                `flagged_words: max 3 specific words that need improvement with short actionable tips in Vietnamese. ` +
-                `If pronunciation is good, flagged_words can be [].`,
-            },
-          ],
-        }],
+        contents: [
+          {
+            parts: [
+              { inlineData: { mimeType, data: audioBase64 } },
+              {
+                text:
+                  `This is a ${lang} learner recording. Reference sentence: "${referenceText}"\n` +
+                  `Score this recording and respond with ONLY valid JSON:\n` +
+                  `{"clarity":85,"fluency":80,"flagged_words":[{"word":"example","tip":"how to improve"}]}\n` +
+                  `clarity: overall pronunciation clarity 0-100. fluency: speaking flow 0-100. ` +
+                  `flagged_words: max 3 specific words that need improvement with short actionable tips in Vietnamese. ` +
+                  `If pronunciation is good, flagged_words can be [].`,
+              },
+            ],
+          },
+        ],
       }),
     },
   );
@@ -122,7 +131,9 @@ Deno.serve(async (req: Request) => {
     const body: ReviewRequest = await req.json();
     const { conversation_id, language_id, transcript, user_segments } = body;
 
-    console.log(`[session-review] user=${user.id} conv=${conversation_id} turns=${transcript?.length}`);
+    console.log(
+      `[session-review] user=${user.id} conv=${conversation_id} turns=${transcript?.length}`,
+    );
 
     // Verify conversation belongs to this user (query by id only to avoid user_id mismatch masking)
     const { data: conv, error: convErr } = await supabase
@@ -133,10 +144,15 @@ Deno.serve(async (req: Request) => {
 
     if (convErr || !conv) {
       console.error(`[session-review] conv not found by id: convErr=${convErr?.message}`);
-      return Response.json({ error: 'Conversation not found' }, { status: 404, headers: corsHeaders });
+      return Response.json(
+        { error: 'Conversation not found' },
+        { status: 404, headers: corsHeaders },
+      );
     }
     if (conv.user_id !== user.id) {
-      console.error(`[session-review] user_id mismatch: conv.user_id=${conv.user_id} user.id=${user.id}`);
+      console.error(
+        `[session-review] user_id mismatch: conv.user_id=${conv.user_id} user.id=${user.id}`,
+      );
       return Response.json({ error: 'Forbidden' }, { status: 403, headers: corsHeaders });
     }
 
@@ -240,7 +256,8 @@ Deno.serve(async (req: Request) => {
       .from('conversations')
       .update({
         summary: {
-          recurring_errors: grammarResult.corrections?.map((c: { original: string }) => c.original) ?? [],
+          recurring_errors:
+            grammarResult.corrections?.map((c: { original: string }) => c.original) ?? [],
           corrections: grammarResult.corrections ?? [],
           words_to_learn: grammarResult.vocab_to_learn ?? [],
           overall_feedback: grammarResult.overall_feedback ?? '',

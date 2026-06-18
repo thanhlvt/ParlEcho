@@ -34,7 +34,9 @@ export default function PracticeIndexScreen() {
 
   // Filter & Search states
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
+  const [selectedLevel, setSelectedLevel] = useState<
+    'all' | 'beginner' | 'intermediate' | 'advanced'
+  >('all');
 
   useFocusEffect(
     useCallback(() => {
@@ -92,7 +94,12 @@ export default function PracticeIndexScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <TouchableOpacity onPress={toggleSidebar} activeOpacity={0.7} style={{ padding: 4 }} hitSlop={8}>
+          <TouchableOpacity
+            onPress={toggleSidebar}
+            activeOpacity={0.7}
+            style={{ padding: 4 }}
+            hitSlop={8}
+          >
             <Ionicons name="menu" size={28} color={colors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.title}>Luyện phát âm</Text>
@@ -123,15 +130,18 @@ export default function PracticeIndexScreen() {
 
       {/* Level Filters */}
       <View style={{ marginBottom: 4 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.levelScroll}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.levelScroll}
+        >
           <TouchableOpacity
-            style={[
-              styles.levelChip,
-              selectedLevel === 'all' && styles.levelChipActiveAll,
-            ]}
+            style={[styles.levelChip, selectedLevel === 'all' && styles.levelChipActiveAll]}
             onPress={() => setSelectedLevel('all')}
           >
-            <Text style={[styles.levelChipText, selectedLevel === 'all' && styles.levelChipTextActive]}>
+            <Text
+              style={[styles.levelChipText, selectedLevel === 'all' && styles.levelChipTextActive]}
+            >
               Tất cả
             </Text>
           </TouchableOpacity>
@@ -142,11 +152,13 @@ export default function PracticeIndexScreen() {
             ]}
             onPress={() => setSelectedLevel('beginner')}
           >
-            <Text style={[
-              styles.levelChipText,
-              { color: selectedLevel === 'beginner' ? '#fff' : colors.success },
-              selectedLevel === 'beginner' && styles.levelChipTextActive
-            ]}>
+            <Text
+              style={[
+                styles.levelChipText,
+                { color: selectedLevel === 'beginner' ? '#fff' : colors.success },
+                selectedLevel === 'beginner' && styles.levelChipTextActive,
+              ]}
+            >
               Cơ bản
             </Text>
           </TouchableOpacity>
@@ -157,11 +169,13 @@ export default function PracticeIndexScreen() {
             ]}
             onPress={() => setSelectedLevel('intermediate')}
           >
-            <Text style={[
-              styles.levelChipText,
-              { color: selectedLevel === 'intermediate' ? '#fff' : colors.warning },
-              selectedLevel === 'intermediate' && styles.levelChipTextActive
-            ]}>
+            <Text
+              style={[
+                styles.levelChipText,
+                { color: selectedLevel === 'intermediate' ? '#fff' : colors.warning },
+                selectedLevel === 'intermediate' && styles.levelChipTextActive,
+              ]}
+            >
               Trung cấp
             </Text>
           </TouchableOpacity>
@@ -172,11 +186,13 @@ export default function PracticeIndexScreen() {
             ]}
             onPress={() => setSelectedLevel('advanced')}
           >
-            <Text style={[
-              styles.levelChipText,
-              { color: selectedLevel === 'advanced' ? '#fff' : colors.error },
-              selectedLevel === 'advanced' && styles.levelChipTextActive
-            ]}>
+            <Text
+              style={[
+                styles.levelChipText,
+                { color: selectedLevel === 'advanced' ? '#fff' : colors.error },
+                selectedLevel === 'advanced' && styles.levelChipTextActive,
+              ]}
+            >
               Nâng cao
             </Text>
           </TouchableOpacity>
@@ -241,10 +257,13 @@ function ScenarioCard({
 
   const score = scenario.progress?.best_pronunciation_score;
   const scoreColor =
-    score == null ? colors.textMuted
-      : score >= 80 ? colors.success
-      : score >= 60 ? colors.warning
-      : colors.error;
+    score == null
+      ? colors.textMuted
+      : score >= 80
+        ? colors.success
+        : score >= 60
+          ? colors.warning
+          : colors.error;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
@@ -252,33 +271,30 @@ function ScenarioCard({
       <View style={styles.cardBody}>
         <Text style={styles.cardTitle}>{scenario.title}</Text>
         {scenario.description ? (
-          <Text style={styles.cardDesc} numberOfLines={2}>{scenario.description}</Text>
+          <Text style={styles.cardDesc} numberOfLines={2}>
+            {scenario.description}
+          </Text>
         ) : null}
         <View style={styles.cardMeta}>
           <View
-            style={[
-              styles.levelBadge,
-              { backgroundColor: LEVEL_COLOR[scenario.level] + '20' },
-            ]}
+            style={[styles.levelBadge, { backgroundColor: LEVEL_COLOR[scenario.level] + '20' }]}
           >
             <Text style={[styles.levelText, { color: LEVEL_COLOR[scenario.level] }]}>
-              {scenario.level === 'beginner' ? 'Cơ bản'
-                : scenario.level === 'intermediate' ? 'Trung cấp'
-                : 'Nâng cao'}
+              {scenario.level === 'beginner'
+                ? 'Cơ bản'
+                : scenario.level === 'intermediate'
+                  ? 'Trung cấp'
+                  : 'Nâng cao'}
             </Text>
           </View>
           {scenario.progress && (
-            <Text style={styles.attemptsText}>
-              {scenario.progress.attempts_count} lần luyện
-            </Text>
+            <Text style={styles.attemptsText}>{scenario.progress.attempts_count} lần luyện</Text>
           )}
         </View>
       </View>
       <View style={styles.cardRight}>
         {score != null && (
-          <Text style={[styles.scoreText, { color: scoreColor }]}>
-            {Math.round(score)}
-          </Text>
+          <Text style={[styles.scoreText, { color: scoreColor }]}>{Math.round(score)}</Text>
         )}
         <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
       </View>
@@ -300,9 +316,7 @@ function EmptyState({
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyIcon}>{error ? '⚠️' : '📚'}</Text>
-      <Text style={styles.emptyTitle}>
-        {error ? 'Lỗi tải dữ liệu' : 'Chưa có kịch bản'}
-      </Text>
+      <Text style={styles.emptyTitle}>{error ? 'Lỗi tải dữ liệu' : 'Chưa có kịch bản'}</Text>
       {error ? (
         <Text style={[styles.emptyText, { color: colors.error }]}>{error}</Text>
       ) : (
@@ -312,10 +326,8 @@ function EmptyState({
             {lang === 'en' ? 'English (EN)' : 'Japanese (JP)'}
           </Text>
           {'\n\n'}Chạy{' '}
-          <Text style={{ fontFamily: 'monospace', color: colors.primary }}>
-            seed_scenarios.sql
-          </Text>
-          {' '}trong Supabase SQL Editor, hoặc đổi ngôn ngữ ở màn hình Home.
+          <Text style={{ fontFamily: 'monospace', color: colors.primary }}>seed_scenarios.sql</Text>{' '}
+          trong Supabase SQL Editor, hoặc đổi ngôn ngữ ở màn hình Home.
         </Text>
       )}
       <TouchableOpacity style={styles.retryBtn} onPress={onRetry}>
@@ -325,157 +337,158 @@ function EmptyState({
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-  },
-  title: { fontSize: 24, fontWeight: '700', color: colors.textPrimary },
-  langBadge: {
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  langText: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
-  loader: { flex: 1 },
-  list: { padding: 16, gap: 12 },
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 16,
+    },
+    title: { fontSize: 24, fontWeight: '700', color: colors.textPrimary },
+    langBadge: {
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    langText: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
+    loader: { flex: 1 },
+    list: { padding: 16, gap: 12 },
 
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardIcon: { fontSize: 36 },
-  cardBody: { flex: 1 },
-  cardTitle: { fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 },
-  cardDesc: { fontSize: 13, color: colors.textMuted, marginBottom: 8 },
-  cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  levelBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  levelText: { fontSize: 11, fontWeight: '700' },
-  attemptsText: { fontSize: 12, color: colors.textMuted },
-  cardRight: { alignItems: 'center', gap: 4 },
-  scoreText: { fontSize: 18, fontWeight: '800' },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    cardIcon: { fontSize: 36 },
+    cardBody: { flex: 1 },
+    cardTitle: { fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 },
+    cardDesc: { fontSize: 13, color: colors.textMuted, marginBottom: 8 },
+    cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+    levelBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+    levelText: { fontSize: 11, fontWeight: '700' },
+    attemptsText: { fontSize: 12, color: colors.textMuted },
+    cardRight: { alignItems: 'center', gap: 4 },
+    scoreText: { fontSize: 18, fontWeight: '800' },
 
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 },
-  emptyText: { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
-  retryBtn: {
-    marginTop: 16,
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-  },
-  retryBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+    empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+    emptyIcon: { fontSize: 48, marginBottom: 16 },
+    emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 },
+    emptyText: { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
+    retryBtn: {
+      marginTop: 16,
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingHorizontal: 24,
+      paddingVertical: 10,
+    },
+    retryBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 
-  // New Search & Level Filters styles
-  searchBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 12,
-    marginHorizontal: 20,
-    marginBottom: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.textPrimary,
-    padding: 0,
-  },
-  levelScroll: {
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    gap: 8,
-  },
-  levelChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  levelChipActiveAll: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  levelChipActiveBeginner: {
-    backgroundColor: colors.success,
-    borderColor: colors.success,
-  },
-  levelChipActiveIntermediate: {
-    backgroundColor: colors.warning,
-    borderColor: colors.warning,
-  },
-  levelChipActiveAdvanced: {
-    backgroundColor: colors.error,
-    borderColor: colors.error,
-  },
-  levelChipText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  levelChipTextActive: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-  emptyFiltered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-    marginTop: 32,
-  },
-  emptyFilteredIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  emptyFilteredTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: 8,
-  },
-  emptyFilteredText: {
-    fontSize: 14,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  resetBtn: {
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  resetBtnText: {
-    color: colors.primary,
-    fontWeight: '600',
-    fontSize: 13,
-  },
-});
+    // New Search & Level Filters styles
+    searchBarContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 12,
+      marginHorizontal: 20,
+      marginBottom: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    searchIcon: {
+      marginRight: 8,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: 14,
+      color: colors.textPrimary,
+      padding: 0,
+    },
+    levelScroll: {
+      paddingHorizontal: 20,
+      paddingBottom: 12,
+      gap: 8,
+    },
+    levelChip: {
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 20,
+      backgroundColor: colors.surfaceAlt,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    levelChipActiveAll: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    levelChipActiveBeginner: {
+      backgroundColor: colors.success,
+      borderColor: colors.success,
+    },
+    levelChipActiveIntermediate: {
+      backgroundColor: colors.warning,
+      borderColor: colors.warning,
+    },
+    levelChipActiveAdvanced: {
+      backgroundColor: colors.error,
+      borderColor: colors.error,
+    },
+    levelChipText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
+    levelChipTextActive: {
+      color: '#fff',
+      fontWeight: '700',
+    },
+    emptyFiltered: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 32,
+      marginTop: 32,
+    },
+    emptyFilteredIcon: {
+      fontSize: 48,
+      marginBottom: 16,
+    },
+    emptyFilteredTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.textPrimary,
+      marginBottom: 8,
+    },
+    emptyFilteredText: {
+      fontSize: 14,
+      color: colors.textMuted,
+      textAlign: 'center',
+      marginBottom: 16,
+      lineHeight: 20,
+    },
+    resetBtn: {
+      backgroundColor: colors.primaryLight,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 8,
+    },
+    resetBtnText: {
+      color: colors.primary,
+      fontWeight: '600',
+      fontSize: 13,
+    },
+  });

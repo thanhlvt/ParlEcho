@@ -8,7 +8,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -47,10 +46,14 @@ export default function ReviewScreen() {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
 
-  useEffect(() => { fetchData(); }, [conversationId]);
+  useEffect(() => {
+    fetchData();
+  }, [conversationId]);
 
   useEffect(() => {
-    return () => { soundRef.current?.unloadAsync(); };
+    return () => {
+      soundRef.current?.unloadAsync();
+    };
   }, []);
 
   async function handlePlayAudio(messageId: string, audioUrl: string) {
@@ -156,47 +159,52 @@ export default function ReviewScreen() {
   }
 
   async function handleDeleteSession() {
-    Alert.alert('Xoá phiên hội thoại', 'Bạn có chắc chắn muốn xoá toàn bộ dữ liệu ghi âm và kết quả của phiên hội thoại này không?', [
-      { text: 'Huỷ', style: 'cancel' },
-      { text: 'Xoá', style: 'destructive', onPress: async () => {
-        try {
-          // 1. Xoá audio file ở local
-          await clearConversationAudio(conversationId);
-          
-          // 2. Lấy danh sách ID tin nhắn thuộc phiên này
-          const { data: messagesToDelete } = await supabase
-            .from('messages')
-            .select('id')
-            .eq('conversation_id', conversationId);
-            
-          const msgIds = messagesToDelete?.map(m => m.id) ?? [];
-          
-          // 3. Xoá các bản ghi phát âm (attempts) liên quan trước để tránh lỗi check constraint
-          if (msgIds.length > 0) {
-            await supabase
-              .from('pronunciation_attempts')
-              .delete()
-              .in('message_id', msgIds);
-          }
-          
-          // 4. Xoá phiên hội thoại (cascade delete các tin nhắn trong messages)
-          const { error } = await supabase
-            .from('conversations')
-            .delete()
-            .eq('id', conversationId);
-            
-          if (error) throw error;
-          
-          Alert.alert('Đã xoá', 'Phiên hội thoại đã được xoá thành công.');
-          
-          // 5. Quay lại màn hình Live
-          router.replace('/live');
-        } catch (err: any) {
-          console.error('[Review] Delete session error:', err);
-          Alert.alert('Lỗi', 'Không thể xoá phiên hội thoại: ' + err.message);
-        }
-      }},
-    ]);
+    Alert.alert(
+      'Xoá phiên hội thoại',
+      'Bạn có chắc chắn muốn xoá toàn bộ dữ liệu ghi âm và kết quả của phiên hội thoại này không?',
+      [
+        { text: 'Huỷ', style: 'cancel' },
+        {
+          text: 'Xoá',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // 1. Xoá audio file ở local
+              await clearConversationAudio(conversationId);
+
+              // 2. Lấy danh sách ID tin nhắn thuộc phiên này
+              const { data: messagesToDelete } = await supabase
+                .from('messages')
+                .select('id')
+                .eq('conversation_id', conversationId);
+
+              const msgIds = messagesToDelete?.map((m) => m.id) ?? [];
+
+              // 3. Xoá các bản ghi phát âm (attempts) liên quan trước để tránh lỗi check constraint
+              if (msgIds.length > 0) {
+                await supabase.from('pronunciation_attempts').delete().in('message_id', msgIds);
+              }
+
+              // 4. Xoá phiên hội thoại (cascade delete các tin nhắn trong messages)
+              const { error } = await supabase
+                .from('conversations')
+                .delete()
+                .eq('id', conversationId);
+
+              if (error) throw error;
+
+              Alert.alert('Đã xoá', 'Phiên hội thoại đã được xoá thành công.');
+
+              // 5. Quay lại màn hình Live
+              router.replace('/live');
+            } catch (err: any) {
+              console.error('[Review] Delete session error:', err);
+              Alert.alert('Lỗi', 'Không thể xoá phiên hội thoại: ' + err.message);
+            }
+          },
+        },
+      ],
+    );
   }
 
   if (loading) {
@@ -210,16 +218,18 @@ export default function ReviewScreen() {
 
   const score = conv?.avg_pronunciation;
   const scoreColor =
-    score == null ? colors.textMuted
-      : score >= 80 ? colors.success
-      : score >= 60 ? colors.warning
-      : colors.error;
+    score == null
+      ? colors.textMuted
+      : score >= 80
+        ? colors.success
+        : score >= 60
+          ? colors.warning
+          : colors.error;
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <Stack.Screen options={{ title: 'Nhận xét phiên' }} />
       <ScrollView contentContainerStyle={styles.content}>
-
         {/* Overall feedback */}
         {conv?.overall_feedback ? (
           <View style={styles.feedbackCard}>
@@ -350,81 +360,105 @@ function FlaggedWordRow({ fw }: { fw: FlaggedWord }) {
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 16, gap: 14 },
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 16, gap: 14 },
 
-  feedbackCard: {
-    backgroundColor: colors.primaryLight,
-    borderRadius: 16, padding: 16, gap: 8,
-  },
-  sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 },
-  feedbackText: { fontSize: 14, color: colors.textPrimary, lineHeight: 22 },
-  fluencyText: { fontSize: 13, color: colors.textSecondary, fontStyle: 'italic' },
+    feedbackCard: {
+      backgroundColor: colors.primaryLight,
+      borderRadius: 16,
+      padding: 16,
+      gap: 8,
+    },
+    sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 },
+    feedbackText: { fontSize: 14, color: colors.textPrimary, lineHeight: 22 },
+    fluencyText: { fontSize: 13, color: colors.textSecondary, fontStyle: 'italic' },
 
-  scoreCard: {
-    backgroundColor: colors.surface, borderRadius: 16, padding: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
-  },
-  scoreRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  scoreBig: { fontSize: 42, fontWeight: '800' },
-  scoreOf: { fontSize: 16, color: colors.textMuted, fontWeight: '600' },
-  scoreLabel: { marginLeft: 10, fontSize: 14, color: colors.textSecondary },
+    scoreCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      elevation: 2,
+    },
+    scoreRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
+    scoreBig: { fontSize: 42, fontWeight: '800' },
+    scoreOf: { fontSize: 16, color: colors.textMuted, fontWeight: '600' },
+    scoreLabel: { marginLeft: 10, fontSize: 14, color: colors.textSecondary },
 
-  section: { gap: 8 },
-  noIssues: { fontSize: 14, color: colors.success },
+    section: { gap: 8 },
+    noIssues: { fontSize: 14, color: colors.success },
 
-  corrPanel: {
-    backgroundColor: colors.surface, borderRadius: 14, padding: 12, gap: 12,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
-  },
-  corrRow: { gap: 4 },
-  corrLine: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  corrLabelSai: { fontSize: 10, fontWeight: '700', color: colors.textMuted, width: 26 },
-  corrOriginal: { fontSize: 13, color: colors.error, textDecorationLine: 'line-through' },
-  corrFixed: { fontSize: 13, color: colors.success, fontWeight: '700' },
-  corrExplain: { fontSize: 12, color: colors.textMuted, fontStyle: 'italic', paddingLeft: 32 },
+    corrPanel: {
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      padding: 12,
+      gap: 12,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    corrRow: { gap: 4 },
+    corrLine: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+    corrLabelSai: { fontSize: 10, fontWeight: '700', color: colors.textMuted, width: 26 },
+    corrOriginal: { fontSize: 13, color: colors.error, textDecorationLine: 'line-through' },
+    corrFixed: { fontSize: 13, color: colors.success, fontWeight: '700' },
+    corrExplain: { fontSize: 12, color: colors.textMuted, fontStyle: 'italic', paddingLeft: 32 },
 
-  vocabRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  vocabChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: colors.primaryLight, borderRadius: 10,
-    paddingHorizontal: 12, paddingVertical: 8,
-    maxWidth: '100%',
-  },
-  vocabText: { fontSize: 13, color: colors.primary, fontWeight: '600', flexShrink: 1 },
-  vocabHint: { fontSize: 11, color: colors.textMuted },
+    vocabRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    vocabChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: colors.primaryLight,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      maxWidth: '100%',
+    },
+    vocabText: { fontSize: 13, color: colors.primary, fontWeight: '600', flexShrink: 1 },
+    vocabHint: { fontSize: 11, color: colors.textMuted },
 
-  transcriptPanel: {
-    backgroundColor: colors.surface, borderRadius: 14, padding: 12, gap: 10,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
-  },
-  transcriptRow: { gap: 2 },
-  transcriptHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  transcriptRole: { fontSize: 11, fontWeight: '700', color: colors.textMuted },
-  transcriptText: { fontSize: 14, color: colors.textPrimary, lineHeight: 20 },
-  playBtn: { padding: 2 },
+    transcriptPanel: {
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      padding: 12,
+      gap: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    transcriptRow: { gap: 2 },
+    transcriptHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    transcriptRole: { fontSize: 11, fontWeight: '700', color: colors.textMuted },
+    transcriptText: { fontSize: 14, color: colors.textPrimary, lineHeight: 20 },
+    playBtn: { padding: 2 },
 
-  flagRow: { gap: 2 },
-  flagWord: { fontSize: 13, fontWeight: '700', color: colors.warning },
-  flagTip: { fontSize: 12, color: colors.textMuted },
+    flagRow: { gap: 2 },
+    flagWord: { fontSize: 13, fontWeight: '700', color: colors.warning },
+    flagTip: { fontSize: 12, color: colors.textMuted },
 
-  deleteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.error,
-    borderRadius: 12,
-    paddingVertical: 12,
-    marginTop: 8,
-  },
-  deleteBtnText: {
-    color: colors.error,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
+    deleteBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.error,
+      borderRadius: 12,
+      paddingVertical: 12,
+      marginTop: 8,
+    },
+    deleteBtnText: {
+      color: colors.error,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+  });

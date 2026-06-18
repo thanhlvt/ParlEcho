@@ -22,15 +22,20 @@ export function WordHighlight({ text, wordScores, onWordPress }: WordHighlightPr
           !ws || ws.error_type === 'Omission'
             ? colors.error
             : ws.score >= 85
-            ? colors.success
-            : ws.score >= 60
-            ? colors.warning
-            : colors.error;
+              ? colors.success
+              : ws.score >= 60
+                ? colors.warning
+                : colors.error;
         return (
           <Text
             key={i}
             style={{ color, fontWeight: '700' }}
-            onPress={onWordPress ? () => onWordPress(word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, ""), isMispronounced) : undefined}
+            onPress={
+              onWordPress
+                ? () =>
+                    onWordPress(word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, ''), isMispronounced)
+                : undefined
+            }
           >
             {word}
             {i < words.length - 1 ? ' ' : ''}
@@ -41,11 +46,12 @@ export function WordHighlight({ text, wordScores, onWordPress }: WordHighlightPr
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  lineText: {
-    fontSize: 18,
-    color: colors.textPrimary,
-    lineHeight: 28,
-    marginBottom: 6,
-  },
-});
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    lineText: {
+      fontSize: 18,
+      color: colors.textPrimary,
+      lineHeight: 28,
+      marginBottom: 6,
+    },
+  });

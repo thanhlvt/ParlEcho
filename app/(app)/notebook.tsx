@@ -56,7 +56,7 @@ export default function NotebookScreen() {
         Speech.stop();
         setSpeakingItemId(null);
       };
-    }, [user?.id])
+    }, [user?.id]),
   );
 
   async function fetchItems() {
@@ -112,34 +112,27 @@ export default function NotebookScreen() {
 
   // ── Delete Item ──────────────────────────────────────────────────────
   function handleDelete(item: SavedItem) {
-    Alert.alert(
-      'Xác nhận xóa',
-      'Bạn có chắc chắn muốn xóa mục này khỏi Sổ tay ôn tập?',
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Xóa',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { error } = await supabase
-                .from('saved_items')
-                .delete()
-                .eq('id', item.id);
-              if (error) throw error;
-              setItems(prev => prev.filter(i => i.id !== item.id));
-            } catch (err) {
-              console.error(err);
-              Alert.alert('Lỗi', 'Không thể xóa mục.');
-            }
-          },
+    Alert.alert('Xác nhận xóa', 'Bạn có chắc chắn muốn xóa mục này khỏi Sổ tay ôn tập?', [
+      { text: 'Hủy', style: 'cancel' },
+      {
+        text: 'Xóa',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const { error } = await supabase.from('saved_items').delete().eq('id', item.id);
+            if (error) throw error;
+            setItems((prev) => prev.filter((i) => i.id !== item.id));
+          } catch (err) {
+            console.error(err);
+            Alert.alert('Lỗi', 'Không thể xóa mục.');
+          }
         },
-      ]
-    );
+      },
+    ]);
   }
 
   // ── Filter Data ─────────────────────────────────────────────────────
-  const filteredItems = items.filter(item => {
+  const filteredItems = items.filter((item) => {
     const typeMatch = filterType === 'all' || item.type === filterType;
     const langMatch = filterLang === 'all' || item.language_id === filterLang;
     const searchMatch =
@@ -183,52 +176,96 @@ export default function NotebookScreen() {
         </View>
 
         {/* Language selector */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterScroll}
+        >
           <Pressable
             style={[styles.filterTab, filterLang === 'all' && styles.filterTabActive]}
             onPress={() => setFilterLang('all')}
           >
-            <Text style={[styles.filterTabText, filterLang === 'all' && styles.filterTabTextActive]}>Tất cả ngôn ngữ</Text>
+            <Text
+              style={[styles.filterTabText, filterLang === 'all' && styles.filterTabTextActive]}
+            >
+              Tất cả ngôn ngữ
+            </Text>
           </Pressable>
           <Pressable
             style={[styles.filterTab, filterLang === 'en' && styles.filterTabActive]}
             onPress={() => setFilterLang('en')}
           >
-            <Text style={[styles.filterTabText, filterLang === 'en' && styles.filterTabTextActive]}>English</Text>
+            <Text style={[styles.filterTabText, filterLang === 'en' && styles.filterTabTextActive]}>
+              English
+            </Text>
           </Pressable>
           <Pressable
             style={[styles.filterTab, filterLang === 'ja' && styles.filterTabActive]}
             onPress={() => setFilterLang('ja')}
           >
-            <Text style={[styles.filterTabText, filterLang === 'ja' && styles.filterTabTextActive]}>Japanese</Text>
+            <Text style={[styles.filterTabText, filterLang === 'ja' && styles.filterTabTextActive]}>
+              Japanese
+            </Text>
           </Pressable>
         </ScrollView>
 
         {/* Type selector */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterScroll}
+        >
           <Pressable
             style={[styles.filterTabSub, filterType === 'all' && styles.filterTabSubActive]}
             onPress={() => setFilterType('all')}
           >
-            <Text style={[styles.filterTabSubText, filterType === 'all' && styles.filterTabSubTextActive]}>Tất cả loại</Text>
+            <Text
+              style={[
+                styles.filterTabSubText,
+                filterType === 'all' && styles.filterTabSubTextActive,
+              ]}
+            >
+              Tất cả loại
+            </Text>
           </Pressable>
           <Pressable
             style={[styles.filterTabSub, filterType === 'word' && styles.filterTabSubActive]}
             onPress={() => setFilterType('word')}
           >
-            <Text style={[styles.filterTabSubText, filterType === 'word' && styles.filterTabSubTextActive]}>Từ vựng</Text>
+            <Text
+              style={[
+                styles.filterTabSubText,
+                filterType === 'word' && styles.filterTabSubTextActive,
+              ]}
+            >
+              Từ vựng
+            </Text>
           </Pressable>
           <Pressable
             style={[styles.filterTabSub, filterType === 'phrase' && styles.filterTabSubActive]}
             onPress={() => setFilterType('phrase')}
           >
-            <Text style={[styles.filterTabSubText, filterType === 'phrase' && styles.filterTabSubTextActive]}>Mẫu câu</Text>
+            <Text
+              style={[
+                styles.filterTabSubText,
+                filterType === 'phrase' && styles.filterTabSubTextActive,
+              ]}
+            >
+              Mẫu câu
+            </Text>
           </Pressable>
           <Pressable
             style={[styles.filterTabSub, filterType === 'mistake' && styles.filterTabSubActive]}
             onPress={() => setFilterType('mistake')}
           >
-            <Text style={[styles.filterTabSubText, filterType === 'mistake' && styles.filterTabSubTextActive]}>Lỗi sai</Text>
+            <Text
+              style={[
+                styles.filterTabSubText,
+                filterType === 'mistake' && styles.filterTabSubTextActive,
+              ]}
+            >
+              Lỗi sai
+            </Text>
           </Pressable>
         </ScrollView>
       </View>
@@ -290,10 +327,7 @@ export default function NotebookScreen() {
       )}
 
       {/* ── MODAL: PRONUNCIATION PRACTICE ────────────────────────────────── */}
-      <PronouncePracticeModal
-        item={practiceItem}
-        onClose={() => setPracticeItem(null)}
-      />
+      <PronouncePracticeModal item={practiceItem} onClose={() => setPracticeItem(null)} />
 
       {/* ── MODAL: FLASHCARD STUDY ─────────────────────────────────────── */}
       <FlashcardModal
@@ -305,143 +339,144 @@ export default function NotebookScreen() {
   );
 }
 
-const getStyles = (colors: any) => StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  loader: { flex: 1, justifyContent: 'center' },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
-  emptyIcon: { fontSize: 64, marginBottom: 16 },
-  emptyText: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', lineHeight: 24 },
+const getStyles = (colors: any) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.background },
+    loader: { flex: 1, justifyContent: 'center' },
+    emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
+    emptyIcon: { fontSize: 64, marginBottom: 16 },
+    emptyText: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', lineHeight: 24 },
 
-  // Filters
-  filterContainer: {
-    backgroundColor: colors.surface,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  filterScroll: {
-    paddingHorizontal: 16,
-    gap: 8,
-    marginVertical: 4,
-  },
-  filterTab: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  filterTabActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  filterTabText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  filterTabTextActive: {
-    color: '#fff',
-  },
+    // Filters
+    filterContainer: {
+      backgroundColor: colors.surface,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    filterScroll: {
+      paddingHorizontal: 16,
+      gap: 8,
+      marginVertical: 4,
+    },
+    filterTab: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: colors.surfaceAlt,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    filterTabActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    filterTabText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
+    filterTabTextActive: {
+      color: '#fff',
+    },
 
-  filterTabSub: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#F3F4F6',
-  },
-  filterTabSubActive: {
-    backgroundColor: colors.primaryLight,
-  },
-  filterTabSubText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  filterTabSubTextActive: {
-    color: colors.primary,
-    fontWeight: '700',
-  },
+    filterTabSub: {
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 16,
+      backgroundColor: '#F3F4F6',
+    },
+    filterTabSubActive: {
+      backgroundColor: colors.primaryLight,
+    },
+    filterTabSubText: {
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+    filterTabSubTextActive: {
+      color: colors.primary,
+      fontWeight: '700',
+    },
 
-  studyBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: colors.primary,
-    marginHorizontal: 16,
-    marginVertical: 12,
-    paddingVertical: 12,
-    borderRadius: 12,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  studyBtnText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '700',
-  },
+    studyBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: colors.primary,
+      marginHorizontal: 16,
+      marginVertical: 12,
+      paddingVertical: 12,
+      borderRadius: 12,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    studyBtnText: {
+      color: '#fff',
+      fontSize: 15,
+      fontWeight: '700',
+    },
 
-  listContent: {
-    padding: 16,
-    gap: 16,
-    paddingBottom: 32,
-  },
+    listContent: {
+      padding: 16,
+      gap: 16,
+      paddingBottom: 32,
+    },
 
-  customHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  customHeaderTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  backBtn: {
-    padding: 4,
-  },
+    customHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    customHeaderTitle: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: colors.textPrimary,
+    },
+    backBtn: {
+      padding: 4,
+    },
 
-  // Search Bar styles
-  searchBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 12,
-    marginHorizontal: 16,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.textPrimary,
-    padding: 0,
-  },
-  resetBtn: {
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginTop: 16,
-  },
-  resetBtnText: {
-    color: colors.primary,
-    fontWeight: '600',
-    fontSize: 13,
-  },
-});
+    // Search Bar styles
+    searchBarContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 12,
+      marginHorizontal: 16,
+      marginBottom: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    searchIcon: {
+      marginRight: 8,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: 14,
+      color: colors.textPrimary,
+      padding: 0,
+    },
+    resetBtn: {
+      backgroundColor: colors.primaryLight,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 8,
+      marginTop: 16,
+    },
+    resetBtnText: {
+      color: colors.primary,
+      fontWeight: '600',
+      fontSize: 13,
+    },
+  });

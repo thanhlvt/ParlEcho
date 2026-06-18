@@ -39,9 +39,11 @@ export async function clearAllAudioCache() {
     if (dirInfo.exists) {
       await FileSystem.deleteAsync(LIVE_AUDIO_DIR, { idempotent: true });
     }
-    
+
     // Xóa liên kết URL ở Supabase cho các file local
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
       await supabase
         .from('messages')

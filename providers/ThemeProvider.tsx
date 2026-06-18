@@ -47,9 +47,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Tính activeTheme đồng bộ trực tiếp trong lúc render
-  const activeTheme: ActiveTheme = themeMode === 'system'
-    ? (systemScheme === 'dark' ? 'dark' : 'light')
-    : themeMode;
+  const activeTheme: ActiveTheme =
+    themeMode === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : themeMode;
 
   const setThemeMode = async (mode: ThemeMode) => {
     console.log('[ThemeProvider] setThemeMode called with:', mode);
@@ -62,7 +61,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const colors = (activeTheme === 'dark' ? darkColors : lightColors) as Record<keyof typeof lightColors, string>;
+  const colors = (activeTheme === 'dark' ? darkColors : lightColors) as Record<
+    keyof typeof lightColors,
+    string
+  >;
   const isDark = activeTheme === 'dark';
 
   return (

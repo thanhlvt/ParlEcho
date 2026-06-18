@@ -8,7 +8,10 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "generate-audio": "node scripts/generate-audio.mjs",
-    "generate-scenarios-sql": "node scripts/generate-scenarios-sql.mjs"
+    "generate-scenarios-sql": "node scripts/generate-scenarios-sql.mjs",
+    "lint": "expo lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -38,6 +41,10 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.1.10",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~10.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "3.8.4",
     "typescript": "^5.3.3"
   }
 }

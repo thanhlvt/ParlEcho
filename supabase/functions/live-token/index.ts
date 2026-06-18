@@ -14,16 +14,22 @@ const STYLE_PROMPTS: Record<string, string> = {
   casual: 'Speak in a friendly, informal, and relaxed tone.',
   formal: 'Speak in a polite, formal tone using standard grammar and honorifics where appropriate.',
   workplace: 'Use professional business language, industry terms, and a polite corporate tone.',
-  beginner: 'Speak very slowly, clearly, and use simple vocabulary suitable for a beginner language learner.',
-  children: 'Speak in an enthusiastic, warm, encouraging, and highly simplified tone suitable for children.',
+  beginner:
+    'Speak very slowly, clearly, and use simple vocabulary suitable for a beginner language learner.',
+  children:
+    'Speak in an enthusiastic, warm, encouraging, and highly simplified tone suitable for children.',
 };
 
 const METHOD_PROMPTS: Record<string, string> = {
   free_talk: 'Maintain a natural, friendly, free-flowing conversation on various everyday topics.',
-  consulting: 'Act as an empathetic advisor. Ask thoughtful questions, listen actively, and help the user think through their problems.',
-  interview: 'Act as a professional interviewer. Ask structured questions one by one about the user\'s background, skills, and experience.',
-  empathetic: 'Be exceptionally supportive, warm, and understanding. Focus on validating the user\'s feelings and thoughts.',
-  pressure: 'Act as a tough challenger. Ask challenging follow-up questions, probe the user\'s arguments, and put moderate conversational pressure on them.',
+  consulting:
+    'Act as an empathetic advisor. Ask thoughtful questions, listen actively, and help the user think through their problems.',
+  interview:
+    "Act as a professional interviewer. Ask structured questions one by one about the user's background, skills, and experience.",
+  empathetic:
+    "Be exceptionally supportive, warm, and understanding. Focus on validating the user's feelings and thoughts.",
+  pressure:
+    "Act as a tough challenger. Ask challenging follow-up questions, probe the user's arguments, and put moderate conversational pressure on them.",
 };
 
 Deno.serve(async (req: Request) => {
@@ -62,9 +68,11 @@ Deno.serve(async (req: Request) => {
     let accentPrompt = '';
     if (language_id === 'en') {
       if (accent === 'en-UK') {
-        accentPrompt = 'You must speak with a British English accent (en-UK), using British pronunciation, spelling, and vocabulary. ';
+        accentPrompt =
+          'You must speak with a British English accent (en-UK), using British pronunciation, spelling, and vocabulary. ';
       } else {
-        accentPrompt = 'You must speak with an American English accent (en-US), using American pronunciation, spelling, and vocabulary. ';
+        accentPrompt =
+          'You must speak with an American English accent (en-US), using American pronunciation, spelling, and vocabulary. ';
       }
     }
 
