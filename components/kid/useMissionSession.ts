@@ -41,7 +41,7 @@ const NUDGE_DISPLAY_MS = 4000;
 const REACTION_DISPLAY_MS = 1600;
 // Star 2 (phát âm): ngưỡng điểm clarity trung bình từ Gemini (/session-review).
 const PRONUNCIATION_STAR_THRESHOLD = 70;
-// Hết giờ chơi/ngày (Pha 4) mà AI không nói thêm gì nữa — vẫn kết thúc sau tối đa khoảng này
+// Hết giờ chơi phiên (Pha 4) mà AI không nói thêm gì nữa — vẫn kết thúc sau tối đa khoảng này
 // để tránh phiên treo vô hạn chờ "lượt nói hiện tại" không bao giờ tới.
 const TIME_UP_FALLBACK_MS = 20000;
 
@@ -138,7 +138,7 @@ export function useMissionSession(missionId: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, mission, steps]);
 
-  // Hết giờ chơi/ngày (Pha 4) trong khi đang live → không cắt ngay, chờ AI nói xong lượt hiện
+  // Hết giờ chơi phiên (Pha 4) trong khi đang live → không cắt ngay, chờ AI nói xong lượt hiện
   // tại (xem onTranscriptUpdate) rồi mới kết thúc. Fallback nếu AI không nói gì thêm.
   useEffect(() => {
     if (!dailyLimitReached || view !== 'live' || timeUpPendingRef.current) return;

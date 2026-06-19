@@ -122,7 +122,7 @@ export default function ProfileScreen() {
     setSavingKid(false);
   };
 
-  // Giới hạn phút/ngày cho Kid Mode (Pha 4 — Screen Time). Mặc định 20, bước nhảy 5.
+  // Giới hạn phút/phiên cho Kid Mode (Pha 4 — Screen Time). Mặc định 20, bước nhảy 5.
   const updateScreenTimeLimit = async (delta: number) => {
     if (!user) return;
     const next = Math.max(5, Math.min(120, screenTimeLimit + delta));
@@ -252,7 +252,7 @@ export default function ProfileScreen() {
                 color={colors.textMuted}
                 style={styles.settingIcon}
               />
-              <Text style={styles.settingLabel}>Giới hạn thời gian/ngày</Text>
+              <Text style={styles.settingLabel}>Giới hạn thời gian/phiên</Text>
               <View style={styles.stepperRow}>
                 <TouchableOpacity
                   style={styles.stepperBtn}

@@ -18,7 +18,7 @@ end $$;
 alter table profiles add column if not exists is_kid_mode               boolean not null default false;
 alter table profiles add column if not exists parent_pin                text;
 alter table profiles add column if not exists companion_id              text;
-alter table profiles add column if not exists screen_time_limit_minutes int not null default 20;
+alter table profiles add column if not exists screen_time_limit_minutes int not null default 20; -- giới hạn phút/phiên
 alter table profiles add column if not exists child_name                text;
 alter table profiles add column if not exists child_level               text default 'beginner';
 

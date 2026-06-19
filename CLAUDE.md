@@ -32,7 +32,7 @@ app/                          # Expo Router
                               #   missions = list nhiệm vụ, mission-live = phiên Guided Conversation (LiveClient + companion)
                               #   exploration = phiên Image Exploration Mission (LiveClient gửi ảnh multimodal, Pha 5)
                               #   collection = Album sticker + tủ trang phục (Reward System)
-                              #   day-summary = màn hết giờ chơi/ngày (Screen Time)
+                              #   day-summary = màn hết giờ chơi (Screen Time, giới hạn theo phiên)
                               #   parent-gate = nhập PIN phụ huynh (icon mờ, không nổi bật, ở góc home, Pha 6)
                               #   parent/dashboard = KPI + biểu đồ phiên/điểm phát âm, parent/sessions = list
                               #   phiên kid_guided/kid_exploration, parent/session/[conversationId] = transcript +
@@ -57,7 +57,7 @@ components/
               ScreenTimeBadge (bộ đếm góc màn hình + toast cảnh báo còn 2 phút, đặt ở (kid)/_layout.tsx),
               useMissionSession (state machine cho Guided Conversation: tải mission/steps/companion, mở LiveClient,
               theo dõi turn timeout/step advance/off-topic, gọi /session-review chấm phát âm, chấm sao + mở
-              sticker/costume, lưu conversation mode='kid_guided', kết thúc sau lượt nói hiện tại khi hết giờ chơi/ngày),
+              sticker/costume, lưu conversation mode='kid_guided', kết thúc sau lượt nói hiện tại khi hết giờ chơi),
               useExplorationSession (state machine cho Image Exploration Mission, Pha 5: chọn ảnh approved ngẫu nhiên
               từ exploration_images, resize/nén bằng expo-image-manipulator, mở LiveClient rồi gọi sendImageTurn() khi
               vào live, gọi /session-review rồi tự lưu vocab_to_learn/corrections vào saved_items — Kid Mode chưa có
@@ -89,7 +89,7 @@ supabase/
     tts/               # Sinh audio mẫu cho scenario_lines
     live-token/        # Tạo ephemeral token cho Gemini Live WebSocket
     session-review/    # Tóm tắt sau buổi Live (pronunciation/fluency/vocab)
-    image-moderation/  # Google Vision SafeSearch duyệt ảnh exploration_images (Pha 5)
+    image-moderation/  # Gemini (gemini-2.5-flash) duyệt nội dung ảnh exploration_images (Pha 5)
     _shared/cors.ts, auth.ts (verifyUser)
 
 scripts/
@@ -144,23 +144,34 @@ sticker trong `sticker_pool` (theo thứ tự, bỏ qua cái đã có); đạt t
 mở thêm 1 costume mới cho companion hiện tại. Streak không reset
 sticker/costume đã mở (bỏ lỡ ngày không bị thu hồi).
 
-**Screen Time (Pha 4):** `daily_kid_usage.seconds_used` được `ScreenTimeProvider`
-cộng dồn mỗi giây khi app ở foreground trong nhánh `(kid)`, flush (upsert) định
-kỳ mỗi 10 giây + khi app vào background/unmount. Giới hạn phút/ngày đọc từ
-`profiles.screen_time_limit_minutes` (mặc định 20, chỉnh ở `(app)/profile.tsx`
-khi Kid Mode đang bật, bước nhảy 5 phút, 5-120). Còn ≤2 phút → `ScreenTimeBadge`
-hiện toast cảnh báo một lần. Hết giờ (`limitReached`): `ScreenTimeGate` ở
-`(kid)/_layout.tsx` chặn mọi màn (kid) khác (trừ `mission-live`/`day-summary`)
-và đẩy về `day-summary`; nếu đang ở giữa phiên Guided Conversation,
-`useMissionSession` KHÔNG cắt ngay — đợi AI nói xong lượt hiện tại (phát hiện
-qua `onTranscriptUpdate` khi có lượt `assistant` mới) rồi mới `endSession()`
-(có fallback timeout nếu AI không nói thêm gì), giữ đúng yêu cầu "không cắt
-giữa câu".
+**Screen Time (Pha 4):** Giới hạn áp dụng **theo từng phiên** (mỗi lần vào nhánh
+`(kid)`, đếm lại từ 0), KHÔNG cộng dồn nhiều phiên trong ngày — `ScreenTimeProvider`
+chỉ đếm `sessionSeconds` từ lúc provider mount để tính `remainingSeconds`/
+`limitReached`, không cộng số đã dùng từ các phiên trước đó trong ngày vào giới
+hạn này. `daily_kid_usage.seconds_used` vẫn được cộng dồn mỗi giây khi app ở
+foreground trong nhánh `(kid)` và flush (upsert) định kỳ mỗi 10 giây + khi app
+vào background/unmount, nhưng cột này CHỈ để lưu tổng thời lượng/ngày cho mục
+đích thống kê (sau này có thể hiện ở Parent Dashboard), KHÔNG dùng để gate giới
+hạn nữa. Giới hạn phút/phiên đọc từ `profiles.screen_time_limit_minutes` (mặc
+định 20, chỉnh ở `(app)/profile.tsx` khi Kid Mode đang bật, bước nhảy 5 phút,
+5-120). Còn ≤2 phút → `ScreenTimeBadge` hiện toast cảnh báo một lần. Hết giờ
+(`limitReached`): `ScreenTimeGate` ở `(kid)/_layout.tsx` chặn mọi màn (kid)
+khác (trừ `mission-live`/`day-summary`) và đẩy về `day-summary`; nếu đang ở
+giữa phiên Guided Conversation, `useMissionSession` KHÔNG cắt ngay — đợi AI
+nói xong lượt hiện tại (phát hiện qua `onTranscriptUpdate` khi có lượt
+`assistant` mới) rồi mới `endSession()` (có fallback timeout nếu AI không nói
+thêm gì), giữ đúng yêu cầu "không cắt giữa câu".
 
 **Image Exploration Mission (Pha 5):** `exploration_images` (`storage_path` trong
 bucket public `exploration-images`, `is_approved`, `safesearch_result` jsonb) —
 chỉ ảnh `is_approved = true` mới đọc được (RLS), duyệt bởi edge function
-`image-moderation` (Google Vision SafeSearch, tái dùng `GOOGLE_GENAI_API_KEY`).
+`image-moderation` — gọi Gemini (`gemini-2.5-flash`, tái dùng
+`GOOGLE_GENAI_API_KEY`) hỏi ảnh có an toàn cho trẻ em không, trả JSON
+`{is_safe, reason}` lưu vào `safesearch_result` (tên cột giữ nguyên từ Pha 5
+dù không còn dùng Cloud Vision SafeSearch nữa — đổi từ Cloud Vision sang
+Gemini vì Gemini đã đọc/phân tích được ảnh, tránh phải enable + xin quyền
+riêng cho Cloud Vision API trên GCP, từng bị lỗi `API_KEY_SERVICE_BLOCKED`
+do API key giới hạn theo service).
 `conversation_mode` có thêm value `'kid_exploration'`. `useExplorationSession`
 chọn ngẫu nhiên 1 ảnh đã duyệt, resize ≤1024px + nén JPEG (`expo-image-manipulator`)
 
@@ -253,7 +264,7 @@ Roadmap đầy đủ + spike multimodal: xem `plan.md`.
 - **`/chat` function** lọc corrections: chỉ giữ correction nếu cụm từ lỗi thực
   sự xuất hiện trong message gần nhất của user (tránh Claude tự bịa lỗi không có
   thật).
-- **Hết giờ chơi/ngày (Kid Mode) không cắt phiên giữa câu** — `useMissionSession`
+- **Hết giờ chơi (Kid Mode, giới hạn theo phiên) không cắt phiên giữa câu** — `useMissionSession`
   chỉ đặt cờ chờ (`timeUpPendingRef`) khi `ScreenTimeProvider` báo
   `limitReached`, và chỉ gọi `endSession()` ở điểm AI vừa hoàn thành một lượt
   nói mới (hoặc sau timeout fallback `TIME_UP_FALLBACK_MS` nếu AI im lặng).
@@ -265,9 +276,11 @@ Roadmap đầy đủ + spike multimodal: xem `plan.md`.
   (`pendingImageTurn`) và flush khi `_handleMessage` nhận `setupComplete`. Hành
   vi này đã được verify bằng spike `scripts/spike-live-image.mjs` trước khi
   implement — không tự ý đổi thứ tự gửi ảnh/setup.
-- **`image-moderation` function tái dùng `GOOGLE_GENAI_API_KEY`** cho Google
-  Cloud Vision SafeSearch — không cần thêm secret riêng, miễn Cloud Vision API
-  đã enable trên cùng GCP project với Gemini.
+- **`image-moderation` function dùng Gemini (`gemini-2.5-flash`) để duyệt ảnh,
+  KHÔNG dùng Cloud Vision SafeSearch** — tái dùng thẳng `GOOGLE_GENAI_API_KEY`
+  đang dùng cho chat/STT/Live, không cần secret hay API riêng. Nếu JSON trả về
+  không parse được, mặc định `is_safe: false` (an toàn là chặn duyệt, không
+  tự ý approve khi không chắc).
 - **PIN phụ huynh không bao giờ lưu plaintext** — `profiles.parent_pin` chỉ
   lưu hash SHA-256 (`lib/pin.ts#hashPin`); `(kid)/parent-gate.tsx` hash input
   rồi so chuỗi, không có verify phía Edge Function. Cổng vào PIN gate

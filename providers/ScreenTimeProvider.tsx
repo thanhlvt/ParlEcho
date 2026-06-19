@@ -31,15 +31,20 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
-// Đếm thời lượng dùng Kid Mode/ngày, cộng dồn vào `daily_kid_usage` (Pha 4 — Screen Time).
+// Đếm thời lượng dùng Kid Mode TRONG 1 PHIÊN (từ lúc mount provider này, tức lúc vào
+// nhánh (kid), tới lúc rời/đóng app) — giới hạn áp theo phiên, KHÔNG cộng dồn nhiều
+// phiên trong ngày (vào lại Kid Mode là được tính lại từ đầu). Vẫn cộng dồn ghi vào
+// `daily_kid_usage` để có số liệu tổng/ngày cho phụ huynh tham khảo, nhưng cột đó
+// KHÔNG được dùng để tính limitReached/remainingSeconds.
 // Bao toàn bộ nhánh (kid) ở _layout.tsx nên chạy nền xuyên suốt mọi màn hình con.
 export function ScreenTimeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { profile } = useProfile();
-  const [usedSeconds, setUsedSeconds] = useState(0);
+  const [sessionSeconds, setSessionSeconds] = useState(0);
   const [loaded, setLoaded] = useState(false);
 
-  // baseSeconds: đã lưu trong DB lúc tải; sessionSeconds: tích thêm từ lúc mount, chưa flush.
+  // baseSeconds: tổng đã lưu trong DB hôm nay lúc tải — chỉ dùng để ghi cộng dồn cho
+  // thống kê, KHÔNG dùng để tính giới hạn của phiên hiện tại.
   const baseSecondsRef = useRef(0);
   const sessionSecondsRef = useRef(0);
   const lastFlushedRef = useRef(0);
@@ -61,7 +66,7 @@ export function ScreenTimeProvider({ children }: { children: React.ReactNode }) 
         baseSecondsRef.current = data?.seconds_used ?? 0;
         sessionSecondsRef.current = 0;
         lastFlushedRef.current = 0;
-        setUsedSeconds(baseSecondsRef.current);
+        setSessionSeconds(0);
         setLoaded(true);
       });
     return () => {
@@ -88,7 +93,7 @@ export function ScreenTimeProvider({ children }: { children: React.ReactNode }) 
     const tick = setInterval(() => {
       if (!appActive) return;
       sessionSecondsRef.current += 1;
-      setUsedSeconds(baseSecondsRef.current + sessionSecondsRef.current);
+      setSessionSeconds(sessionSecondsRef.current);
       if (sessionSecondsRef.current - lastFlushedRef.current >= FLUSH_INTERVAL_SEC) {
         flush();
       }
@@ -106,13 +111,19 @@ export function ScreenTimeProvider({ children }: { children: React.ReactNode }) 
     };
   }, [loaded, flush]);
 
-  const remainingSeconds = Math.max(0, limitSeconds - usedSeconds);
+  const remainingSeconds = Math.max(0, limitSeconds - sessionSeconds);
   const limitReached = loaded && remainingSeconds <= 0;
   const showWarning = loaded && remainingSeconds > 0 && remainingSeconds <= WARNING_THRESHOLD_SEC;
 
   return (
     <ScreenTimeContext.Provider
-      value={{ usedSeconds, limitSeconds, remainingSeconds, limitReached, showWarning }}
+      value={{
+        usedSeconds: sessionSeconds,
+        limitSeconds,
+        remainingSeconds,
+        limitReached,
+        showWarning,
+      }}
     >
       {children}
     </ScreenTimeContext.Provider>

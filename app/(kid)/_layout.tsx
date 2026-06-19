@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { ScreenTimeBadge } from '../../components/kid/ScreenTimeBadge';
 import { ScreenTimeProvider, useScreenTime } from '../../providers/ScreenTimeProvider';
 
-// Hết giờ chơi/ngày → chặn mọi màn (kid) khác, đẩy về day-summary. Bỏ qua mission-live/
+// Hết giờ chơi (giới hạn theo phiên) → chặn mọi màn (kid) khác, đẩy về day-summary. Bỏ qua mission-live/
 // exploration để useMissionSession/useExplorationSession tự kết thúc phiên sau lượt nói
 // hiện tại (không cắt giữa câu). Bỏ qua parent-gate/parent để phụ huynh không bị đẩy ra
 // giữa lúc đang xem Parent Dashboard.

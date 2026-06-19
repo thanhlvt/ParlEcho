@@ -27,9 +27,9 @@ export default function DaySummaryScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.center}>
         <Companion companionId={profile?.companion_id} expression="cheering" size={150} />
-        <Text style={styles.title}>Hết giờ chơi hôm nay rồi! 🌙</Text>
+        <Text style={styles.title}>Hết giờ chơi rồi! 🌙</Text>
         <Text style={styles.note}>
-          Hôm nay con đã học được {minutes} phút. Hẹn gặp lại ngày mai nhé!
+          Phiên này con đã học được {minutes} phút. Nghỉ một chút rồi vào lại chơi tiếp nhé!
         </Text>
       </View>
 

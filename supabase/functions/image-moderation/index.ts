@@ -1,24 +1,56 @@
 import { corsHeaders, handleCors } from '../_shared/cors.ts';
 import { verifyUser } from '../_shared/auth.ts';
 
-// Ngưỡng SafeSearch chấp nhận được — chỉ duyệt ảnh khi mọi mục đều rất khó xảy ra.
-// Thang đo Google Vision: UNKNOWN, VERY_UNLIKELY, UNLIKELY, POSSIBLE, LIKELY, VERY_LIKELY.
-const SAFE_LEVELS = new Set(['VERY_UNLIKELY', 'UNLIKELY']);
-
-interface SafeSearchAnnotation {
-  adult?: string;
-  violence?: string;
-  racy?: string;
-  medical?: string;
-  spoof?: string;
+interface ModerationResult {
+  is_safe: boolean;
+  reason: string;
 }
 
-function isApproved(safeSearch: SafeSearchAnnotation): boolean {
-  return (
-    SAFE_LEVELS.has(safeSearch.adult ?? 'UNKNOWN') &&
-    SAFE_LEVELS.has(safeSearch.violence ?? 'UNKNOWN') &&
-    SAFE_LEVELS.has(safeSearch.racy ?? 'UNKNOWN')
+// Dùng Gemini (đã có sẵn key cho chat/STT/Live, tránh phải enable + xin quyền
+// riêng cho Cloud Vision API trên GCP) để đánh giá ảnh có phù hợp với trẻ em
+// không, thay vì gọi Cloud Vision SafeSearch.
+async function moderateWithGemini(
+  imageBase64: string,
+  geminiKey: string,
+): Promise<ModerationResult> {
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { inlineData: { mimeType: 'image/jpeg', data: imageBase64 } },
+              {
+                text:
+                  `Đây là ảnh phụ huynh tải lên để dùng cho một nhiệm vụ học tiếng Anh/Nhật ` +
+                  `của trẻ em (Image Exploration Mission). Hãy đánh giá ảnh có an toàn, phù hợp ` +
+                  `để hiển thị cho trẻ em không (không khoả thân, không bạo lực/máu me, không ` +
+                  `nội dung khiêu dâm/gợi dục, không hình ảnh đáng sợ/gây hoảng loạn cho trẻ nhỏ).\n` +
+                  `Trả về DUY NHẤT JSON hợp lệ, không markdown, không giải thích thêm:\n` +
+                  `{"is_safe": true, "reason": "lý do ngắn gọn bằng tiếng Việt"}`,
+              },
+            ],
+          },
+        ],
+      }),
+    },
   );
+
+  if (!resp.ok) throw new Error(`Gemini moderation error: ${await resp.text()}`);
+  const data = await resp.json();
+  const raw: string = (data.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim();
+
+  try {
+    const cleaned = raw.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '');
+    const parsed = JSON.parse(cleaned);
+    return { is_safe: parsed.is_safe === true, reason: String(parsed.reason ?? '') };
+  } catch {
+    // Không parse được JSON → an toàn là chặn duyệt, không tự ý approve.
+    return { is_safe: false, reason: 'Không đánh giá được nội dung ảnh.' };
+  }
 }
 
 Deno.serve(async (req: Request) => {
@@ -51,44 +83,21 @@ Deno.serve(async (req: Request) => {
     for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
     const imageBase64 = btoa(binary);
 
-    // Reuse GOOGLE_GENAI_API_KEY — Cloud Vision API key trên cùng GCP project.
-    const visionKey = Deno.env.get('GOOGLE_GENAI_API_KEY');
-    if (!visionKey) throw new Error('GOOGLE_GENAI_API_KEY not configured');
+    const geminiKey = Deno.env.get('GOOGLE_GENAI_API_KEY');
+    if (!geminiKey) throw new Error('GOOGLE_GENAI_API_KEY not configured');
 
-    const visionResp = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${visionKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requests: [
-            {
-              image: { content: imageBase64 },
-              features: [{ type: 'SAFE_SEARCH_DETECTION' }],
-            },
-          ],
-        }),
-      },
-    );
-
-    if (!visionResp.ok) throw new Error(`Vision API error: ${await visionResp.text()}`);
-    const visionData = await visionResp.json();
-    const safeSearch: SafeSearchAnnotation = visionData.responses?.[0]?.safeSearchAnnotation ?? {};
-
-    const approved = isApproved(safeSearch);
+    const result = await moderateWithGemini(imageBase64, geminiKey);
 
     await supabase
       .from('exploration_images')
-      .update({ is_approved: approved, safesearch_result: safeSearch })
+      .update({ is_approved: result.is_safe, safesearch_result: result })
       .eq('id', exploration_image_id);
 
-    console.log(`[image-moderation] image=${exploration_image_id} approved=${approved}`);
+    console.log(`[image-moderation] image=${exploration_image_id} approved=${result.is_safe}`);
 
     return Response.json(
-      { is_approved: approved, safesearch_result: safeSearch },
-      {
-        headers: corsHeaders,
-      },
+      { is_approved: result.is_safe, safesearch_result: result },
+      { headers: corsHeaders },
     );
   } catch (err) {
     console.error('[image-moderation]', err);

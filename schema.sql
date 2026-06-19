@@ -156,7 +156,7 @@ create table profiles (
   is_kid_mode               boolean not null default false,
   parent_pin                text,                       -- hash PIN 4 số (KHÔNG lưu plaintext)
   companion_id              text,                       -- nhân vật đồng hành đã chọn
-  screen_time_limit_minutes int not null default 20,    -- giới hạn phút/ngày
+  screen_time_limit_minutes int not null default 20,    -- giới hạn phút/phiên
   child_name                text,
   child_level               text default 'beginner',    -- 'beginner' | 'intermediate'
   created_at          timestamptz not null default now(),

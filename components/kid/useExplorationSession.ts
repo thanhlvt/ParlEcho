@@ -141,7 +141,7 @@ export function useExplorationSession() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
-  // Hết giờ chơi/ngày (Pha 4): không cắt ngay, chờ AI nói xong lượt hiện tại.
+  // Hết giờ chơi phiên (Pha 4): không cắt ngay, chờ AI nói xong lượt hiện tại.
   useEffect(() => {
     if (!dailyLimitReached || view !== 'live' || timeUpPendingRef.current) return;
     timeUpPendingRef.current = true;
