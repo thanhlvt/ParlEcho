@@ -296,15 +296,19 @@ export function useMissionSession(missionId: string) {
         setShowHint(false);
         setCurrentStepIndex((prev) => {
           const next = prev + 1;
+          setReaction('cheering', REACTION_DISPLAY_MS);
           if (next >= steps.length) {
+            // Bước cuối — đợi AI nói xong lời chúc mừng (onAiAudioDone) rồi mới kết thúc
+            // phiên, tránh cắt audio giữa câu. Xem onAiAudioDone bên dưới.
             missionCompletedRef.current = true;
-            setReaction('cheering', REACTION_DISPLAY_MS);
-            setTimeout(() => endSession(), REACTION_DISPLAY_MS);
-          } else {
-            setReaction('cheering', REACTION_DISPLAY_MS);
           }
           return next;
         });
+      },
+      // AI vừa phát hết audio buffer của lượt cuối (lời chúc mừng) — nếu mission đã hoàn
+      // thành thì giờ mới an toàn để kết thúc phiên.
+      onAiAudioDone: () => {
+        if (missionCompletedRef.current) endSession();
       },
       onOffTopic: (_streak, sortOrder) => {
         offTopicTurnsRef.current = [...offTopicTurnsRef.current, sortOrder];

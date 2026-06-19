@@ -110,6 +110,11 @@ export interface LiveClientCallbacks {
   /** Kid Mode (guided): AI báo đã hoàn thành bước hiện tại, sang bước kế */
   onStepAdvance?: () => void;
   /**
+   * Audio buffer của lượt AI vừa xong đã phát hết (cùng mốc dùng để mở lại mic) — dùng để
+   * trì hoãn các hành động như kết thúc phiên cho tới khi AI nói xong, tránh cắt ngang giữa câu.
+   */
+  onAiAudioDone?: () => void;
+  /**
    * Kid Mode (guided): AI báo trẻ đang lạc đề; streak = số lượt liên tiếp lạc đề,
    * sortOrder = sort_order của lượt AI này (dùng để Parent Dashboard đánh dấu, Pha 6)
    */
@@ -494,6 +499,7 @@ export class LiveClient {
         this.aiSpeaking = false;
         // Mic vừa được mở lại — bắt đầu đếm lượt của trẻ (Kid Mode guided)
         this._startTurnTimer();
+        this.cb.onAiAudioDone?.();
       }, remainingMs);
       this.cb.onTranscriptUpdate([...this.turns]);
     }

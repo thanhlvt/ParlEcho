@@ -16,7 +16,8 @@
       "Bash(npm run *)",
       "Bash(grep -n \"sticker_pool = pool where id = mis.id\\\\|end \\\\$\\\\$;\" schema.sql)",
       "Bash(echo \"EXIT:$?\")",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx|js\\)$\")"
     ]
   }
 }
