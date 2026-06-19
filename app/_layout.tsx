@@ -25,19 +25,22 @@ function RouteGuard() {
       return;
     }
 
-    // Đã đăng nhập — chờ profile để biết Kid Mode trước khi điều hướng theo mode.
+    // Đã đăng nhập — chờ profile để biết Kid Mode trước khi điều hướng.
     if (profileLoading) return;
 
     const inKidGroup = root === '(kid)';
 
-    if (isKidMode) {
-      // Trẻ chỉ được ở trong (kid); chặn (app) và (auth).
-      // Dùng /(kid)/home (không phải index) để tránh đụng route '/' với (app).
-      if (!inKidGroup) router.replace('/(kid)/home' as Href);
-    } else {
-      // Người lớn không được ở (kid); rời (auth) sau khi đăng nhập.
-      if (inKidGroup || inAuthGroup) router.replace('/(app)');
+    // Rời màn đăng nhập sau khi đăng nhập thành công — vào (kid) nếu Kid Mode
+    // đang bật (giao máy cho trẻ), ngược lại vào (app).
+    if (inAuthGroup) {
+      router.replace((isKidMode ? '/(kid)/home' : '/(app)') as Href);
+      return;
     }
+
+    // Không tự động đẩy người dùng vào (kid) chỉ vì is_kid_mode=true — phụ huynh
+    // tự điều hướng vào Kid Mode khi sẵn sàng giao máy (xem nút ở profile.tsx),
+    // tránh bị "nhốt" ngoài Profile sau khi vừa bật Kid Mode/đặt PIN.
+    if (!isKidMode && inKidGroup) router.replace('/(app)');
   }, [session, authLoading, profileLoading, isKidMode, segments, router]);
 
   return <Slot />;

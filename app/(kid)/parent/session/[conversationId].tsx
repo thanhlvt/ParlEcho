@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Href, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -24,6 +24,7 @@ import { useTheme } from '../../../../providers/ThemeProvider';
 export default function ParentSessionReviewScreen() {
   const { colors } = useTheme();
   const styles = getStyles(colors);
+  const router = useRouter();
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
 
   const [loading, setLoading] = useState(true);
@@ -104,10 +105,23 @@ export default function ParentSessionReviewScreen() {
     }
   }
 
+  const header = (
+    <View style={styles.header}>
+      <TouchableOpacity
+        onPress={() => router.replace('/(kid)/parent/sessions' as Href)}
+        hitSlop={10}
+      >
+        <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle}>Chi tiết phiên</Text>
+      <View style={{ width: 24 }} />
+    </View>
+  );
+
   if (loading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <Stack.Screen options={{ title: 'Chi tiết phiên' }} />
+        {header}
         <ActivityIndicator style={{ flex: 1 }} color={colors.primary} />
       </SafeAreaView>
     );
@@ -117,8 +131,8 @@ export default function ParentSessionReviewScreen() {
   const score = conv?.summary?.avg_pronunciation;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
-      <Stack.Screen options={{ title: 'Chi tiết phiên' }} />
+    <SafeAreaView style={styles.safe}>
+      {header}
       <ScrollView contentContainerStyle={styles.content}>
         {score != null ? (
           <View style={styles.scoreCard}>
@@ -167,6 +181,16 @@ export default function ParentSessionReviewScreen() {
 const getStyles = (colors: any) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.background },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    headerTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary },
     content: { padding: 16, gap: 14 },
     scoreCard: {
       backgroundColor: colors.surface,

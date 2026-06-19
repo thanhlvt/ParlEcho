@@ -13,6 +13,12 @@ export default function ExplorationScreen() {
   if (session.view === 'loading' || session.view === 'connecting' || session.view === 'saving') {
     return (
       <SafeAreaView style={styles.safe}>
+        {session.view !== 'saving' ? (
+          <TouchableOpacity style={styles.backBtn} onPress={session.goHome}>
+            <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
+            <Text style={styles.backText}>Về nhà</Text>
+          </TouchableOpacity>
+        ) : null}
         <View style={styles.centerFull}>
           <Companion companionId={session.companion?.id} expression="thinking" size={120} />
           <Text style={styles.statusText}>
@@ -105,6 +111,13 @@ export default function ExplorationScreen() {
 const getStyles = (colors: any) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.background },
+    backBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingTop: 8,
+    },
+    backText: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
     centerFull: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 },
     statusText: { fontSize: 16, color: colors.textSecondary, textAlign: 'center' },
     finishedTitle: { fontSize: 26, fontWeight: '800', color: colors.primary },

@@ -296,3 +296,28 @@ create policy "own priority_vocab" on priority_vocab
 
 -- 22. GRANT --------------------------------------------------------------
 grant all on table priority_vocab to authenticated, service_role;
+
+-- 23. exploration-images: phụ huynh upload ảnh từ Parent Dashboard ------
+-- Bucket chỉ có policy public read (bước 18) — thiếu policy insert nên
+-- app/(kid)/parent/images.tsx upload luôn lỗi RLS. Chỉ cho phép ghi vào
+-- đúng path "{auth.uid()}/..." khớp storagePath app đang dùng.
+drop policy if exists "exploration-images: own upload" on storage.objects;
+create policy "exploration-images: own upload"
+  on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'exploration-images'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- 24. exploration-images: phụ huynh xoá ảnh mình đã tải lên (parent/images.tsx) ----
+drop policy if exists "exploration-images: own delete" on storage.objects;
+create policy "exploration-images: own delete"
+  on storage.objects for delete to authenticated
+  using (
+    bucket_id = 'exploration-images'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "delete own exploration_images" on exploration_images;
+create policy "delete own exploration_images" on exploration_images
+  for delete to authenticated using (uploader = auth.uid());

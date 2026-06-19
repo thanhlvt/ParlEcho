@@ -52,6 +52,12 @@
           "microphonePermission": "ParlEcho cần microphone để ghi âm giọng nói luyện phát âm."
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "ParlEcho cần camera để phụ huynh chụp ảnh cho nhiệm vụ Khám phá ảnh."
+        }
+      ],
       "expo-asset",
       "expo-build-properties",
       "./plugins/withAndroidCmakeVersion"

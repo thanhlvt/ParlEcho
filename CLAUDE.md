@@ -14,8 +14,9 @@ conversation, pronunciation scoring). React Native + Expo, backend Supabase.
 - **Audio:** `expo-audio`, `expo-speech`, `@siteed/expo-audio-studio` (mic
   streaming + AEC), `react-native-audio-api` (buffer queue cho Live)
 - **Image:** `expo-image-manipulator` (resize + nén ảnh trước khi gửi multimodal
-  cho Image Exploration Mission, Pha 5), `expo-image-picker` (chọn ảnh từ thư
-  viện cho Parent Dashboard upload, Pha 6)
+  cho Image Exploration Mission, Pha 5), `expo-image-picker` (chụp ảnh camera
+  hoặc chọn từ thư viện cho Parent Dashboard upload, Pha 6 — cần plugin
+  `expo-image-picker` trong `app.json` để khai báo `cameraPermission`)
 - **Security:** `expo-crypto` (hash SHA-256 mã PIN phụ huynh, Pha 6)
 - **Animation:** react-native-reanimated ~4
 
@@ -112,8 +113,15 @@ mình (xem `grants.sql`).
 `child_level`. `scenarios.audience` (`'adult'|'child'`) phân loại nội dung.
 `companions` (static, seed bear/cat/robot) lưu `name` + `personality` (dùng cho
 system prompt Gemini) + `accent_color`. `daily_kid_usage` đếm screen time/ngày.
-Bật/tắt Kid Mode ở profile (adult) → `RouteGuard` cô lập trẻ trong nhánh
-`(kid)`.
+Bật Kid Mode ở `(app)/profile.tsx` **bắt đặt `parent_pin` trước** (mở PIN modal
+ngay khi gạt switch nếu chưa có PIN) — KHÔNG tự động điều hướng vào `(kid)`
+(`RouteGuard` ở `app/_layout.tsx` chỉ chặn chiều ngược lại: `!isKidMode` mà
+đang ở `(kid)` thì đẩy về `(app)`), để phụ huynh còn ở lại `(app)/profile.tsx`
+thiết lập tiếp (giới hạn giờ, upload ảnh qua Parent Dashboard...) mà không bị
+"nhốt" trong `(kid)`. Phụ huynh tự bấm "Vào Kid Mode" (settingRow, chỉ hiện khi
+đã có PIN) để chuyển sang `(kid)/home` khi sẵn sàng giao máy. `ThemeProvider`
+chỉ áp `kidColors` khi `isKidMode && đang ở route group (kid)` (dùng
+`useSegments()`), không áp toàn app chỉ vì `is_kid_mode=true` trong DB.
 
 **Guided Conversation (Pha 2):** `missions` (static, seed "Gọi món tại quán
 kem") + `mission_steps` (`step_order`, `target_sentence`, `intent`) định nghĩa
@@ -178,9 +186,17 @@ highlight transcript ở `parent/session/[conversationId].tsx`. `priority_vocab`
 tiên") mọi mission có `title`/`topic` chứa một `content` trong đó.
 `exploration_images` có thêm policy insert (`uploader = auth.uid()`) và SELECT
 mở rộng (`is_approved = true or uploader = auth.uid()`) để `parent/images.tsx`
-upload ảnh mới (qua `expo-image-picker` + bucket `exploration-images`) và theo
-dõi trạng thái duyệt của ảnh mình tải lên, gọi lại edge function
-`image-moderation` (Pha 5) ngay sau insert.
+upload ảnh mới (qua `expo-image-picker` — chụp ảnh camera hoặc chọn từ album +
+bucket `exploration-images`) và theo dõi trạng thái duyệt của ảnh mình tải
+lên, gọi lại edge function `image-moderation` (Pha 5) ngay sau insert.
+`storage.objects` của bucket `exploration-images` cần thêm policy insert riêng
+(`exploration-images: own upload`, scope theo path `{auth.uid()}/...`) — chỉ
+tạo policy ở bảng `exploration_images` (bước 20) KHÔNG đủ để upload file vào
+Storage thành công, đây là 2 lớp RLS độc lập (bảng vs `storage.objects`).
+Tương tự, xoá ảnh (`parent/images.tsx`) cần cả 2 policy delete: bước 24 thêm
+policy delete cho bảng `exploration_images` (owner-only) VÀ cho
+`storage.objects` (scope cùng path) — thiếu 1 trong 2 sẽ xoá được record DB
+nhưng để rác file trong Storage, hoặc xoá được file nhưng lỗi xoá record.
 
 Roadmap đầy đủ + spike multimodal: xem `plan.md`.
 
@@ -256,7 +272,15 @@ Roadmap đầy đủ + spike multimodal: xem `plan.md`.
   lưu hash SHA-256 (`lib/pin.ts#hashPin`); `(kid)/parent-gate.tsx` hash input
   rồi so chuỗi, không có verify phía Edge Function. Cổng vào PIN gate
   (`(kid)/home.tsx`) là icon mờ, không nhãn, theo đúng yêu cầu "không hiện
-  trong UI Kid" — không tự ý làm nó nổi bật hơn.
+  trong UI Kid" — không tự ý làm nó nổi bật hơn. Icon này đặt `top: insets.top
+  + 8` (qua `useSafeAreaInsets()`), không hardcode `top: 8`, để không bị
+  status bar/notch che (đã từng bị che trên thiết bị có insets lớn).
+- **Policy RLS cho Supabase Storage là độc lập với policy RLS của bảng** —
+  thêm policy insert ở bảng `exploration_images` không tự động cho phép
+  upload file vào bucket `exploration-images`; phải thêm policy riêng trên
+  `storage.objects` (xem bước 23, `kid_mode.sql`) scope theo
+  `(storage.foldername(name))[1] = auth.uid()::text`. Thiếu policy này khiến
+  `parent/images.tsx` luôn báo lỗi "Không thể tải ảnh lên." dù code app đúng.
 - **TODO (Pha 6, hoãn):** Parent Dashboard chưa có push/email notification
   (vd. báo phụ huynh khi có ảnh mới cần duyệt, khi đạt sao, khi gần hết giờ
   chơi) — cần chọn provider (Expo Push/FCM hoặc email service) và bảng lưu

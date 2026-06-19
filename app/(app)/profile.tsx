@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Href, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   StyleSheet,
@@ -46,6 +46,7 @@ export default function ProfileScreen() {
   const [pinInput, setPinInput] = useState('');
   const [pinConfirmInput, setPinConfirmInput] = useState('');
   const [savingPin, setSavingPin] = useState(false);
+  const [pendingKidModeEnable, setPendingKidModeEnable] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -93,9 +94,20 @@ export default function ProfileScreen() {
     );
   };
 
-  // Bật/tắt Kid Mode. Khi bật, RouteGuard sẽ tự chuyển sang nhánh (kid).
+  // Bật/tắt Kid Mode. Khi bật, RouteGuard sẽ tự chuyển sang nhánh (kid) ngay —
+  // phải có parent_pin trước, nếu chưa thì bắt đặt PIN trước khi bật, tránh
+  // bị "nhốt" trong Kid Mode không vào lại được Parent Dashboard.
   const toggleKidMode = async (value: boolean) => {
     if (!user) return;
+    if (value && !profile?.parent_pin) {
+      setPendingKidModeEnable(true);
+      Alert.alert(
+        'Cần đặt mã PIN',
+        'Hãy đặt mã PIN phụ huynh trước khi bật Chế độ trẻ em, để bạn có thể vào lại Parent Dashboard sau khi bật.',
+      );
+      openPinModal();
+      return;
+    }
     setSavingKid(true);
     const { error } = await supabase
       .from('profiles')
@@ -138,14 +150,19 @@ export default function ProfileScreen() {
     setSavingPin(true);
     try {
       const hashed = await hashPin(pinInput);
-      const { error } = await supabase
-        .from('profiles')
-        .update({ parent_pin: hashed })
-        .eq('id', user.id);
+      const updates: Partial<Profile> = { parent_pin: hashed };
+      if (pendingKidModeEnable) updates.is_kid_mode = true;
+      const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
       if (error) throw error;
-      setProfile((p) => (p ? { ...p, parent_pin: hashed } : p));
+      setProfile((p) => (p ? { ...p, ...updates } : p));
       setPinModalVisible(false);
-      Alert.alert('Đã lưu', 'Mã PIN phụ huynh đã được cập nhật.');
+      setPendingKidModeEnable(false);
+      if (updates.is_kid_mode) {
+        await refreshProfile();
+        Alert.alert('Đã lưu', 'Mã PIN đã đặt và Chế độ trẻ em đã được bật.');
+      } else {
+        Alert.alert('Đã lưu', 'Mã PIN phụ huynh đã được cập nhật.');
+      }
     } catch (err) {
       console.error(err);
       Alert.alert('Lỗi', 'Không thể lưu mã PIN.');
@@ -267,6 +284,23 @@ export default function ProfileScreen() {
               <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
             </TouchableOpacity>
           ) : null}
+
+          {profile?.is_kid_mode && profile?.parent_pin ? (
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={() => router.replace('/(kid)/home' as Href)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="play-outline"
+                size={20}
+                color={colors.textMuted}
+                style={styles.settingIcon}
+              />
+              <Text style={styles.settingLabel}>Vào Kid Mode</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         {/* Theme Settings */}
@@ -328,7 +362,10 @@ export default function ProfileScreen() {
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.modalCancelBtn}
-                onPress={() => setPinModalVisible(false)}
+                onPress={() => {
+                  setPinModalVisible(false);
+                  setPendingKidModeEnable(false);
+                }}
               >
                 <Text style={styles.modalCancelText}>Huỷ</Text>
               </TouchableOpacity>

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useFocusEffect } from 'expo-router';
+import { Href, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +12,7 @@ import { useTheme } from '../../../providers/ThemeProvider';
 export default function ParentVocabScreen() {
   const { colors } = useTheme();
   const styles = getStyles(colors);
+  const router = useRouter();
   const { user } = useAuth();
   const { profile } = useProfile();
   const [items, setItems] = useState<PriorityVocab[]>([]);
@@ -54,7 +55,16 @@ export default function ParentVocabScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <Stack.Screen options={{ title: 'Từ vựng ưu tiên' }} />
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.replace('/(kid)/parent/dashboard' as Href)}
+          hitSlop={10}
+        >
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Từ vựng ưu tiên</Text>
+        <View style={{ width: 24 }} />
+      </View>
       <Text style={styles.hint}>
         Nhiệm vụ liên quan đến từ/câu này sẽ được đẩy lên đầu danh sách nhiệm vụ của trẻ.
       </Text>
@@ -93,6 +103,16 @@ export default function ParentVocabScreen() {
 const getStyles = (colors: any) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.background },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    headerTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary },
     hint: { fontSize: 13, color: colors.textSecondary, padding: 16, paddingBottom: 0 },
     inputRow: { flexDirection: 'row', gap: 10, padding: 16 },
     input: {

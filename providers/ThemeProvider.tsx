@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
+import { useSegments } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { lightColors, darkColors, kidColors } from '../constants/Colors';
 import { useProfile } from './ProfileProvider';
@@ -30,6 +31,7 @@ export function useTheme() {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useColorScheme();
   const { isKidMode } = useProfile();
+  const segments = useSegments();
   const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
 
   // Load saved theme mode from AsyncStorage on mount
@@ -62,10 +64,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Kid Mode dùng palette tươi sáng cố định, bỏ qua light/dark.
+  // Kid Mode dùng palette tươi sáng cố định, bỏ qua light/dark — chỉ áp dụng
+  // khi đang thực sự ở trong nhánh (kid), không phải chỉ vì is_kid_mode=true
+  // (phụ huynh vẫn ở (app) để thiết lập sau khi bật Kid Mode/đặt PIN).
+  // Cast string vì typed-routes chưa regenerate cho nhánh (kid) (giống app/_layout.tsx).
+  const inKidRoute = (segments[0] as string | undefined) === '(kid)';
+  const useKidTheme = isKidMode && inKidRoute;
   const baseColors = activeTheme === 'dark' ? darkColors : lightColors;
-  const colors = (isKidMode ? kidColors : baseColors) as Record<keyof typeof lightColors, string>;
-  const isDark = !isKidMode && activeTheme === 'dark';
+  const colors = (useKidTheme ? kidColors : baseColors) as Record<keyof typeof lightColors, string>;
+  const isDark = !useKidTheme && activeTheme === 'dark';
 
   return (
     <ThemeContext.Provider value={{ themeMode, activeTheme, colors, isDark, setThemeMode }}>

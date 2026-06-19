@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Href, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Companion } from '../../components/kid/Companion';
 import { CompanionExpression } from '../../components/kid/companionAssets';
 import { supabase } from '../../lib/supabase';
@@ -14,6 +14,7 @@ import { useTheme } from '../../providers/ThemeProvider';
 export default function KidHome() {
   const { colors } = useTheme();
   const styles = getStyles(colors);
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
   const { profile, refresh } = useProfile();
@@ -64,9 +65,11 @@ export default function KidHome() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Cổng phụ huynh — không phải nút nổi bật, không có chữ gợi ý cho trẻ. */}
+      {/* Cổng phụ huynh — không phải nút nổi bật, không có chữ gợi ý cho trẻ.
+          Đặt top-left (ScreenTimeBadge chiếm top-right) + cộng insets.top để
+          không bị status bar/notch che mất. */}
       <TouchableOpacity
-        style={styles.parentGateBtn}
+        style={[styles.parentGateBtn, { top: insets.top + 8 }]}
         onPress={() => router.push('/(kid)/parent-gate' as Href)}
         hitSlop={10}
       >
@@ -126,8 +129,7 @@ const getStyles = (colors: any) =>
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
     parentGateBtn: {
       position: 'absolute',
-      top: 8,
-      right: 8,
+      left: 8,
       zIndex: 1,
       padding: 10,
       opacity: 0.5,

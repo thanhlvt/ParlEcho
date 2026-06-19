@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Href, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -65,6 +66,14 @@ export default function MissionsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <TouchableOpacity
+        style={styles.backBtn}
+        onPress={() => router.replace('/(kid)/home' as Href)}
+      >
+        <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
+        <Text style={styles.backText}>Về nhà</Text>
+      </TouchableOpacity>
+
       <Text style={styles.title}>Chọn nhiệm vụ 🎯</Text>
       <Text style={styles.subtitle}>Cùng bạn đồng hành hoàn thành nhiệm vụ nhé!</Text>
 
@@ -101,6 +110,8 @@ export default function MissionsScreen() {
 const getStyles = (colors: any) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background, padding: 24 },
+    backBtn: { flexDirection: 'row', alignItems: 'center' },
+    backText: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
     title: { fontSize: 26, fontWeight: '800', color: colors.primary, marginTop: 12 },
     subtitle: { fontSize: 15, color: colors.textSecondary, marginTop: 6, marginBottom: 8 },
     list: { paddingVertical: 8, gap: 12 },
