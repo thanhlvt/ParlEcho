@@ -167,6 +167,7 @@ export type Profile = {
   screen_time_limit_minutes: number;
   child_name: string | null;
   child_level: string | null;
+  biscuit_count: number;
   created_at: string;
   updated_at: string;
 };

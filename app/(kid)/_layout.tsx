@@ -1,6 +1,7 @@
 import { Href, Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
 import { View } from 'react-native';
+import { BiscuitBadge } from '../../components/kid/BiscuitBadge';
 import { ScreenTimeBadge } from '../../components/kid/ScreenTimeBadge';
 import { ScreenTimeProvider, useScreenTime } from '../../providers/ScreenTimeProvider';
 
@@ -27,7 +28,12 @@ function ScreenTimeGate() {
     router.replace('/(kid)/day-summary' as Href);
   }, [limitReached, segments, router]);
 
-  return <ScreenTimeBadge />;
+  return (
+    <>
+      <BiscuitBadge />
+      <ScreenTimeBadge />
+    </>
+  );
 }
 
 // Kid Mode dùng UI tuỳ biến (nhân vật, chữ to) — không dùng header/tab mặc định.

@@ -1,5 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
+import { Href, useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Companion } from '../../components/kid/Companion';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../providers/AuthProvider';
@@ -10,6 +12,8 @@ import { useTheme } from '../../providers/ThemeProvider';
 export default function DaySummaryScreen() {
   const { colors } = useTheme();
   const styles = getStyles(colors);
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { user } = useAuth();
   const { profile, refresh } = useProfile();
   const { usedSeconds } = useScreenTime();
@@ -25,6 +29,17 @@ export default function DaySummaryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Cổng phụ huynh — vẫn hiển thị ở màn hết giờ chơi để phụ huynh vào được
+          Parent Dashboard mà không cần thoát Kid Mode (xem ScreenTimeGate ở
+          (kid)/_layout.tsx, day-summary là 1 trong số ít màn được phép truy cập). */}
+      <TouchableOpacity
+        style={[styles.parentGateBtn, { top: insets.top + 8 }]}
+        onPress={() => router.push('/(kid)/parent-gate' as Href)}
+        hitSlop={10}
+      >
+        <Ionicons name="ellipsis-horizontal" size={18} color={colors.textMuted} />
+      </TouchableOpacity>
+
       <View style={styles.center}>
         <Companion companionId={profile?.companion_id} expression="cheering" size={150} />
         <Text style={styles.title}>Hết giờ chơi rồi! 🌙</Text>
@@ -49,6 +64,13 @@ const getStyles = (colors: any) =>
       paddingBottom: 24,
     },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 8 },
+    parentGateBtn: {
+      position: 'absolute',
+      left: 8,
+      zIndex: 1,
+      padding: 10,
+      opacity: 0.5,
+    },
     title: {
       fontSize: 24,
       fontWeight: '800',

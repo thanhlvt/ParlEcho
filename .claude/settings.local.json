@@ -11,7 +11,12 @@
       "Bash(npx eslint *)",
       "Bash(npx prettier *)",
       "Bash(sort -t'|' -k2 -rn)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npx supabase *)",
+      "Bash(npm run *)",
+      "Bash(grep -n \"sticker_pool = pool where id = mis.id\\\\|end \\\\$\\\\$;\" schema.sql)",
+      "Bash(echo \"EXIT:$?\")",
+      "Read(//tmp/**)"
     ]
   }
 }

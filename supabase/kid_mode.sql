@@ -321,3 +321,331 @@ create policy "exploration-images: own delete"
 drop policy if exists "delete own exploration_images" on exploration_images;
 create policy "delete own exploration_images" on exploration_images
   for delete to authenticated using (uploader = auth.uid());
+
+-- 25. exploration_images: GRANT DELETE bị thiếu — RLS policy (bước 24) chỉ định nghĩa
+-- AI ĐƯỢC xoá, nhưng Postgres còn cần GRANT DELETE ở cấp bảng cho role authenticated thì
+-- mới cho phép câu lệnh DELETE chạy tới; thiếu GRANT này khiến xoá ảnh luôn thất bại dù
+-- policy đúng (tương tự gotcha GRANT vs RLS đã gặp với storage.objects).
+grant delete on table exploration_images to authenticated;
+
+-- 26. Seed 29 nhiệm vụ bổ sung (tổng 30 cùng "Gọi món tại quán kem" đã có sẵn) -----
+do $$
+declare
+  m record;
+  v_mission_id uuid;
+begin
+  for m in (
+    select * from (values
+      ('Mua bánh mì tại tiệm bánh', 'buying bread at a bakery',
+        'Hello!', 'Trẻ chào nhân viên tiệm bánh.',
+        'Can I have a loaf of bread, please?', 'Trẻ gọi món bánh mì.',
+        'Brown bread, please.', 'Trẻ chọn loại bánh (white / brown / sweet).',
+        'To go, please.', 'Trẻ chọn cách lấy (to go / eat here).',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt để kết thúc.'),
+      ('Mượn sách tại thư viện', 'borrowing a book at the library',
+        'Hello!', 'Trẻ chào thủ thư.',
+        'Can I borrow this book, please?', 'Trẻ xin mượn một quyển sách.',
+        'A storybook, please.', 'Trẻ chọn loại sách (storybook / picture book / comic).',
+        'For one week, please.', 'Trẻ chọn thời gian mượn (one week / two weeks).',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn thủ thư và chào tạm biệt.'),
+      ('Khám bệnh tại phòng khám', 'visiting the doctor',
+        'Hello, doctor!', 'Trẻ chào bác sĩ.',
+        'My tummy hurts.', 'Trẻ nói lý do đi khám (tummy / head / throat hurts).',
+        'It started yesterday.', 'Trẻ trả lời khi nào bắt đầu đau (yesterday / today / this morning).',
+        'Okay, I will take the medicine.', 'Trẻ đồng ý uống thuốc theo lời bác sĩ.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn bác sĩ và chào tạm biệt.'),
+      ('Mua đồ chơi tại cửa hàng', 'buying a toy at the toy store',
+        'Hello!', 'Trẻ chào nhân viên cửa hàng.',
+        'Can I have this toy car, please?', 'Trẻ chọn một món đồ chơi muốn mua.',
+        'The red one, please.', 'Trẻ chọn màu sắc (red / blue / yellow).',
+        'Can you wrap it, please?', 'Trẻ xin gói món đồ chơi lại.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Gọi taxi', 'taking a taxi',
+        'Hello!', 'Trẻ chào lái xe taxi.',
+        'Can you take me to the park, please?', 'Trẻ nói nơi muốn đến.',
+        'Yes, I have my seatbelt on.', 'Trẻ xác nhận đã cài dây an toàn.',
+        'Here is the money.', 'Trẻ trả tiền sau khi đến nơi.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Nhận phòng khách sạn', 'checking into a hotel',
+        'Hello!', 'Trẻ chào nhân viên lễ tân.',
+        'Can I have my room key, please?', 'Trẻ xin nhận chìa khoá phòng.',
+        'Room 12, please.', 'Trẻ nói số phòng của mình.',
+        'Where is the elevator, please?', 'Trẻ hỏi đường tới thang máy.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Cắt tóc tại tiệm', 'getting a haircut',
+        'Hello!', 'Trẻ chào thợ cắt tóc.',
+        'Can I have a haircut, please?', 'Trẻ xin cắt tóc.',
+        'Short, please.', 'Trẻ chọn kiểu tóc (short / long).',
+        'It looks great, thank you.', 'Trẻ khen kiểu tóc mới.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Mua trái cây ở siêu thị', 'buying fruit at the supermarket',
+        'Hello!', 'Trẻ chào nhân viên siêu thị.',
+        'Can I have some apples, please?', 'Trẻ chọn loại trái cây muốn mua.',
+        'Five apples, please.', 'Trẻ nói số lượng muốn mua.',
+        'In a bag, please.', 'Trẻ xin đựng trong túi.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Hỏi đường', 'asking for directions',
+        'Excuse me!', 'Trẻ gọi xin chú ý lịch sự.',
+        'Where is the park, please?', 'Trẻ hỏi đường tới một nơi.',
+        'Is it far from here?', 'Trẻ hỏi thêm khoảng cách.',
+        'Okay, turn left. Got it!', 'Trẻ xác nhận đã hiểu chỉ đường.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Gọi pizza', 'ordering a pizza',
+        'Hello!', 'Trẻ chào nhân viên quán pizza.',
+        'Can I have a pizza, please?', 'Trẻ gọi pizza.',
+        'Cheese pizza, please.', 'Trẻ chọn loại pizza (cheese / pepperoni / vegetable).',
+        'A small one, please.', 'Trẻ chọn kích cỡ (small / large).',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Mua kem que ở công viên', 'buying a popsicle at the park',
+        'Hello!', 'Trẻ chào người bán kem que.',
+        'Can I have a popsicle, please?', 'Trẻ gọi món kem que.',
+        'Mango flavor, please.', 'Trẻ chọn vị (mango / orange / grape).',
+        'Here is the money.', 'Trẻ trả tiền.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Đặt bàn nhà hàng', 'booking a table at a restaurant',
+        'Hello!', 'Trẻ chào nhân viên nhà hàng.',
+        'A table for two, please.', 'Trẻ xin một bàn cho số người.',
+        'By the window, please.', 'Trẻ chọn vị trí bàn (by the window / near the door).',
+        'Can I see the menu, please?', 'Trẻ xin xem menu.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Mua vé xem phim', 'buying movie tickets',
+        'Hello!', 'Trẻ chào nhân viên bán vé.',
+        'Two tickets, please.', 'Trẻ xin số lượng vé.',
+        'For the cartoon movie, please.', 'Trẻ chọn phim muốn xem.',
+        'Popcorn, please.', 'Trẻ gọi thêm bắp rang.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Mua vé xe buýt', 'buying a bus ticket',
+        'Hello!', 'Trẻ chào nhân viên bán vé xe buýt.',
+        'One ticket, please.', 'Trẻ xin một vé.',
+        'To the zoo, please.', 'Trẻ nói nơi muốn đến.',
+        'Here is the money.', 'Trẻ trả tiền vé.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Gửi thư tại bưu điện', 'sending a letter at the post office',
+        'Hello!', 'Trẻ chào nhân viên bưu điện.',
+        'Can I send this letter, please?', 'Trẻ xin gửi một lá thư.',
+        'A stamp, please.', 'Trẻ xin mua thêm tem.',
+        'How much is it, please?', 'Trẻ hỏi giá tiền.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Mượn đồ chơi tại sân chơi', 'borrowing toys at the playground',
+        'Hello!', 'Trẻ chào bạn mới ở sân chơi.',
+        'Can I play with the ball, please?', 'Trẻ xin mượn một món đồ chơi.',
+        'Yes, let''s play together!', 'Trẻ đề nghị chơi cùng bạn.',
+        'Here you go, thank you.', 'Trẻ trả lại đồ chơi và cảm ơn.',
+        'Goodbye, see you again!', 'Trẻ chào tạm biệt bạn mới.'),
+      ('Đặt món ăn sáng', 'ordering breakfast',
+        'Good morning!', 'Trẻ chào buổi sáng.',
+        'Can I have some pancakes, please?', 'Trẻ gọi món ăn sáng.',
+        'With honey, please.', 'Trẻ chọn thêm topping (honey / syrup / fruit).',
+        'A glass of milk, please.', 'Trẻ gọi thêm đồ uống.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Mua văn phòng phẩm', 'buying school supplies',
+        'Hello!', 'Trẻ chào nhân viên cửa hàng văn phòng phẩm.',
+        'Can I have a notebook, please?', 'Trẻ gọi món muốn mua (notebook / pencil / eraser).',
+        'The blue one, please.', 'Trẻ chọn màu sắc.',
+        'How much is it, please?', 'Trẻ hỏi giá tiền.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Hỏi giờ tàu', 'asking about train times',
+        'Excuse me!', 'Trẻ xin chú ý lịch sự.',
+        'What time is the next train, please?', 'Trẻ hỏi giờ tàu kế tiếp.',
+        'Which platform, please?', 'Trẻ hỏi số sân ga.',
+        'Thank you for your help.', 'Trẻ cảm ơn vì đã giúp đỡ.',
+        'Goodbye!', 'Trẻ chào tạm biệt.'),
+      ('Mua thú nhồi bông', 'buying a stuffed animal',
+        'Hello!', 'Trẻ chào nhân viên cửa hàng.',
+        'Can I have this teddy bear, please?', 'Trẻ chọn một con thú nhồi bông.',
+        'The brown one, please.', 'Trẻ chọn màu sắc.',
+        'Can you wrap it, please?', 'Trẻ xin gói lại món đồ.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Đặt bánh sinh nhật', 'ordering a birthday cake',
+        'Hello!', 'Trẻ chào nhân viên tiệm bánh.',
+        'Can I order a birthday cake, please?', 'Trẻ xin đặt một bánh sinh nhật.',
+        'Chocolate flavor, please.', 'Trẻ chọn vị bánh.',
+        'Can you write "Happy Birthday" on it?', 'Trẻ xin viết chữ lên bánh.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Mua nước uống tại quán', 'buying a drink at a café',
+        'Hello!', 'Trẻ chào nhân viên quán nước.',
+        'Can I have some orange juice, please?', 'Trẻ gọi món đồ uống.',
+        'A small one, please.', 'Trẻ chọn kích cỡ.',
+        'With ice, please.', 'Trẻ chọn thêm đá.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Mượn sách tranh tại thư viện', 'borrowing a picture book',
+        'Hello!', 'Trẻ chào thủ thư.',
+        'Can I borrow a picture book, please?', 'Trẻ xin mượn sách tranh.',
+        'About animals, please.', 'Trẻ chọn chủ đề sách (animals / space / dinosaurs).',
+        'Thank you for helping me find it.', 'Trẻ cảm ơn thủ thư đã giúp tìm sách.',
+        'Goodbye!', 'Trẻ chào tạm biệt.'),
+      ('Mua vé vào sở thú', 'buying a zoo ticket',
+        'Hello!', 'Trẻ chào nhân viên bán vé.',
+        'One ticket, please.', 'Trẻ xin một vé vào sở thú.',
+        'I want to see the lions first.', 'Trẻ nói muốn xem con vật nào trước.',
+        'Here is the money.', 'Trẻ trả tiền vé.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Mua bóng bay', 'buying a balloon',
+        'Hello!', 'Trẻ chào người bán bóng bay.',
+        'Can I have a balloon, please?', 'Trẻ xin mua một quả bóng bay.',
+        'The red one, please.', 'Trẻ chọn màu bóng bay.',
+        'Here is the money.', 'Trẻ trả tiền.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Đặt món tại quầy mì', 'ordering noodles',
+        'Hello!', 'Trẻ chào nhân viên quầy mì.',
+        'Can I have a bowl of noodles, please?', 'Trẻ gọi món mì.',
+        'With chicken, please.', 'Trẻ chọn loại topping (chicken / beef / vegetable).',
+        'Not spicy, please.', 'Trẻ chọn mức độ cay.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Mua giày mới', 'buying new shoes',
+        'Hello!', 'Trẻ chào nhân viên cửa hàng giày.',
+        'Can I try these shoes, please?', 'Trẻ xin thử một đôi giày.',
+        'Size small, please.', 'Trẻ chọn kích cỡ (small / medium / large).',
+        'They fit well, thank you.', 'Trẻ xác nhận giày vừa chân.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Mua mũ', 'buying a hat',
+        'Hello!', 'Trẻ chào nhân viên cửa hàng.',
+        'Can I have this hat, please?', 'Trẻ chọn một chiếc mũ muốn mua.',
+        'The yellow one, please.', 'Trẻ chọn màu sắc.',
+        'Here is the money.', 'Trẻ trả tiền.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Mua bút màu', 'buying crayons',
+        'Hello!', 'Trẻ chào nhân viên cửa hàng.',
+        'Can I have a box of crayons, please?', 'Trẻ gọi món bút màu.',
+        'The big box, please.', 'Trẻ chọn kích cỡ hộp (big / small).',
+        'Here is the money.', 'Trẻ trả tiền.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.')
+    ) as t(title, topic, s1, i1, s2, i2, s3, i3, s4, i4, s5, i5)
+  )
+  loop
+    if not exists (select 1 from missions where title = m.title) then
+      insert into missions (id, language_id, title, topic, level, step_count, sticker_pool)
+      values (gen_random_uuid(), 'en', m.title, m.topic, 'beginner', 5, '{}')
+      returning id into v_mission_id;
+
+      insert into mission_steps (mission_id, step_order, target_sentence, intent) values
+        (v_mission_id, 1, m.s1, m.i1),
+        (v_mission_id, 2, m.s2, m.i2),
+        (v_mission_id, 3, m.s3, m.i3),
+        (v_mission_id, 4, m.s4, m.i4),
+        (v_mission_id, 5, m.s5, m.i5);
+    end if;
+  end loop;
+end $$;
+
+-- 27. Mở rộng catalog sticker lên 100 (đã có 5, thêm 95) -----------------
+insert into stickers (id, name, theme, emoji, sort_order)
+select 'sticker-' || row_number() over () + 5, t.name, t.theme, t.emoji, row_number() over () + 5
+from unnest(
+  array[
+    'Sư tử','Hổ','Voi','Hươu cao cổ','Khỉ','Gấu trúc','Cáo','Sóc','Thỏ','Mèo',
+    'Chó','Heo','Bò','Ngựa','Gà','Vịt','Cú','Chim cánh cụt','Cá sấu','Rắn',
+    'Rùa','Ếch','Cá','Cá heo','Cá voi','Bạch tuộc','Ốc sên','Bướm','Ong','Kiến',
+    'Táo','Chuối','Dưa hấu','Dâu tây','Nho','Cam','Dứa','Xoài','Bánh mì','Bánh ngọt',
+    'Kẹo','Sô-cô-la','Kem ốc quế','Pizza','Hamburger','Mì','Cơm','Sushi','Trứng','Bắp rang',
+    'Ô tô','Xe buýt','Xe đạp','Tàu hoả','Máy bay','Thuyền','Tàu vũ trụ','Khí cầu','Xe cứu thương','Xe cứu hoả',
+    'Xe máy','Tàu điện','Trực thăng','Taxi','Xe tải',
+    'Mặt trời','Mặt trăng','Sao','Cầu vồng','Mây','Mưa','Tuyết','Sấm sét','Hoa','Cây',
+    'Lá','Núi','Biển','Sa mạc','Núi lửa',
+    'Người ngoài hành tinh','Rô-bốt','Đũa phép','Kỳ lân','Rồng','Vương miện','Lâu đài','Sao băng','Hành tinh','Trái đất',
+    'Cầu pha lê','Chiếc nhẫn','Chuông','Hộp quà','Bóng bay'
+  ],
+  array[
+    'animal','animal','animal','animal','animal','animal','animal','animal','animal','animal',
+    'animal','animal','animal','animal','animal','animal','animal','animal','animal','animal',
+    'animal','animal','animal','animal','animal','animal','animal','animal','animal','animal',
+    'food','food','food','food','food','food','food','food','food','food',
+    'food','food','food','food','food','food','food','food','food','food',
+    'vehicle','vehicle','vehicle','vehicle','vehicle','vehicle','vehicle','vehicle','vehicle','vehicle',
+    'vehicle','vehicle','vehicle','vehicle','vehicle',
+    'nature','nature','nature','nature','nature','nature','nature','nature','nature','nature',
+    'nature','nature','nature','nature','nature',
+    'fantasy','fantasy','fantasy','fantasy','fantasy','fantasy','fantasy','fantasy','fantasy','fantasy',
+    'fantasy','fantasy','fantasy','fantasy','fantasy'
+  ],
+  array[
+    '🦁','🐯','🐘','🦒','🐵','🐼','🦊','🐿️','🐰','🐱',
+    '🐶','🐷','🐮','🐴','🐔','🦆','🦉','🐧','🐊','🐍',
+    '🐢','🐸','🐟','🐬','🐳','🐙','🐌','🦋','🐝','🐜',
+    '🍎','🍌','🍉','🍓','🍇','🍊','🍍','🥭','🍞','🍰',
+    '🍬','🍫','🍦','🍕','🍔','🍜','🍚','🍣','🥚','🍿',
+    '🚗','🚌','🚲','🚂','✈️','⛵','🚀','🎈','🚑','🚒',
+    '🏍️','🚊','🚁','🚕','🚚',
+    '☀️','🌙','⭐','🌈','☁️','🌧️','❄️','⚡','🌸','🌳',
+    '🍃','⛰️','🌊','🏜️','🌋',
+    '👽','🤖','🪄','🦄','🐉','👑','🏰','🌠','🪐','🌍',
+    '🔮','💍','🔔','🎁','🎈'
+  ]
+) as t(name, theme, emoji)
+on conflict (id) do nothing;
+
+-- 28. Mở rộng catalog costume lên 50 (đã có 3, thêm 47: 16 bear + 16 cat + 15 robot) ----
+insert into costumes (id, companion_id, name, emoji, sort_order)
+select 'costume-bear-' || (idx + 1), 'bear', name, emoji, (idx + 1)
+from (
+  select row_number() over () as idx, name, emoji from unnest(
+    array['Nón vui nhộn','Kính râm','Vương miện','Balo phiêu lưu','Dù che nắng','Giày boots',
+          'Bao tay ấm','Vòng cổ lấp lánh','Huy chương','Cánh thiên thần','Mặt nạ bí ẩn',
+          'Áo choàng phù thủy','Nón cướp biển','Vòng hoa','Nơ lấp lánh','Đôi cánh bướm'],
+    array['🎩','🕶️','👑','🎒','☂️','👢','🧤','📿','🏅','🪽','🎭','🧙','🏴‍☠️','🌼','🎗️','🦋']
+  ) as t(name, emoji)
+) s
+on conflict (id) do nothing;
+
+insert into costumes (id, companion_id, name, emoji, sort_order)
+select 'costume-cat-' || (idx + 1), 'cat', name, emoji, (idx + 1)
+from (
+  select row_number() over () as idx, name, emoji from unnest(
+    array['Nón vui nhộn','Kính râm','Vương miện','Balo phiêu lưu','Dù che nắng','Giày boots',
+          'Bao tay ấm','Vòng cổ lấp lánh','Huy chương','Cánh thiên thần','Mặt nạ bí ẩn',
+          'Áo choàng phù thủy','Nón cướp biển','Vòng hoa','Nơ lấp lánh','Đôi cánh bướm'],
+    array['🎩','🕶️','👑','🎒','☂️','👢','🧤','📿','🏅','🪽','🎭','🧙','🏴‍☠️','🌼','🎗️','🦋']
+  ) as t(name, emoji)
+) s
+on conflict (id) do nothing;
+
+insert into costumes (id, companion_id, name, emoji, sort_order)
+select 'costume-robot-' || (idx + 1), 'robot', name, emoji, (idx + 1)
+from (
+  select row_number() over () as idx, name, emoji from unnest(
+    array['Nón vui nhộn','Kính râm','Vương miện','Balo phiêu lưu','Dù che nắng','Giày boots',
+          'Bao tay ấm','Vòng cổ lấp lánh','Huy chương','Cánh thiên thần','Mặt nạ bí ẩn',
+          'Áo choàng phù thủy','Nón cướp biển','Vòng hoa','Nơ lấp lánh'],
+    array['🎩','🕶️','👑','🎒','☂️','👢','🧤','📿','🏅','🪽','🎭','🧙','🏴‍☠️','🌼','🎗️']
+  ) as t(name, emoji)
+) s
+on conflict (id) do nothing;
+
+-- 29. Gắn sticker_pool (3 sticker/nhiệm vụ) cho 29 nhiệm vụ mới — không có pool thì
+-- không mở được sticker nào khi đạt sao (xem useMissionSession.awardMissionResult).
+-- Lấy lần lượt 3 sticker chưa dùng theo sort_order cho mỗi mission, không trùng nhau.
+do $$
+declare
+  mis record;
+  i int := 0;
+  pool text[];
+begin
+  for mis in (
+    select id from missions where title <> 'Gọi món tại quán kem' and sticker_pool = '{}'
+    order by created_at
+  ) loop
+    select array_agg(id) into pool from (
+      select id from stickers where id ~ '^sticker-[0-9]+$'
+      order by sort_order offset (i * 3) limit 3
+    ) s;
+    update missions set sticker_pool = pool where id = mis.id;
+    i := i + 1;
+  end loop;
+end $$;
+
+-- 30. Biscuit reward (mỗi mission/exploration hoàn thành thưởng 1/3/5 bánh theo số sao) ----
+alter table profiles add column if not exists biscuit_count int not null default 0;
+
+-- 31. RPC tăng biscuit_count atomically — client (Supabase JS) không tự làm được
+-- `column = column + N` an toàn dưới điều kiện race, nên dùng RPC. SECURITY INVOKER (mặc
+-- định) để RLS "own profile" vẫn áp dụng — chỉ tăng được biscuit của chính mình.
+create or replace function increment_biscuits(p_user_id uuid, p_amount int)
+returns int
+language sql
+as $$
+  update profiles set biscuit_count = biscuit_count + p_amount
+  where id = p_user_id
+  returning biscuit_count;
+$$;
+
+grant execute on function increment_biscuits(uuid, int) to authenticated;

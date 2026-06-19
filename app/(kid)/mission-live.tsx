@@ -2,7 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BiscuitReward } from '../../components/kid/BiscuitReward';
 import { Companion } from '../../components/kid/Companion';
+import { LuckyWheel } from '../../components/kid/LuckyWheel';
 import { StarRow } from '../../components/kid/StarRow';
 import { useMissionSession } from '../../components/kid/useMissionSession';
 import { useTheme } from '../../providers/ThemeProvider';
@@ -49,6 +51,10 @@ export default function MissionLiveScreen() {
           <Text style={styles.statusText}>Con đã hoàn thành một phần nhiệm vụ rồi đó!</Text>
 
           <StarRow stars={session.stars} />
+          <BiscuitReward amount={session.biscuitsAwarded} />
+          {session.showLuckyWheel ? (
+            <LuckyWheel result={session.luckyWheelResult} onSpin={session.spinLuckyWheel} />
+          ) : null}
 
           {session.unlockedStickers.length > 0 || session.unlockedCostume ? (
             <View style={styles.rewardBox}>

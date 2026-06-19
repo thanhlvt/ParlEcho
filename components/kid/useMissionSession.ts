@@ -10,6 +10,7 @@ import {
   AudioContext,
   decodePCMInBase64,
 } from 'react-native-audio-api';
+import { awardBiscuits, spinLuckyWheel as spinLuckyWheelReward } from '../../lib/biscuits';
 import {
   bytesToBase64,
   LiveClient,
@@ -49,7 +50,7 @@ export type MissionView = 'loading' | 'connecting' | 'live' | 'saving' | 'finish
 
 export function useMissionSession(missionId: string) {
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile, refresh: refreshProfile } = useProfile();
   const { limitReached: dailyLimitReached } = useScreenTime();
   const router = useRouter();
 
@@ -69,6 +70,9 @@ export function useMissionSession(missionId: string) {
   const [unlockedStickers, setUnlockedStickers] = useState<Sticker[]>([]);
   const [unlockedCostume, setUnlockedCostume] = useState<Costume | null>(null);
   const [timeUp, setTimeUp] = useState(false);
+  const [biscuitsAwarded, setBiscuitsAwarded] = useState(0);
+  const [showLuckyWheel, setShowLuckyWheel] = useState(false);
+  const [luckyWheelResult, setLuckyWheelResult] = useState<number | null>(null);
 
   const clientRef = useRef<LiveClient | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -487,6 +491,13 @@ export function useMissionSession(missionId: string) {
       used_hint: hintUsedRef.current,
     });
 
+    if (earnedStars > 0) {
+      const amount = await awardBiscuits(user.id, earnedStars);
+      setBiscuitsAwarded(amount);
+      await refreshProfile();
+    }
+    if (earnedStars === 3) setShowLuckyWheel(true);
+
     if (earnedStars === 0) return;
 
     // Mở sticker từ sticker_pool — 1 sao mở 1 sticker, theo đúng thứ tự pool, không lặp lại cái đã có.
@@ -538,6 +549,14 @@ export function useMissionSession(missionId: string) {
     }
   }
 
+  // Vòng quay may mắn — chỉ hiện khi đạt tròn 3 sao, quay 1 lần duy nhất/phiên.
+  async function spinLuckyWheel() {
+    if (!user || luckyWheelResult !== null) return;
+    const amount = await spinLuckyWheelReward(user.id);
+    setLuckyWheelResult(amount);
+    await refreshProfile();
+  }
+
   function goHome() {
     router.replace('/(kid)/home' as Href);
   }
@@ -558,6 +577,10 @@ export function useMissionSession(missionId: string) {
     stars,
     unlockedStickers,
     unlockedCostume,
+    biscuitsAwarded,
+    showLuckyWheel,
+    luckyWheelResult,
+    spinLuckyWheel,
     savingMsg,
     errorMsg,
     endSession,

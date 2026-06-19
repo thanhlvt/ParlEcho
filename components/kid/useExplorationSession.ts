@@ -11,6 +11,7 @@ import {
   AudioContext,
   decodePCMInBase64,
 } from 'react-native-audio-api';
+import { awardBiscuits, spinLuckyWheel as spinLuckyWheelReward } from '../../lib/biscuits';
 import {
   bytesToBase64,
   EXPLORATION_OPENING_TEXT,
@@ -39,17 +40,36 @@ const REACTION_DISPLAY_MS = 1600;
 const TIME_UP_FALLBACK_MS = 20000;
 const IMAGE_POOL_SIZE = 50;
 const IMAGE_MAX_DIMENSION = 1024;
+// Không có bước/hint như Guided Conversation — tính sao theo điểm phát âm trung bình
+// (/session-review): star 1 luôn có khi hoàn thành phiên, star 2/3 theo 2 ngưỡng điểm.
+const PRONUNCIATION_STAR_THRESHOLD = 70;
+const PRONUNCIATION_EXCELLENT_THRESHOLD = 85;
 
-export type ExplorationView = 'loading' | 'connecting' | 'live' | 'saving' | 'finished' | 'error';
+export type ExplorationView =
+  | 'loading'
+  | 'picking'
+  | 'connecting'
+  | 'live'
+  | 'saving'
+  | 'finished'
+  | 'error';
+
+export interface PickableImage {
+  id: string;
+  storagePath: string;
+  url: string;
+}
 
 export function useExplorationSession() {
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile, refresh: refreshProfile } = useProfile();
   const { limitReached: dailyLimitReached } = useScreenTime();
   const router = useRouter();
 
   const [view, setView] = useState<ExplorationView>('loading');
   const [companion, setCompanion] = useState<CompanionType | null>(null);
+  const [pickableImages, setPickableImages] = useState<PickableImage[]>([]);
+  const [pickingImageId, setPickingImageId] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [expression, setExpression] = useState<CompanionExpression>('idle');
   const [lastAiText, setLastAiText] = useState('');
@@ -58,6 +78,10 @@ export function useExplorationSession() {
   const [errorMsg, setErrorMsg] = useState('');
   const [vocabLearned, setVocabLearned] = useState<string[]>([]);
   const [timeUp, setTimeUp] = useState(false);
+  const [stars, setStars] = useState(0);
+  const [biscuitsAwarded, setBiscuitsAwarded] = useState(0);
+  const [showLuckyWheel, setShowLuckyWheel] = useState(false);
+  const [luckyWheelResult, setLuckyWheelResult] = useState<number | null>(null);
 
   const clientRef = useRef<LiveClient | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -77,7 +101,7 @@ export function useExplorationSession() {
     reactionTimerRef.current = setTimeout(() => setExpression('idle'), durationMs);
   }, []);
 
-  // ── Tải companion + chọn ảnh ngẫu nhiên + resize/nén trước khi mở WS ──────
+  // ── Tải companion + danh sách ảnh đã duyệt để trẻ tự chọn ─────────────────
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -103,29 +127,14 @@ export function useExplorationSession() {
         return;
       }
 
-      const picked = images[Math.floor(Math.random() * images.length)] as ExplorationImage;
-      const { data: publicUrlData } = supabase.storage
-        .from('exploration-images')
-        .getPublicUrl(picked.storage_path);
-
-      try {
-        const result = await manipulateAsync(
-          publicUrlData.publicUrl,
-          [{ resize: { width: IMAGE_MAX_DIMENSION, height: IMAGE_MAX_DIMENSION } }],
-          { compress: 0.7, format: SaveFormat.JPEG, base64: true },
-        );
-        if (cancelled) return;
-        if (!result.base64) throw new Error('Không nén được ảnh');
-        imageBase64Ref.current = result.base64;
-        setImageUrl(result.uri);
-        setView('connecting');
-      } catch (err) {
-        console.error('[ExplorationSession] image load error', err);
-        if (!cancelled) {
-          setErrorMsg('Không tải được ảnh. Hãy thử lại nhé!');
-          setView('error');
-        }
-      }
+      const pickable = (images as ExplorationImage[]).map((img) => ({
+        id: img.id,
+        storagePath: img.storage_path,
+        url: supabase.storage.from('exploration-images').getPublicUrl(img.storage_path).data
+          .publicUrl,
+      }));
+      setPickableImages(pickable);
+      setView('picking');
     }
     load();
     return () => {
@@ -133,6 +142,28 @@ export function useExplorationSession() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Trẻ chọn 1 ảnh trong danh sách → resize/nén ảnh đó trước khi mở WS ────
+  async function pickImage(image: PickableImage) {
+    setPickingImageId(image.id);
+    try {
+      const result = await manipulateAsync(
+        image.url,
+        [{ resize: { width: IMAGE_MAX_DIMENSION, height: IMAGE_MAX_DIMENSION } }],
+        { compress: 0.7, format: SaveFormat.JPEG, base64: true },
+      );
+      if (!result.base64) throw new Error('Không nén được ảnh');
+      imageBase64Ref.current = result.base64;
+      setImageUrl(result.uri);
+      setView('connecting');
+    } catch (err) {
+      console.error('[ExplorationSession] image pick error', err);
+      setErrorMsg('Không tải được ảnh. Hãy thử lại nhé!');
+      setView('error');
+    } finally {
+      setPickingImageId(null);
+    }
+  }
 
   // ── Mở kết nối Live khi đã có ảnh sẵn sàng ────────────────────────────
   useEffect(() => {
@@ -412,6 +443,7 @@ export function useExplorationSession() {
         if (reviewErr) console.warn('[ExplorationSession] session-review error:', reviewErr);
         const review = reviewData as SessionReviewApiResponse | null;
         if (review) await saveLearnedItems(review);
+        await awardExplorationResult(review?.avg_pronunciation ?? null);
       } catch (reviewErr) {
         console.warn('[ExplorationSession] session-review call failed:', reviewErr);
       }
@@ -472,6 +504,30 @@ export function useExplorationSession() {
     setVocabLearned(learned);
   }
 
+  // Tính sao theo điểm phát âm + thưởng biscuit — Image Exploration không có bước/hint
+  // như Guided Conversation nên không dùng mission_results, chỉ thưởng biscuit/biscuit_count.
+  async function awardExplorationResult(avgPronunciation: number | null) {
+    if (!user) return;
+    const starExcellent =
+      avgPronunciation !== null && avgPronunciation >= PRONUNCIATION_EXCELLENT_THRESHOLD;
+    const starGood = avgPronunciation !== null && avgPronunciation >= PRONUNCIATION_STAR_THRESHOLD;
+    const earnedStars = 1 + (starGood ? 1 : 0) + (starExcellent ? 1 : 0);
+    setStars(earnedStars);
+
+    const amount = await awardBiscuits(user.id, earnedStars);
+    setBiscuitsAwarded(amount);
+    await refreshProfile();
+    if (earnedStars === 3) setShowLuckyWheel(true);
+  }
+
+  // Vòng quay may mắn — chỉ hiện khi đạt tròn 3 sao, quay 1 lần duy nhất/phiên.
+  async function spinLuckyWheel() {
+    if (!user || luckyWheelResult !== null) return;
+    const amount = await spinLuckyWheelReward(user.id);
+    setLuckyWheelResult(amount);
+    await refreshProfile();
+  }
+
   function goHome() {
     router.replace('/(kid)/home' as Href);
   }
@@ -479,12 +535,20 @@ export function useExplorationSession() {
   return {
     view,
     companion,
+    pickableImages,
+    pickingImageId,
+    pickImage,
     imageUrl,
     expression,
     lastAiText,
     elapsedSec,
     timeUp,
     vocabLearned,
+    stars,
+    biscuitsAwarded,
+    showLuckyWheel,
+    luckyWheelResult,
+    spinLuckyWheel,
     savingMsg,
     errorMsg,
     endSession,

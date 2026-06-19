@@ -88,7 +88,7 @@ export default function ParentSessionsScreen() {
           >
             <TouchableOpacity
               style={styles.card}
-              activeOpacity={0.8}
+              activeOpacity={1}
               onPress={() => router.push(`/(kid)/parent/session/${item.id}` as Href)}
             >
               <View style={{ flex: 1 }}>

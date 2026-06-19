@@ -1,7 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BiscuitReward } from '../../components/kid/BiscuitReward';
 import { Companion } from '../../components/kid/Companion';
+import { LuckyWheel } from '../../components/kid/LuckyWheel';
+import { StarRow } from '../../components/kid/StarRow';
 import { useExplorationSession } from '../../components/kid/useExplorationSession';
 import { useTheme } from '../../providers/ThemeProvider';
 
@@ -29,6 +40,41 @@ export default function ExplorationScreen() {
     );
   }
 
+  if (session.view === 'picking') {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <TouchableOpacity style={styles.backBtn} onPress={session.goHome}>
+          <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
+          <Text style={styles.backText}>Về nhà</Text>
+        </TouchableOpacity>
+        <View style={styles.header}>
+          <Text style={styles.title}>Con muốn khám phá ảnh nào? 🖼️</Text>
+        </View>
+        <FlatList
+          data={session.pickableImages}
+          keyExtractor={(img) => img.id}
+          numColumns={2}
+          contentContainerStyle={styles.pickList}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.pickCard}
+              onPress={() => session.pickImage(item)}
+              disabled={session.pickingImageId !== null}
+              activeOpacity={0.85}
+            >
+              <Image source={{ uri: item.url }} style={styles.pickThumb} resizeMode="cover" />
+              {session.pickingImageId === item.id ? (
+                <View style={styles.pickOverlay}>
+                  <ActivityIndicator color="#fff" />
+                </View>
+              ) : null}
+            </TouchableOpacity>
+          )}
+        />
+      </SafeAreaView>
+    );
+  }
+
   if (session.view === 'error') {
     return (
       <SafeAreaView style={styles.safe}>
@@ -50,6 +96,12 @@ export default function ExplorationScreen() {
           <Companion companionId={session.companion?.id} expression="cheering" size={140} />
           <Text style={styles.finishedTitle}>Khám phá xong rồi! 🎉</Text>
           <Text style={styles.statusText}>Con đã quan sát và trả lời rất giỏi đó!</Text>
+
+          <StarRow stars={session.stars} />
+          <BiscuitReward amount={session.biscuitsAwarded} />
+          {session.showLuckyWheel ? (
+            <LuckyWheel result={session.luckyWheelResult} onSpin={session.spinLuckyWheel} />
+          ) : null}
 
           {session.vocabLearned.length > 0 ? (
             <View style={styles.rewardBox}>
@@ -124,6 +176,28 @@ const getStyles = (colors: any) =>
 
     header: { paddingHorizontal: 24, paddingTop: 16 },
     title: { fontSize: 18, fontWeight: '800', color: colors.textPrimary },
+
+    pickList: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 24, gap: 12 },
+    pickCard: {
+      flex: 1,
+      margin: 6,
+      aspectRatio: 1,
+      borderRadius: 16,
+      overflow: 'hidden',
+      borderWidth: 2,
+      borderColor: colors.border,
+    },
+    pickThumb: { width: '100%', height: '100%' },
+    pickOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
     image: {
       width: 220,

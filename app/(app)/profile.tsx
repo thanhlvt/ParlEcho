@@ -108,6 +108,11 @@ export default function ProfileScreen() {
       openPinModal();
       return;
     }
+    // Cập nhật state ngay (optimistic) trước khi await — Switch native (Android) đã tự
+    // nhảy sang vị trí mới ngay lúc chạm, nếu đợi network rồi mới setProfile thì React sẽ
+    // tự chạy animate lại từ off→on trên giá trị đã nhảy sẵn, gây hiệu ứng nháy 1 cái rồi
+    // animate lại. Set state đồng bộ ngay khi nhận onValueChange để khớp với gesture.
+    setProfile((p) => (p ? { ...p, is_kid_mode: value } : p));
     setSavingKid(true);
     const { error } = await supabase
       .from('profiles')
@@ -115,8 +120,8 @@ export default function ProfileScreen() {
       .eq('id', user.id);
     if (error) {
       Alert.alert('Lỗi', 'Không thể cập nhật chế độ trẻ em.');
+      setProfile((p) => (p ? { ...p, is_kid_mode: !value } : p));
     } else {
-      setProfile((p) => (p ? { ...p, is_kid_mode: value } : p));
       await refreshProfile();
     }
     setSavingKid(false);

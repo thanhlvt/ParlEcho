@@ -1,3 +1,4 @@
+import { useSegments } from 'expo-router';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { supabase } from '../lib/supabase';
@@ -40,8 +41,14 @@ function todayStr() {
 export function ScreenTimeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { profile } = useProfile();
+  const segments = useSegments();
   const [sessionSeconds, setSessionSeconds] = useState(0);
   const [loaded, setLoaded] = useState(false);
+
+  // Dừng đếm giờ khi phụ huynh đang ở Parent Dashboard (parent-gate/parent/*) — đây là
+  // thời gian phụ huynh dùng máy, không phải thời gian trẻ chơi.
+  const screen = segments[1] as string | undefined;
+  const paused = screen === 'parent-gate' || screen === 'parent';
 
   // baseSeconds: tổng đã lưu trong DB hôm nay lúc tải — chỉ dùng để ghi cộng dồn cho
   // thống kê, KHÔNG dùng để tính giới hạn của phiên hiện tại.
@@ -49,6 +56,8 @@ export function ScreenTimeProvider({ children }: { children: React.ReactNode }) 
   const sessionSecondsRef = useRef(0);
   const lastFlushedRef = useRef(0);
   const dateRef = useRef(todayStr());
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
 
   const limitSeconds = (profile?.screen_time_limit_minutes ?? 20) * 60;
 
@@ -91,7 +100,7 @@ export function ScreenTimeProvider({ children }: { children: React.ReactNode }) 
     let appActive = AppState.currentState === 'active';
 
     const tick = setInterval(() => {
-      if (!appActive) return;
+      if (!appActive || pausedRef.current) return;
       sessionSecondsRef.current += 1;
       setSessionSeconds(sessionSecondsRef.current);
       if (sessionSecondsRef.current - lastFlushedRef.current >= FLUSH_INTERVAL_SEC) {
