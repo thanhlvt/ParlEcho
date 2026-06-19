@@ -709,3 +709,29 @@ create policy "own exploration_results" on exploration_results
   for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 grant all on table exploration_results to authenticated, service_role;
+
+-- 35. pronunciation_attempts.message_id: sửa on delete set null -> cascade ---------------
+-- Bug: attempt chỉ neo vào message_id (không có scenario_line_id, vd. chấm phát âm trong
+-- Live/Kid Mode guided) bị "on delete set null" đưa cả 2 cột về null khi message bị xoá
+-- (cascade từ xoá conversation) -> vi phạm check "scenario_line_id is not null or message_id
+-- is not null". Phải cascade để attempt mất ý nghĩa cùng message bị xoá theo, không set null.
+do $$
+declare
+  fk_name text;
+begin
+  select tc.constraint_name into fk_name
+  from information_schema.table_constraints tc
+  join information_schema.key_column_usage kcu
+    on tc.constraint_name = kcu.constraint_name and tc.table_schema = kcu.table_schema
+  where tc.table_name = 'pronunciation_attempts'
+    and tc.constraint_type = 'FOREIGN KEY'
+    and kcu.column_name = 'message_id';
+
+  if fk_name is not null then
+    execute format('alter table pronunciation_attempts drop constraint %I', fk_name);
+  end if;
+
+  alter table pronunciation_attempts
+    add constraint pronunciation_attempts_message_id_fkey
+    foreign key (message_id) references messages(id) on delete cascade;
+end $$;

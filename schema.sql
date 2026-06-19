@@ -209,7 +209,7 @@ create table pronunciation_attempts (
   user_id            uuid not null references auth.users(id) on delete cascade,
   language_id        text not null references languages(id),
   scenario_line_id   uuid references scenario_lines(id) on delete set null,
-  message_id         uuid references messages(id) on delete set null,
+  message_id         uuid references messages(id) on delete cascade,
   audio_url          text,
   recognized_text    text,
   overall_score      numeric(5,2),                -- 0..100
