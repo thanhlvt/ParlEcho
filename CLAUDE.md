@@ -21,6 +21,7 @@ Screen Time, Parent Dashboard). React Native + Expo, backend Supabase.
   `expo-image-picker` trong `app.json` để khai báo `cameraPermission`)
 - **Security:** `expo-crypto` (hash SHA-256 mã PIN phụ huynh)
 - **Animation:** react-native-reanimated ~4
+- **Vector graphics:** `react-native-svg` (vòng quay may mắn dạng pie chart trong Kid Mode)
 
 ## Cấu trúc thư mục
 

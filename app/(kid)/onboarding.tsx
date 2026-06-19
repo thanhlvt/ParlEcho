@@ -14,7 +14,8 @@ export default function KidOnboarding() {
   const styles = getStyles(colors);
   const router = useRouter();
   const { user } = useAuth();
-  const { refresh } = useProfile();
+  const { profile, refresh } = useProfile();
+  const isChanging = !!profile?.companion_id;
 
   const [companions, setCompanions] = useState<CompanionType[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -30,6 +31,11 @@ export default function KidOnboarding() {
       });
   }, []);
 
+  // Đang đổi bạn đồng hành (không phải lần chọn đầu) → chọn sẵn bạn hiện tại.
+  useEffect(() => {
+    if (profile?.companion_id) setSelected(profile.companion_id);
+  }, [profile?.companion_id]);
+
   async function confirm() {
     if (!user || !selected) return;
     setSaving(true);
@@ -40,13 +46,21 @@ export default function KidOnboarding() {
     setSaving(false);
     if (!error) {
       await refresh();
-      router.replace('/(kid)/home' as Href);
+      if (isChanging) router.back();
+      else router.replace('/(kid)/home' as Href);
     }
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Chọn người bạn của con!</Text>
+      {isChanging ? (
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Text style={styles.backText}>‹ Quay lại</Text>
+        </TouchableOpacity>
+      ) : null}
+      <Text style={styles.title}>
+        {isChanging ? 'Đổi người bạn của con!' : 'Chọn người bạn của con!'}
+      </Text>
       <Text style={styles.subtitle}>Bạn ấy sẽ cùng con học mỗi ngày 💫</Text>
 
       <ScrollView contentContainerStyle={styles.grid}>
@@ -76,7 +90,9 @@ export default function KidOnboarding() {
         disabled={!selected || saving}
         activeOpacity={0.85}
       >
-        <Text style={styles.confirmText}>{saving ? 'Đang lưu...' : 'Chọn bạn này!'}</Text>
+        <Text style={styles.confirmText}>
+          {saving ? 'Đang lưu...' : isChanging ? 'Đổi sang bạn này!' : 'Chọn bạn này!'}
+        </Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -85,6 +101,8 @@ export default function KidOnboarding() {
 const getStyles = (colors: any) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background, padding: 24 },
+    backBtn: { alignSelf: 'flex-start', paddingVertical: 6, paddingHorizontal: 4 },
+    backText: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
     title: {
       fontSize: 28,
       fontWeight: '800',

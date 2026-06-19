@@ -87,6 +87,14 @@ export default function KidHome() {
         <Text style={styles.note}>Cùng nhau học vui nhé! Chạm vào bạn ấy thử xem 👆</Text>
 
         <TouchableOpacity
+          style={styles.changeCompanionBtn}
+          onPress={() => router.push('/(kid)/onboarding' as Href)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.changeCompanionText}>Đổi bạn đồng hành 🔄</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={styles.missionBtn}
           onPress={() => router.push('/(kid)/missions' as Href)}
           activeOpacity={0.85}
@@ -142,6 +150,8 @@ const getStyles = (colors: any) =>
       textAlign: 'center',
     },
     note: { fontSize: 16, color: colors.textSecondary, textAlign: 'center', marginTop: 12 },
+    changeCompanionBtn: { marginTop: 14, paddingVertical: 6, paddingHorizontal: 12 },
+    changeCompanionText: { fontSize: 14, fontWeight: '700', color: colors.textMuted },
     missionBtn: {
       backgroundColor: colors.primary,
       borderRadius: 20,

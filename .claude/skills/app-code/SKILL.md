@@ -18,8 +18,10 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
   - `live/`: `index` = setup+live+review, `history`, `review/[conversationId]`.
 - `(kid)/`: UI riêng cho trẻ em, cô lập hoàn toàn khỏi `(app)`.
   - `_layout.tsx` bọc `ScreenTimeProvider` + `ScreenTimeGate`.
-  - `onboarding` = chọn nhân vật đồng hành lần đầu; `home` = màn chính
-    (gate sang `onboarding` nếu chưa chọn).
+  - `onboarding` = chọn nhân vật đồng hành lần đầu, cũng được tái dùng để
+    **đổi** nhân vật (nút "Đổi bạn đồng hành" ở `home`) — phân biệt qua
+    `profile.companion_id` đã có sẵn hay chưa (preselect, đổi nhãn nút/nút
+    quay lại); `home` = màn chính (gate sang `onboarding` nếu chưa chọn).
   - `missions` = list nhiệm vụ; `mission-live` = phiên Guided Conversation
     (`useMissionSession` + `LiveClient` + companion).
   - `exploration` = phiên Image Exploration Mission (`useExplorationSession`
@@ -44,11 +46,15 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
   - `Companion` (emoji + reanimated, biểu cảm
     idle/happy/surprised/cheering/thinking), `companionAssets`.
   - `StarRow` (animation sao bay khi tổng kết mission).
-  - `BiscuitBadge` (bộ đếm biscuit góc màn hình, đặt ở `(kid)/_layout.tsx`,
-    đọc `profile.biscuit_count`), `BiscuitReward` (animation "+N 🍪" khi
-    thưởng), `LuckyWheel` (vòng quay may mắn khi đạt tròn 3 sao).
-  - `ScreenTimeBadge` (bộ đếm góc màn hình + toast cảnh báo còn 2 phút, đặt
-    ở `(kid)/_layout.tsx`).
+  - `BiscuitBadge` (bộ đếm biscuit, đặt ở `(kid)/_layout.tsx`, đọc
+    `profile.biscuit_count`, góc phải — ngay dưới `ScreenTimeBadge` để
+    không đè lên nút "..."/nút "Về nhà" ở góc trái các màn `home`/
+    `exploration`/`collection`), `BiscuitReward` (animation "+N 🍪" khi
+    thưởng), `LuckyWheel` (vòng quay may mắn khi đạt tròn 3 sao — vẽ bằng
+    `react-native-svg` thành các miếng pie có emoji riêng theo mức thưởng
+    1-5; gọi RPC lấy kết quả trước rồi xoay dừng đúng miếng tương ứng).
+  - `ScreenTimeBadge` (bộ đếm góc màn hình phải + toast cảnh báo còn 2
+    phút, đặt ở `(kid)/_layout.tsx`).
   - `useMissionSession`: state machine cho Guided Conversation — tải
     mission/steps/companion, mở `LiveClient`, theo dõi turn timeout/step
     advance/off-topic, gọi `/session-review` chấm phát âm, chấm sao + mở

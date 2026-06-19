@@ -520,12 +520,14 @@ export function useExplorationSession() {
     if (earnedStars === 3) setShowLuckyWheel(true);
   }
 
-  // Vòng quay may mắn — chỉ hiện khi đạt tròn 3 sao, quay 1 lần duy nhất/phiên.
+  // Vòng quay may mắn — chỉ hiện khi đạt tròn 3 sao, quay 1 lần duy nhất/phiên. Trả về số
+  // biscuit thưởng được để UI xoay vòng quay dừng đúng vào miếng tương ứng kết quả.
   async function spinLuckyWheel() {
-    if (!user || luckyWheelResult !== null) return;
+    if (!user || luckyWheelResult !== null) return 0;
     const amount = await spinLuckyWheelReward(user.id);
     setLuckyWheelResult(amount);
     await refreshProfile();
+    return amount;
   }
 
   function goHome() {
