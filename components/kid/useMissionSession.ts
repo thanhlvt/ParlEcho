@@ -71,8 +71,10 @@ export function useMissionSession(missionId: string) {
   const [biscuitsAwarded, setBiscuitsAwarded] = useState(0);
   const [showLuckyWheel, setShowLuckyWheel] = useState(false);
   const [luckyWheelResult, setLuckyWheelResult] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   const clientRef = useRef<LiveClient | null>(null);
+  const isPausedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -97,6 +99,13 @@ export function useMissionSession(missionId: string) {
   const revealHint = useCallback(() => {
     hintUsedRef.current = true;
     setShowHint(true);
+  }, []);
+
+  const togglePause = useCallback(() => {
+    const next = !isPausedRef.current;
+    isPausedRef.current = next;
+    setIsPaused(next);
+    if (next) audioQueueRef.current?.clearBuffers();
   }, []);
 
   // ── Tải mission + steps + companion ──────────────────────────────────
@@ -166,7 +175,7 @@ export function useMissionSession(missionId: string) {
     if (view !== 'live') return;
 
     const sub = audioEmitter.current.addListener('AudioData', async (event: any) => {
-      if (event?.encoded) {
+      if (event?.encoded && !isPausedRef.current) {
         clientRef.current?.sendAudioChunk(event.encoded as string);
       }
     });
@@ -223,6 +232,8 @@ export function useMissionSession(missionId: string) {
     setCurrentStepIndex(0);
     setShowHint(false);
     setTimeUp(false);
+    setIsPaused(false);
+    isPausedRef.current = false;
 
     const client = new LiveClient({
       onStateChange: (s: LiveState) => {
@@ -230,6 +241,7 @@ export function useMissionSession(missionId: string) {
           setView('live');
           timerRef.current = setInterval(() => {
             setElapsedSec((prev) => {
+              if (isPausedRef.current) return prev;
               if (prev >= SESSION_LIMIT_MINUTES * 60 - 1) {
                 endSession();
                 return prev;
@@ -248,6 +260,7 @@ export function useMissionSession(missionId: string) {
         }
       },
       onAudioChunk: async (pcm24Base64) => {
+        if (isPausedRef.current) return;
         if (!audioCtxRef.current) {
           const ctx = new AudioContext({ sampleRate: 24000 });
           audioCtxRef.current = ctx;
@@ -552,6 +565,8 @@ export function useMissionSession(missionId: string) {
     showNudge,
     showHint,
     revealHint,
+    isPaused,
+    togglePause,
     timeUp,
     stars,
     unlockedStickers,

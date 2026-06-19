@@ -159,6 +159,21 @@ export default function ExplorationScreen() {
       </View>
 
       <View style={styles.bottomRow}>
+        <TouchableOpacity
+          style={[styles.pauseBtn, session.isPaused && styles.resumeBtn]}
+          onPress={session.togglePause}
+          activeOpacity={0.85}
+        >
+          <Ionicons
+            name={session.isPaused ? 'play' : 'pause'}
+            size={20}
+            color={session.isPaused ? '#fff' : colors.primary}
+          />
+          <Text style={[styles.pauseBtnText, session.isPaused && styles.resumeBtnText]}>
+            {session.isPaused ? 'Tiếp tục' : 'Tạm dừng'}
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.endBtn} onPress={session.endSession} activeOpacity={0.85}>
           <Ionicons name="stop-circle" size={22} color="#fff" />
           <Text style={styles.endBtnText}>Kết thúc</Text>
@@ -283,6 +298,21 @@ const getStyles = (colors: any) =>
       marginHorizontal: 24,
       marginBottom: 24,
     },
+    pauseBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderWidth: 2,
+      borderColor: colors.primary,
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 18,
+      paddingVertical: 14,
+    },
+    pauseBtnText: { fontSize: 15, fontWeight: '700', color: colors.primary },
+    resumeBtn: { backgroundColor: colors.primary, borderColor: colors.primary },
+    resumeBtnText: { color: '#fff' },
     endBtn: {
       flex: 1,
       flexDirection: 'row',
