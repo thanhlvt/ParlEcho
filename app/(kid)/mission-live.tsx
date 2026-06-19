@@ -129,8 +129,10 @@ export default function MissionLiveScreen() {
 
       <View style={styles.bottomRow}>
         <TouchableOpacity style={styles.hintBtn} onPress={session.revealHint} activeOpacity={0.85}>
-          <Ionicons name="bulb" size={20} color={colors.primary} />
-          <Text style={styles.hintBtnText}>Gợi ý</Text>
+          <Ionicons name="bulb" size={18} color={colors.primary} />
+          <Text style={styles.hintBtnText} numberOfLines={1}>
+            Gợi ý
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -140,17 +142,19 @@ export default function MissionLiveScreen() {
         >
           <Ionicons
             name={session.isPaused ? 'play' : 'pause'}
-            size={20}
+            size={18}
             color={session.isPaused ? '#fff' : colors.primary}
           />
-          <Text style={[styles.pauseBtnText, session.isPaused && styles.resumeBtnText]}>
+          <Text style={[styles.pauseBtnText, session.isPaused && styles.resumeBtnText]} numberOfLines={1}>
             {session.isPaused ? 'Tiếp tục' : 'Tạm dừng'}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.endBtn} onPress={session.endSession} activeOpacity={0.85}>
-          <Ionicons name="stop-circle" size={22} color="#fff" />
-          <Text style={styles.endBtnText}>Kết thúc</Text>
+          <Ionicons name="stop-circle" size={18} color="#fff" />
+          <Text style={styles.endBtnText} numberOfLines={1}>
+            Kết thúc
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -231,11 +235,12 @@ const getStyles = (colors: any) =>
 
     bottomRow: {
       flexDirection: 'row',
-      gap: 12,
+      gap: 8,
       marginHorizontal: 24,
       marginBottom: 24,
     },
     hintBtn: {
+      flex: 0.9,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -244,12 +249,13 @@ const getStyles = (colors: any) =>
       borderRadius: 18,
       borderWidth: 2,
       borderColor: colors.border,
-      paddingHorizontal: 18,
+      paddingHorizontal: 10,
       paddingVertical: 14,
     },
     hintBtnText: { fontSize: 14, fontWeight: '700', color: colors.primary },
 
     pauseBtn: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -258,7 +264,7 @@ const getStyles = (colors: any) =>
       borderColor: colors.primary,
       backgroundColor: colors.surfaceAlt,
       borderRadius: 18,
-      paddingHorizontal: 18,
+      paddingHorizontal: 10,
       paddingVertical: 14,
     },
     pauseBtnText: { fontSize: 14, fontWeight: '700', color: colors.primary },
@@ -266,14 +272,15 @@ const getStyles = (colors: any) =>
     resumeBtnText: { color: '#fff' },
 
     endBtn: {
-      flex: 1,
+      flex: 1.1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 10,
+      gap: 6,
       backgroundColor: colors.error,
       borderRadius: 18,
+      paddingHorizontal: 6,
       paddingVertical: 14,
     },
-    endBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+    endBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
   });
