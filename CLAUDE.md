@@ -13,6 +13,8 @@ conversation, pronunciation scoring). React Native + Expo, backend Supabase.
   `gemini-*-live-preview` cho WebSocket Live)
 - **Audio:** `expo-audio`, `expo-speech`, `@siteed/expo-audio-studio` (mic
   streaming + AEC), `react-native-audio-api` (buffer queue cho Live)
+- **Image:** `expo-image-manipulator` (resize + nén ảnh trước khi gửi multimodal
+  cho Image Exploration Mission, Pha 5)
 - **Animation:** react-native-reanimated ~4
 
 ## Cấu trúc thư mục
@@ -22,6 +24,12 @@ app/                          # Expo Router
   _layout.tsx                 # KeyboardProvider > AuthProvider > ProfileProvider > ThemeProvider > RouteGuard > Slot
   (auth)/                     # login, register — Stack, no header
   (kid)/                      # Kid Mode (is_kid_mode=true): UI riêng, RouteGuard cô lập khỏi (app)
+                              #   _layout.tsx bọc ScreenTimeProvider + ScreenTimeGate (Pha 4)
+                              #   onboarding = chọn nhân vật lần đầu, home = màn chính (gate onboarding nếu chưa chọn)
+                              #   missions = list nhiệm vụ, mission-live = phiên Guided Conversation (LiveClient + companion)
+                              #   exploration = phiên Image Exploration Mission (LiveClient gửi ảnh multimodal, Pha 5)
+                              #   collection = Album sticker + tủ trang phục (Reward System)
+                              #   day-summary = màn hết giờ chơi/ngày (Screen Time)
   (app)/                      # Tab bar: home, practice, chat, live, profile (+ ẩn: notebook, analytics)
     index.tsx                 # Home: goal, streak, weekly chart, action cards
     practice/                 # index = list kịch bản, [scenarioId] = chi tiết shadowing
@@ -36,6 +44,16 @@ components/
   live/       SetupView, LiveConversationView, StatusView, useLiveSession (state machine)
   notebook/   FlashcardModal, PronouncePracticeModal, SavedItemCard
   analytics/  ProgressRing, NotebookPieChart
+  kid/        Companion (emoji + reanimated, biểu cảm idle/happy/surprised/cheering/thinking), companionAssets,
+              StarRow (animation sao bay khi tổng kết mission),
+              ScreenTimeBadge (bộ đếm góc màn hình + toast cảnh báo còn 2 phút, đặt ở (kid)/_layout.tsx),
+              useMissionSession (state machine cho Guided Conversation: tải mission/steps/companion, mở LiveClient,
+              theo dõi turn timeout/step advance/off-topic, gọi /session-review chấm phát âm, chấm sao + mở
+              sticker/costume, lưu conversation mode='kid_guided', kết thúc sau lượt nói hiện tại khi hết giờ chơi/ngày),
+              useExplorationSession (state machine cho Image Exploration Mission, Pha 5: chọn ảnh approved ngẫu nhiên
+              từ exploration_images, resize/nén bằng expo-image-manipulator, mở LiveClient rồi gọi sendImageTurn() khi
+              vào live, gọi /session-review rồi tự lưu vocab_to_learn/corrections vào saved_items — Kid Mode chưa có
+              UI tap-to-save, lưu conversation mode='kid_exploration')
   SwipeableRow.tsx
 
 lib/
@@ -46,9 +64,12 @@ lib/
   liveClient.ts        # WebSocket client cho Gemini Live API
 
 providers/
-  AuthProvider.tsx     # useAuth() -> { session, user, loading, signOut }
-  ProfileProvider.tsx  # useProfile() -> { profile, isKidMode, loading, refresh } — phụ thuộc useAuth
-  ThemeProvider.tsx    # useTheme() -> { themeMode, activeTheme, colors, isDark, setThemeMode } — dùng kidColors khi isKidMode
+  AuthProvider.tsx        # useAuth() -> { session, user, loading, signOut }
+  ProfileProvider.tsx     # useProfile() -> { profile, isKidMode, loading, refresh } — phụ thuộc useAuth
+  ThemeProvider.tsx       # useTheme() -> { themeMode, activeTheme, colors, isDark, setThemeMode } — dùng kidColors khi isKidMode
+  ScreenTimeProvider.tsx  # useScreenTime() -> { usedSeconds, limitSeconds, remainingSeconds, limitReached,
+                          #   showWarning } — đếm giây khi app foreground, flush định kỳ vào daily_kid_usage;
+                          #   chỉ bọc nhánh (kid) (xem (kid)/_layout.tsx)
 
 supabase/
   grants.sql, seed_*.sql
@@ -59,6 +80,7 @@ supabase/
     tts/               # Sinh audio mẫu cho scenario_lines
     live-token/        # Tạo ephemeral token cho Gemini Live WebSocket
     session-review/    # Tóm tắt sau buổi Live (pronunciation/fluency/vocab)
+    image-moderation/  # Google Vision SafeSearch duyệt ảnh exploration_images (Pha 5)
     _shared/cors.ts, auth.ts (verifyUser)
 
 scripts/
@@ -80,9 +102,62 @@ mình (xem `grants.sql`).
 **Kid Mode (đang triển khai theo `plan.md`):** `profiles` có `is_kid_mode`,
 `parent_pin`, `companion_id`, `screen_time_limit_minutes`, `child_name`,
 `child_level`. `scenarios.audience` (`'adult'|'child'`) phân loại nội dung.
-`daily_kid_usage` đếm screen time/ngày. Bật/tắt Kid Mode ở profile (adult) →
-`RouteGuard` cô lập trẻ trong nhánh `(kid)`. Roadmap đầy đủ + spike multimodal:
-xem `plan.md`.
+`companions` (static, seed bear/cat/robot) lưu `name` + `personality` (dùng cho
+system prompt Gemini) + `accent_color`. `daily_kid_usage` đếm screen time/ngày.
+Bật/tắt Kid Mode ở profile (adult) → `RouteGuard` cô lập trẻ trong nhánh
+`(kid)`.
+
+**Guided Conversation (Pha 2):** `missions` (static, seed "Gọi món tại quán
+kem") + `mission_steps` (`step_order`, `target_sentence`, `intent`) định nghĩa
+nhiệm vụ trẻ đi qua từng bước. `conversations.mission_id` gắn phiên với
+nhiệm vụ, `conversation_mode` có thêm value `'kid_guided'`. AI (qua
+`live-token` system prompt) chèn marker `[STEP_DONE]`/`[OFFTOPIC]` vào lời nói
+— `LiveClient` parse và strip các marker này (xem `STEP_DONE_MARKER`,
+`OFFTOPIC_MARKER` trong `lib/liveClient.ts`) để bắn callback
+`onStepAdvance`/`onOffTopic`, KHÔNG hiển thị marker cho người dùng.
+
+**Reward System (Pha 3):** `stickers`/`costumes` (static, catalog) +
+`user_stickers`/`user_costumes` (đã mở khoá, owner-only) + `mission_results`
+(`stars` 0-3, `used_hint`, gắn `mission_id`/`conversation_id`). Mỗi `mission`
+có `sticker_pool` (text[] id sticker có thể thưởng). Chấm sao khi kết thúc
+mission (`useMissionSession.awardMissionResult`): star 1 = hoàn thành đủ
+bước, star 2 = `avg_pronunciation` (từ `/session-review`, tái dùng cho Kid
+Mode kể từ pha này) đạt ngưỡng `PRONUNCIATION_STAR_THRESHOLD`, star 3 =
+không bấm nút "Gợi ý" trong phiên. Số sao đạt được mở khoá tương ứng số
+sticker trong `sticker_pool` (theo thứ tự, bỏ qua cái đã có); đạt tròn 3 sao
+mở thêm 1 costume mới cho companion hiện tại. Streak không reset
+sticker/costume đã mở (bỏ lỡ ngày không bị thu hồi).
+
+**Screen Time (Pha 4):** `daily_kid_usage.seconds_used` được `ScreenTimeProvider`
+cộng dồn mỗi giây khi app ở foreground trong nhánh `(kid)`, flush (upsert) định
+kỳ mỗi 10 giây + khi app vào background/unmount. Giới hạn phút/ngày đọc từ
+`profiles.screen_time_limit_minutes` (mặc định 20, chỉnh ở `(app)/profile.tsx`
+khi Kid Mode đang bật, bước nhảy 5 phút, 5-120). Còn ≤2 phút → `ScreenTimeBadge`
+hiện toast cảnh báo một lần. Hết giờ (`limitReached`): `ScreenTimeGate` ở
+`(kid)/_layout.tsx` chặn mọi màn (kid) khác (trừ `mission-live`/`day-summary`)
+và đẩy về `day-summary`; nếu đang ở giữa phiên Guided Conversation,
+`useMissionSession` KHÔNG cắt ngay — đợi AI nói xong lượt hiện tại (phát hiện
+qua `onTranscriptUpdate` khi có lượt `assistant` mới) rồi mới `endSession()`
+(có fallback timeout nếu AI không nói thêm gì), giữ đúng yêu cầu "không cắt
+giữa câu".
+
+**Image Exploration Mission (Pha 5):** `exploration_images` (`storage_path` trong
+bucket public `exploration-images`, `is_approved`, `safesearch_result` jsonb) —
+chỉ ảnh `is_approved = true` mới đọc được (RLS), duyệt bởi edge function
+`image-moderation` (Google Vision SafeSearch, tái dùng `GOOGLE_GENAI_API_KEY`).
+`conversation_mode` có thêm value `'kid_exploration'`. `useExplorationSession`
+chọn ngẫu nhiên 1 ảnh đã duyệt, resize ≤1024px + nén JPEG (`expo-image-manipulator`)
+
+- base64 **trước khi mở WebSocket**; sau khi `LiveClient` nhận `setupComplete`
+  thật (không phải lúc `ws.onopen`), gọi `sendImageTurn()` gửi MỘT `clientContent`
+  user turn chứa ảnh + câu mở đầu cố định (`EXPLORATION_OPENING_TEXT`) — ảnh
+  KHÔNG được nhét vào setup message. `scenario_lines`/`missions` không dùng ở
+  mission này; câu hỏi (5W1H+Why) do Gemini tự sinh từ ảnh qua system prompt
+  (`buildKidExplorationPrompt` trong `live-token`). Kết thúc gọi `/session-review`
+  như Guided Conversation, rồi **tự động** lưu `vocab_to_learn`/`corrections` vào
+  `saved_items` (Kid Mode chưa có UI tap-to-save như màn review của adult).
+
+Roadmap đầy đủ + spike multimodal: xem `plan.md`.
 
 ## Code style & convention
 
@@ -125,9 +200,33 @@ xem `plan.md`.
   điểm.
 - **Live session** giới hạn 15 phút (giới hạn cứng của Gemini Live), token
   ephemeral hiệu lực 30 phút.
+- **Guided Conversation (Kid Mode)** giới hạn 10 phút/phiên, mỗi lượt trẻ có
+  tối đa 8s để nói (`TURN_LIMIT_SEC` trong `useMissionSession.ts`) trước khi
+  companion nhắc lại. Tiến trình bước (`STEP_DONE`) và lạc đề (`OFFTOPIC`)
+  được AI báo qua marker trong text — KHÔNG dùng heuristic phía client để suy
+  đoán, tránh sai lệch với system prompt.
+- **Guided Conversation gọi `/session-review`** sau mỗi mission (kể từ Pha 3)
+  để lấy `avg_pronunciation` dùng tính sao — phần `corrections`/`vocab_to_learn`
+  từ Claude trong response này KHÔNG hiển thị cho trẻ (Kid Mode chưa có UI sửa
+  ngữ pháp), chỉ `avg_pronunciation` được dùng.
 - **`/chat` function** lọc corrections: chỉ giữ correction nếu cụm từ lỗi thực
   sự xuất hiện trong message gần nhất của user (tránh Claude tự bịa lỗi không có
   thật).
+- **Hết giờ chơi/ngày (Kid Mode) không cắt phiên giữa câu** — `useMissionSession`
+  chỉ đặt cờ chờ (`timeUpPendingRef`) khi `ScreenTimeProvider` báo
+  `limitReached`, và chỉ gọi `endSession()` ở điểm AI vừa hoàn thành một lượt
+  nói mới (hoặc sau timeout fallback `TIME_UP_FALLBACK_MS` nếu AI im lặng).
+  `useExplorationSession` dùng lại đúng pattern này.
+- **`LiveClient.sendImageTurn()` chỉ được gửi sau khi server xác nhận
+  `setupComplete` thật** — KHÔNG phải lúc `ws.onopen` (lúc đó `onStateChange('live')`
+  đã fire nhưng server có thể chưa sẵn sàng nhận `clientContent`). Gọi
+  `sendImageTurn()` sớm hơn vẫn an toàn vì `LiveClient` tự queue
+  (`pendingImageTurn`) và flush khi `_handleMessage` nhận `setupComplete`. Hành
+  vi này đã được verify bằng spike `scripts/spike-live-image.mjs` trước khi
+  implement — không tự ý đổi thứ tự gửi ảnh/setup.
+- **`image-moderation` function tái dùng `GOOGLE_GENAI_API_KEY`** cho Google
+  Cloud Vision SafeSearch — không cần thêm secret riêng, miễn Cloud Vision API
+  đã enable trên cùng GCP project với Gemini.
 
 ## Lệnh hay dùng
 

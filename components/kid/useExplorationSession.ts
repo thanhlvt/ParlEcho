@@ -1,0 +1,493 @@
+import { ExpoAudioStreamModule, useAudioRecorder } from '@siteed/audio-studio';
+import { requestRecordingPermissionsAsync } from 'expo-audio';
+import * as FileSystem from 'expo-file-system/legacy';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { LegacyEventEmitter } from 'expo-modules-core';
+import { Href, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert } from 'react-native';
+import {
+  AudioBufferQueueSourceNode,
+  AudioContext,
+  decodePCMInBase64,
+} from 'react-native-audio-api';
+import {
+  bytesToBase64,
+  EXPLORATION_OPENING_TEXT,
+  LiveClient,
+  LiveState,
+  pcmToWav,
+  uploadLiveSegment,
+} from '../../lib/liveClient';
+import { supabase } from '../../lib/supabase';
+import {
+  Companion as CompanionType,
+  Correction,
+  ExplorationImage,
+  LiveAudioSegment,
+  LiveTurn,
+  SessionReviewApiResponse,
+} from '../../lib/types';
+import { useAuth } from '../../providers/AuthProvider';
+import { useProfile } from '../../providers/ProfileProvider';
+import { useScreenTime } from '../../providers/ScreenTimeProvider';
+import { CompanionExpression } from './companionAssets';
+
+// Phiên Image Exploration ngắn hơn Guided Conversation — chỉ là hỏi-đáp xoay quanh 1 ảnh.
+const SESSION_LIMIT_MINUTES = 8;
+const REACTION_DISPLAY_MS = 1600;
+const TIME_UP_FALLBACK_MS = 20000;
+const IMAGE_POOL_SIZE = 50;
+const IMAGE_MAX_DIMENSION = 1024;
+
+export type ExplorationView = 'loading' | 'connecting' | 'live' | 'saving' | 'finished' | 'error';
+
+export function useExplorationSession() {
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  const { limitReached: dailyLimitReached } = useScreenTime();
+  const router = useRouter();
+
+  const [view, setView] = useState<ExplorationView>('loading');
+  const [companion, setCompanion] = useState<CompanionType | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [expression, setExpression] = useState<CompanionExpression>('idle');
+  const [lastAiText, setLastAiText] = useState('');
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [savingMsg, setSavingMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [vocabLearned, setVocabLearned] = useState<string[]>([]);
+  const [timeUp, setTimeUp] = useState(false);
+
+  const clientRef = useRef<LiveClient | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeUpFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const turnsRef = useRef<LiveTurn[]>([]);
+  const timeUpPendingRef = useRef(false);
+  const imageBase64Ref = useRef<string | null>(null);
+  const audioCtxRef = useRef<InstanceType<typeof AudioContext> | null>(null);
+  const audioQueueRef = useRef<AudioBufferQueueSourceNode | null>(null);
+  const audioEmitter = useRef(new LegacyEventEmitter(ExpoAudioStreamModule));
+  const { startRecording, stopRecording } = useAudioRecorder();
+
+  const setReaction = useCallback((expr: CompanionExpression, durationMs: number) => {
+    setExpression(expr);
+    if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+    reactionTimerRef.current = setTimeout(() => setExpression('idle'), durationMs);
+  }, []);
+
+  // ── Tải companion + chọn ảnh ngẫu nhiên + resize/nén trước khi mở WS ──────
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      if (profile?.companion_id) {
+        const { data: comp } = await supabase
+          .from('companions')
+          .select('*')
+          .eq('id', profile.companion_id)
+          .single();
+        if (!cancelled && comp) setCompanion(comp as CompanionType);
+      }
+
+      const { data: images, error: imagesErr } = await supabase
+        .from('exploration_images')
+        .select('*')
+        .eq('is_approved', true)
+        .limit(IMAGE_POOL_SIZE);
+
+      if (cancelled) return;
+      if (imagesErr || !images || images.length === 0) {
+        setErrorMsg('Chưa có ảnh nào để khám phá. Hãy nhờ bố mẹ thêm ảnh nhé!');
+        setView('error');
+        return;
+      }
+
+      const picked = images[Math.floor(Math.random() * images.length)] as ExplorationImage;
+      const { data: publicUrlData } = supabase.storage
+        .from('exploration-images')
+        .getPublicUrl(picked.storage_path);
+
+      try {
+        const result = await manipulateAsync(
+          publicUrlData.publicUrl,
+          [{ resize: { width: IMAGE_MAX_DIMENSION, height: IMAGE_MAX_DIMENSION } }],
+          { compress: 0.7, format: SaveFormat.JPEG, base64: true },
+        );
+        if (cancelled) return;
+        if (!result.base64) throw new Error('Không nén được ảnh');
+        imageBase64Ref.current = result.base64;
+        setImageUrl(result.uri);
+        setView('connecting');
+      } catch (err) {
+        console.error('[ExplorationSession] image load error', err);
+        if (!cancelled) {
+          setErrorMsg('Không tải được ảnh. Hãy thử lại nhé!');
+          setView('error');
+        }
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Mở kết nối Live khi đã có ảnh sẵn sàng ────────────────────────────
+  useEffect(() => {
+    if (view !== 'connecting' || !imageBase64Ref.current) return;
+    startSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
+  // Hết giờ chơi/ngày (Pha 4): không cắt ngay, chờ AI nói xong lượt hiện tại.
+  useEffect(() => {
+    if (!dailyLimitReached || view !== 'live' || timeUpPendingRef.current) return;
+    timeUpPendingRef.current = true;
+    setTimeUp(true);
+    timeUpFallbackRef.current = setTimeout(() => endSession(), TIME_UP_FALLBACK_MS);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dailyLimitReached, view]);
+
+  // Cleanup khi unmount
+  useEffect(() => {
+    return () => {
+      clientRef.current?.stop();
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+      if (timeUpFallbackRef.current) clearTimeout(timeUpFallbackRef.current);
+    };
+  }, []);
+
+  // Mic streaming khi vào trạng thái live
+  useEffect(() => {
+    if (view !== 'live') return;
+
+    const sub = audioEmitter.current.addListener('AudioData', async (event: any) => {
+      if (event?.encoded) {
+        clientRef.current?.sendAudioChunk(event.encoded as string);
+      }
+    });
+
+    startRecording({
+      sampleRate: 16000,
+      channels: 1,
+      encoding: 'pcm_16bit',
+      interval: 100,
+      ios: {
+        audioSession: {
+          category: 'PlayAndRecord',
+          mode: 'VoiceChat',
+          categoryOptions: ['DefaultToSpeaker', 'AllowBluetooth'],
+        },
+      },
+      android: { audioFocusStrategy: 'communication' },
+    }).catch((e) => console.warn('[ExplorationSession] startRecording error', e));
+
+    return () => {
+      sub.remove();
+      stopRecording().catch(() => {});
+      audioQueueRef.current?.stop();
+      audioCtxRef.current?.close();
+      audioCtxRef.current = null;
+      audioQueueRef.current = null;
+    };
+  }, [view, startRecording, stopRecording]);
+
+  async function startSession() {
+    try {
+      const { granted } = await requestRecordingPermissionsAsync();
+      if (!granted) {
+        Alert.alert(
+          'Cần quyền microphone',
+          'Vào Cài đặt → ParlEcho → Microphone để cho phép ghi âm.',
+        );
+        setView('error');
+        return;
+      }
+    } catch (err) {
+      console.error('[ExplorationSession] permission error', err);
+      setView('error');
+      return;
+    }
+
+    turnsRef.current = [];
+    timeUpPendingRef.current = false;
+    setElapsedSec(0);
+    setTimeUp(false);
+
+    const client = new LiveClient({
+      onStateChange: (s: LiveState) => {
+        if (s === 'live') {
+          setView('live');
+          client.sendImageTurn(
+            imageBase64Ref.current as string,
+            'image/jpeg',
+            EXPLORATION_OPENING_TEXT,
+          );
+          timerRef.current = setInterval(() => {
+            setElapsedSec((prev) => {
+              if (prev >= SESSION_LIMIT_MINUTES * 60 - 1) {
+                endSession();
+                return prev;
+              }
+              return prev + 1;
+            });
+          }, 1000);
+        }
+        if (s === 'error') {
+          if (timerRef.current) clearInterval(timerRef.current);
+          if (turnsRef.current.length > 0) {
+            endSession();
+          } else {
+            setView('error');
+          }
+        }
+      },
+      onAudioChunk: async (pcm24Base64) => {
+        if (!audioCtxRef.current) {
+          const ctx = new AudioContext({ sampleRate: 24000 });
+          audioCtxRef.current = ctx;
+          const queue = ctx.createBufferQueueSource();
+          queue.connect(ctx.destination);
+          queue.start(0, 0);
+          audioQueueRef.current = queue;
+        }
+        try {
+          const buffer = await decodePCMInBase64(pcm24Base64, 24000, 1);
+          audioQueueRef.current?.enqueueBuffer(buffer);
+        } catch (e) {
+          console.warn('[ExplorationSession] playback enqueue error', e);
+        }
+      },
+      onInterrupted: () => {
+        audioQueueRef.current?.clearBuffers();
+      },
+      onTranscriptUpdate: (t) => {
+        const prevLen = turnsRef.current.length;
+        turnsRef.current = t;
+        const lastAi = [...t].reverse().find((turn) => turn.role === 'assistant');
+        if (lastAi) {
+          setLastAiText(lastAi.text);
+          setReaction('cheering', REACTION_DISPLAY_MS);
+        }
+        if (
+          timeUpPendingRef.current &&
+          t.length > prevLen &&
+          t[t.length - 1]?.role === 'assistant'
+        ) {
+          if (timeUpFallbackRef.current) clearTimeout(timeUpFallbackRef.current);
+          endSession();
+        }
+      },
+      onError: (msg) => {
+        console.warn('[ExplorationSession] error', msg);
+      },
+    });
+
+    clientRef.current = client;
+    await client.start({
+      languageId: profile?.active_language_id ?? 'en',
+      mode: 'kid_exploration',
+      companionName: companion?.name,
+      companionPersonality: companion?.personality,
+      childLevel: profile?.child_level ?? 'beginner',
+    });
+  }
+
+  async function endSession() {
+    if (timerRef.current) clearInterval(timerRef.current);
+    const client = clientRef.current;
+    if (!client || !user) {
+      setView('finished');
+      return;
+    }
+
+    setView('saving');
+    setSavingMsg('Đang lưu lại...');
+
+    const { turns: finalTurns, rawUserSegments, rawAiSegments } = client.stop();
+    clientRef.current = null;
+
+    if (finalTurns.length === 0) {
+      setView('finished');
+      return;
+    }
+
+    try {
+      const { data: conv, error: convErr } = await supabase
+        .from('conversations')
+        .insert({
+          user_id: user.id,
+          language_id: profile?.active_language_id ?? 'en',
+          mode: 'kid_exploration',
+        })
+        .select('id')
+        .single();
+
+      if (convErr || !conv) throw new Error('Không thể tạo phiên hội thoại');
+      const conversationId = conv.id;
+
+      const localAudioDir = `${FileSystem.documentDirectory}live/${conversationId}/`;
+      await FileSystem.makeDirectoryAsync(localAudioDir, { intermediates: true });
+
+      const userAudioMap = new Map<number, string>();
+      for (const seg of rawUserSegments) {
+        if (seg.pcm.length === 0) continue;
+        const base64Wav = bytesToBase64(pcmToWav(seg.pcm, 16000, 16));
+        const localUri = `${localAudioDir}${seg.order}_user.wav`;
+        await FileSystem.writeAsStringAsync(localUri, base64Wav, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        userAudioMap.set(seg.order, localUri);
+      }
+
+      const aiAudioMap = new Map<number, string>();
+      for (const seg of rawAiSegments) {
+        if (seg.pcm.length === 0) continue;
+        const base64Wav = bytesToBase64(pcmToWav(seg.pcm, 24000, 16));
+        const localUri = `${localAudioDir}${seg.order}_ai.wav`;
+        await FileSystem.writeAsStringAsync(localUri, base64Wav, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        aiAudioMap.set(seg.order, localUri);
+      }
+
+      const { data: savedMessages } = await supabase
+        .from('messages')
+        .insert(
+          finalTurns.map((t) => ({
+            conversation_id: conversationId,
+            user_id: user.id,
+            role: t.role,
+            sort_order: t.sort_order,
+            text: t.text,
+            audio_url:
+              t.role === 'user' ? userAudioMap.get(t.sort_order) : aiAudioMap.get(t.sort_order),
+          })),
+        )
+        .select('id, sort_order');
+
+      const messageIdByOrder = new Map(
+        (savedMessages ?? []).map((m: { id: string; sort_order: number }) => [m.sort_order, m.id]),
+      );
+
+      const audioSegments: LiveAudioSegment[] = [];
+      for (const seg of rawUserSegments) {
+        if (seg.pcm.length === 0 || !seg.text) continue;
+        const messageId = messageIdByOrder.get(seg.order);
+        if (!messageId) continue;
+        try {
+          const storagePath = await uploadLiveSegment(user.id, conversationId, seg.order, seg.pcm);
+          audioSegments.push({
+            message_id: messageId,
+            audio_storage_path: storagePath,
+            text: seg.text,
+            sort_order: seg.order,
+          });
+        } catch (uploadErr) {
+          console.warn('[ExplorationSession] audio upload failed', seg.order, uploadErr);
+        }
+      }
+
+      await supabase
+        .from('conversations')
+        .update({ ended_at: new Date().toISOString() })
+        .eq('id', conversationId);
+
+      setSavingMsg('Đang xem con học được gì...');
+      try {
+        const { data: reviewData, error: reviewErr } = await supabase.functions.invoke(
+          'session-review',
+          {
+            body: {
+              conversation_id: conversationId,
+              language_id: profile?.active_language_id ?? 'en',
+              transcript: finalTurns.map((t) => ({ role: t.role, text: t.text })),
+              user_segments: audioSegments,
+            },
+          },
+        );
+        if (reviewErr) console.warn('[ExplorationSession] session-review error:', reviewErr);
+        const review = reviewData as SessionReviewApiResponse | null;
+        if (review) await saveLearnedItems(review);
+      } catch (reviewErr) {
+        console.warn('[ExplorationSession] session-review call failed:', reviewErr);
+      }
+
+      setView('finished');
+    } catch (err) {
+      console.error('[ExplorationSession] endSession error:', err);
+      setView('finished');
+    }
+  }
+
+  // Kid Mode chưa có UI sửa ngữ pháp riêng — tự lưu từ vựng/lỗi lặp vào saved_items
+  // ngay sau session-review (khác với Live tự do của adult, nơi người dùng tự bấm lưu).
+  async function saveLearnedItems(review: SessionReviewApiResponse) {
+    if (!user) return;
+    const languageId = profile?.active_language_id ?? 'en';
+    const learned: string[] = [];
+
+    for (const word of review.vocab_to_learn ?? []) {
+      const { data: existing } = await supabase
+        .from('saved_items')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('language_id', languageId)
+        .eq('type', 'word')
+        .ilike('content', word)
+        .maybeSingle();
+      if (existing) continue;
+      const { error } = await supabase.from('saved_items').insert({
+        user_id: user.id,
+        language_id: languageId,
+        type: 'word',
+        content: word,
+      });
+      if (!error) learned.push(word);
+    }
+
+    for (const correction of (review.corrections ?? []) as Correction[]) {
+      const { data: existing } = await supabase
+        .from('saved_items')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('language_id', languageId)
+        .eq('type', 'mistake')
+        .ilike('content', correction.original)
+        .maybeSingle();
+      if (existing) continue;
+      await supabase.from('saved_items').insert({
+        user_id: user.id,
+        language_id: languageId,
+        type: 'mistake',
+        content: correction.original,
+        translation: correction.fixed,
+        note: correction.explanation,
+      });
+    }
+
+    setVocabLearned(learned);
+  }
+
+  function goHome() {
+    router.replace('/(kid)/home' as Href);
+  }
+
+  return {
+    view,
+    companion,
+    imageUrl,
+    expression,
+    lastAiText,
+    elapsedSec,
+    timeUp,
+    vocabLearned,
+    savingMsg,
+    errorMsg,
+    endSession,
+    goHome,
+  };
+}

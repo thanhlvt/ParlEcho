@@ -86,6 +86,16 @@ function concat(arrays: Uint8Array[]): Uint8Array {
 
 export type LiveState = 'idle' | 'connecting' | 'live' | 'ended' | 'error';
 
+// Markers AI chèn vào lời nói (outputTranscription) để báo tiến trình nhiệm vụ Kid Mode.
+// Được strip khỏi text hiển thị/lưu trữ — chỉ dùng nội bộ để client phát hiện sự kiện.
+export const STEP_DONE_MARKER = '[STEP_DONE]';
+export const OFFTOPIC_MARKER = '[OFFTOPIC]';
+
+// Image Exploration (Pha 5): câu mở đầu cố định gửi kèm ảnh qua clientContent — chỉ là
+// chỉ dẫn nội bộ cho model, không hiển thị cho trẻ (không qua inputAudioTranscription).
+export const EXPLORATION_OPENING_TEXT =
+  'Here is a picture for the child to look at. Start the activity now by asking your first question about it.';
+
 export interface LiveClientCallbacks {
   onStateChange: (state: LiveState) => void;
   /** PCM24 chunk từ Gemini → UI play */
@@ -95,6 +105,12 @@ export interface LiveClientCallbacks {
   onError: (msg: string) => void;
   /** Barge-in: AI bị ngắt → UI nên clear audio queue */
   onInterrupted?: () => void;
+  /** Kid Mode (guided): hết `turnLimitSec` mà trẻ chưa nói gì ở lượt của mình */
+  onTurnTimeout?: () => void;
+  /** Kid Mode (guided): AI báo đã hoàn thành bước hiện tại, sang bước kế */
+  onStepAdvance?: () => void;
+  /** Kid Mode (guided): AI báo trẻ đang lạc đề; streak = số lượt liên tiếp lạc đề */
+  onOffTopic?: (streak: number) => void;
 }
 
 export interface LiveSessionResult {
@@ -132,6 +148,16 @@ export class LiveClient {
   private aiAudioStartTime = 0;
   private aiAudioByteCount = 0;
 
+  // Kid Mode (guided): timer nhắc khi tới lượt trẻ mà im lặng quá lâu
+  private turnLimitMs = 0;
+  private turnTimer: ReturnType<typeof setTimeout> | null = null;
+  private offTopicStreak = 0;
+
+  // Kid Mode (Image Exploration): chỉ gửi ảnh sau khi server xác nhận setupComplete thật
+  // (KHÔNG nhét vào setup message — xem plan.md Pha 5 / spike-live-image.mjs).
+  private setupReady = false;
+  private pendingImageTurn: { base64: string; mimeType: string; text: string } | null = null;
+
   constructor(cb: LiveClientCallbacks) {
     this.cb = cb;
   }
@@ -145,7 +171,24 @@ export class LiveClient {
     speakingStyle?: string;
     conversationMethod?: string;
     accent?: string;
+    /** Kid Mode: 'kid_guided' để live-token build system prompt theo mission */
+    mode?: string;
+    mission?: {
+      title: string;
+      topic: string;
+      steps: { stepOrder: number; targetSentence: string; intent: string }[];
+    };
+    companionName?: string;
+    companionPersonality?: string;
+    /** Kid Mode (guided): giây tối đa chờ trẻ nói ở lượt của mình trước khi nudge */
+    turnLimitSec?: number;
+    /** Kid Mode (exploration): 'beginner' | 'intermediate' — scale độ khó câu hỏi */
+    childLevel?: string;
   }) {
+    this.turnLimitMs = (opts.turnLimitSec ?? 0) * 1000;
+    this.offTopicStreak = 0;
+    this.setupReady = false;
+    this.pendingImageTurn = null;
     this.cb.onStateChange('connecting');
 
     // 1. Lấy ephemeral token từ Edge Function
@@ -157,6 +200,11 @@ export class LiveClient {
         speaking_style: opts.speakingStyle,
         conversation_method: opts.conversationMethod,
         accent: opts.accent,
+        mode: opts.mode,
+        mission: opts.mission,
+        companion_name: opts.companionName,
+        companion_personality: opts.companionPersonality,
+        child_level: opts.childLevel,
       },
     });
 
@@ -269,6 +317,34 @@ export class LiveClient {
   }
 
   /**
+   * Kid Mode (Image Exploration): gửi MỘT user turn chứa ảnh + câu mở đầu, dạng
+   * clientContent (KHÔNG nhét vào setup message). Nếu server chưa xác nhận
+   * setupComplete, request được queue và tự gửi ngay khi setupComplete tới
+   * (xem _handleMessage).
+   */
+  sendImageTurn(base64: string, mimeType: string, text: string) {
+    if (this.setupReady) {
+      this._sendImageTurnNow(base64, mimeType, text);
+    } else {
+      this.pendingImageTurn = { base64, mimeType, text };
+    }
+  }
+
+  private _sendImageTurnNow(base64: string, mimeType: string, text: string) {
+    this._send({
+      clientContent: {
+        turns: [
+          {
+            role: 'user',
+            parts: [{ inlineData: { mimeType, data: base64 } }, { text }],
+          },
+        ],
+        turnComplete: true,
+      },
+    });
+  }
+
+  /**
    * Dừng phiên. Trả về data để UI persist + gọi /session-review.
    * Upload audio segments cần được thực hiện bởi UI sau khi nhận result.
    */
@@ -284,6 +360,7 @@ export class LiveClient {
       }
       this.ws = null;
     }
+    this._clearTurnTimer();
     this._flushCurrentUserTurn();
     this._flushCurrentAiTurn();
     this.cb.onStateChange('ended');
@@ -304,9 +381,16 @@ export class LiveClient {
       return;
     }
 
-    // setupComplete confirms the session is ready
+    // setupComplete confirms the session is ready — only NOW is it safe to send the
+    // image turn (sending it inside/before setup is not supported by the API).
     if (msg.setupComplete !== undefined) {
       console.log('[LiveClient] setupComplete received — session ready');
+      this.setupReady = true;
+      if (this.pendingImageTurn) {
+        const { base64, mimeType, text } = this.pendingImageTurn;
+        this.pendingImageTurn = null;
+        this._sendImageTurnNow(base64, mimeType, text);
+      }
       return;
     }
 
@@ -348,6 +432,8 @@ export class LiveClient {
     const inputTx = sc.inputTranscription as { text?: string } | undefined;
     if (inputTx?.text) {
       this.currentUserText += inputTx.text;
+      // Trẻ đã bắt đầu nói ở lượt của mình — không cần nudge nữa
+      this._clearTurnTimer();
       // Gemini confirmed it's receiving user audio — cancel any stale aiSpeaking flag
       if (this.aiSpeaking) {
         this.aiSpeaking = false;
@@ -403,8 +489,25 @@ export class LiveClient {
       this.aiAudioByteCount = 0;
       setTimeout(() => {
         this.aiSpeaking = false;
+        // Mic vừa được mở lại — bắt đầu đếm lượt của trẻ (Kid Mode guided)
+        this._startTurnTimer();
       }, remainingMs);
       this.cb.onTranscriptUpdate([...this.turns]);
+    }
+  }
+
+  private _startTurnTimer() {
+    if (this.turnLimitMs <= 0) return;
+    this._clearTurnTimer();
+    this.turnTimer = setTimeout(() => {
+      this.cb.onTurnTimeout?.();
+    }, this.turnLimitMs);
+  }
+
+  private _clearTurnTimer() {
+    if (this.turnTimer) {
+      clearTimeout(this.turnTimer);
+      this.turnTimer = null;
     }
   }
 
@@ -423,7 +526,8 @@ export class LiveClient {
   }
 
   private _flushCurrentAiTurn() {
-    const text = this.currentAiText.trim();
+    const rawText = this.currentAiText.trim();
+    const text = this._consumeMarkers(rawText);
     if (text || this.aiPcmChunks.length > 0) {
       const pcm = concat(this.aiPcmChunks);
       this.aiAudioSegments.push({ pcm, text, order: this.turnOrder });
@@ -437,6 +541,28 @@ export class LiveClient {
       this.currentAiText = '';
       this.aiPcmChunks = [];
     }
+  }
+
+  // Kid Mode (guided): tách marker tiến trình khỏi text hiển thị/lưu trữ + bắn callback.
+  private _consumeMarkers(text: string): string {
+    let cleaned = text;
+
+    if (cleaned.includes(STEP_DONE_MARKER)) {
+      cleaned = cleaned.split(STEP_DONE_MARKER).join('').trim();
+      this.offTopicStreak = 0;
+      this.cb.onStepAdvance?.();
+    }
+
+    if (cleaned.includes(OFFTOPIC_MARKER)) {
+      cleaned = cleaned.split(OFFTOPIC_MARKER).join('').trim();
+      this.offTopicStreak++;
+      this.cb.onOffTopic?.(this.offTopicStreak);
+    } else if (this.turnLimitMs > 0) {
+      // Chỉ reset streak trong Kid Mode guided — AI quay lại đúng nhiệm vụ
+      this.offTopicStreak = 0;
+    }
+
+    return cleaned;
   }
 
   private _send(payload: unknown) {

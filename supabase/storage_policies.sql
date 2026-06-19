@@ -10,7 +10,9 @@ VALUES
   ('recordings', 'recordings', false, 10485760,
    ARRAY['audio/mp4', 'audio/m4a', 'audio/mpeg', 'audio/wav', 'audio/webm']),
   ('tts',        'tts',        true,  5242880,
-   ARRAY['audio/wav', 'audio/mpeg', 'audio/mp4'])
+   ARRAY['audio/wav', 'audio/mpeg', 'audio/mp4']),
+  ('exploration-images', 'exploration-images', true, 5242880,
+   ARRAY['image/jpeg', 'image/png'])
 ON CONFLICT (id) DO NOTHING;
 
 -- ──────────────────────────────────────────────────────────────────────
@@ -20,6 +22,7 @@ DROP POLICY IF EXISTS "recordings: users upload to own folder" ON storage.object
 DROP POLICY IF EXISTS "recordings: users read own files"       ON storage.objects;
 DROP POLICY IF EXISTS "recordings: users delete own files"     ON storage.objects;
 DROP POLICY IF EXISTS "tts: public read"                       ON storage.objects;
+DROP POLICY IF EXISTS "exploration-images: public read"        ON storage.objects;
 
 -- ──────────────────────────────────────────────────────────────────────
 -- 3. recordings bucket policies
@@ -58,3 +61,14 @@ CREATE POLICY "tts: public read"
   ON storage.objects FOR SELECT
   TO public
   USING (bucket_id = 'tts');
+
+-- ──────────────────────────────────────────────────────────────────────
+-- 5. exploration-images bucket — public read, service_role-only write
+--    (Pha 5: ảnh duyệt bởi image-moderation; Pha 6 sẽ thêm policy upload
+--    cho phụ huynh)
+-- ──────────────────────────────────────────────────────────────────────
+
+CREATE POLICY "exploration-images: public read"
+  ON storage.objects FOR SELECT
+  TO public
+  USING (bucket_id = 'exploration-images');

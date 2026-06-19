@@ -12,7 +12,14 @@ export type Language = {
 export type ScenarioLevel = 'beginner' | 'intermediate' | 'advanced';
 export type ScenarioType = 'scripted' | 'ai_roleplay' | 'pronunciation';
 export type LineSpeaker = 'user' | 'partner';
-export type ConversationMode = 'roleplay' | 'exam' | 'journaling' | 'code_switch' | 'free_talk';
+export type ConversationMode =
+  | 'roleplay'
+  | 'exam'
+  | 'journaling'
+  | 'code_switch'
+  | 'free_talk'
+  | 'kid_guided'
+  | 'kid_exploration';
 export type MessageRole = 'user' | 'assistant' | 'system';
 export type ProgressStatus = 'locked' | 'in_progress' | 'completed';
 export type SavedItemType = 'word' | 'phrase' | 'mistake';
@@ -52,6 +59,94 @@ export type ScenarioLine = {
   created_at: string;
 };
 
+// Kid Mode: nhân vật đồng hành (bảng companions)
+export type Companion = {
+  id: string;
+  name: string;
+  personality: string;
+  accent_color: string;
+  sort_order: number;
+};
+
+// Kid Mode: nhiệm vụ hội thoại có cấu trúc (bảng missions/mission_steps)
+export type Mission = {
+  id: string;
+  language_id: LanguageId;
+  title: string;
+  topic: string;
+  level: ScenarioLevel;
+  step_count: number;
+  sticker_pool: string[];
+  created_at: string;
+};
+
+export type MissionStep = {
+  id: string;
+  mission_id: string;
+  step_order: number;
+  target_sentence: string;
+  intent: string;
+};
+
+// Kid Mode: Reward System (Pha 3)
+export type Sticker = {
+  id: string;
+  name: string;
+  theme: string;
+  emoji: string;
+  sort_order: number;
+};
+
+export type Costume = {
+  id: string;
+  companion_id: string;
+  name: string;
+  emoji: string;
+  sort_order: number;
+};
+
+export type UserSticker = {
+  id: string;
+  user_id: string;
+  sticker_id: string;
+  unlocked_at: string;
+};
+
+export type UserCostume = {
+  id: string;
+  user_id: string;
+  costume_id: string;
+  unlocked_at: string;
+};
+
+export type MissionResult = {
+  id: string;
+  user_id: string;
+  mission_id: string;
+  conversation_id: string | null;
+  stars: number;
+  used_hint: boolean;
+  completed_at: string;
+};
+
+// Kid Mode: ảnh cho Image Exploration Mission (Pha 5 — bảng exploration_images)
+export type ExplorationImage = {
+  id: string;
+  uploader: string | null;
+  storage_path: string;
+  is_approved: boolean;
+  safesearch_result: Record<string, unknown> | null;
+  created_at: string;
+};
+
+// Kid Mode: đếm thời lượng dùng app/ngày (Pha 4 — Screen Time)
+export type DailyKidUsage = {
+  id: string;
+  user_id: string;
+  activity_date: string;
+  seconds_used: number;
+};
+
 export type Profile = {
   id: string;
   name: string | null;
@@ -83,6 +178,7 @@ export type Conversation = {
   id: string;
   user_id: string;
   scenario_id: string | null;
+  mission_id: string | null;
   language_id: LanguageId;
   mode: ConversationMode;
   summary: ConversationSummary | null;

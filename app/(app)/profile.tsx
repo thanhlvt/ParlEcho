@@ -30,6 +30,7 @@ export default function ProfileScreen() {
   const [totalLines, setTotalLines] = useState<number>(0);
   const [audioCacheSize, setAudioCacheSize] = useState<number>(0);
   const [savingKid, setSavingKid] = useState(false);
+  const [screenTimeLimit, setScreenTimeLimit] = useState(20);
 
   useEffect(() => {
     if (!user) return;
@@ -38,7 +39,10 @@ export default function ProfileScreen() {
       .select('*')
       .eq('id', user.id)
       .single()
-      .then(({ data }) => setProfile(data));
+      .then(({ data }) => {
+        setProfile(data);
+        if (data?.screen_time_limit_minutes) setScreenTimeLimit(data.screen_time_limit_minutes);
+      });
 
     supabase
       .from('daily_activity')
@@ -89,6 +93,14 @@ export default function ProfileScreen() {
       await refreshProfile();
     }
     setSavingKid(false);
+  };
+
+  // Giới hạn phút/ngày cho Kid Mode (Pha 4 — Screen Time). Mặc định 20, bước nhảy 5.
+  const updateScreenTimeLimit = async (delta: number) => {
+    if (!user) return;
+    const next = Math.max(5, Math.min(120, screenTimeLimit + delta));
+    setScreenTimeLimit(next);
+    await supabase.from('profiles').update({ screen_time_limit_minutes: next }).eq('id', user.id);
   };
 
   const initial = (profile?.name ?? user?.email ?? '?')[0].toUpperCase();
@@ -163,6 +175,33 @@ export default function ProfileScreen() {
               trackColor={{ true: colors.primary }}
             />
           </View>
+
+          {profile?.is_kid_mode ? (
+            <View style={styles.settingRow}>
+              <Ionicons
+                name="time-outline"
+                size={20}
+                color={colors.textMuted}
+                style={styles.settingIcon}
+              />
+              <Text style={styles.settingLabel}>Giới hạn thời gian/ngày</Text>
+              <View style={styles.stepperRow}>
+                <TouchableOpacity
+                  style={styles.stepperBtn}
+                  onPress={() => updateScreenTimeLimit(-5)}
+                >
+                  <Ionicons name="remove" size={16} color={colors.textPrimary} />
+                </TouchableOpacity>
+                <Text style={styles.stepperValue}>{screenTimeLimit} phút</Text>
+                <TouchableOpacity
+                  style={styles.stepperBtn}
+                  onPress={() => updateScreenTimeLimit(5)}
+                >
+                  <Ionicons name="add" size={16} color={colors.textPrimary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : null}
         </View>
 
         {/* Theme Settings */}
@@ -272,6 +311,16 @@ const getStyles = (colors: any) =>
     settingIcon: { marginRight: 12 },
     settingLabel: { flex: 1, fontSize: 15, color: colors.textPrimary },
     settingValue: { fontSize: 14, color: colors.textMuted },
+    stepperRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    stepperBtn: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: colors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    stepperValue: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, minWidth: 50 },
     signOutBtn: {
       alignSelf: 'stretch',
       flexDirection: 'row',
