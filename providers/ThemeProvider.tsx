@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { lightColors, darkColors } from '../constants/Colors';
-import { useAuth } from './AuthProvider';
+import { lightColors, darkColors, kidColors } from '../constants/Colors';
+import { useProfile } from './ProfileProvider';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 type ActiveTheme = 'light' | 'dark';
@@ -29,6 +29,7 @@ export function useTheme() {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useColorScheme();
+  const { isKidMode } = useProfile();
   const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
 
   // Load saved theme mode from AsyncStorage on mount
@@ -61,11 +62,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const colors = (activeTheme === 'dark' ? darkColors : lightColors) as Record<
-    keyof typeof lightColors,
-    string
-  >;
-  const isDark = activeTheme === 'dark';
+  // Kid Mode dùng palette tươi sáng cố định, bỏ qua light/dark.
+  const baseColors = activeTheme === 'dark' ? darkColors : lightColors;
+  const colors = (isKidMode ? kidColors : baseColors) as Record<keyof typeof lightColors, string>;
+  const isDark = !isKidMode && activeTheme === 'dark';
 
   return (
     <ThemeContext.Provider value={{ themeMode, activeTheme, colors, isDark, setThemeMode }}>

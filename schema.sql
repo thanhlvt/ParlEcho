@@ -15,6 +15,7 @@ create type conversation_mode as enum ('roleplay', 'exam', 'journaling', 'code_s
 create type message_role      as enum ('user', 'assistant', 'system');
 create type progress_status    as enum ('locked', 'in_progress', 'completed');
 create type saved_item_type    as enum ('word', 'phrase', 'mistake');
+create type audience           as enum ('adult', 'child');   -- Kid Mode: phân loại nội dung
 
 -- =====================================================================
 -- 1. NỘI DUNG TĨNH (dùng chung mọi user; không bật RLS write)
@@ -47,6 +48,7 @@ create table scenarios (
   type        scenario_type  not null default 'scripted',
   icon        text,
   sort_order  int not null default 0,
+  audience    audience not null default 'adult',   -- 'child' = nội dung Kid Mode
   created_at  timestamptz not null default now(),
   unique (group_id, language_id)                  -- mỗi group tối đa 1 scenario / ngôn ngữ
 );
@@ -78,6 +80,13 @@ create table profiles (
   id                  uuid primary key references auth.users(id) on delete cascade,
   name                text,
   active_language_id  text references languages(id) default 'en',
+  -- ── Kid Mode ─────────────────────────────────────────────────────────
+  is_kid_mode               boolean not null default false,
+  parent_pin                text,                       -- hash PIN 4 số (KHÔNG lưu plaintext)
+  companion_id              text,                       -- nhân vật đồng hành đã chọn
+  screen_time_limit_minutes int not null default 20,    -- giới hạn phút/ngày
+  child_name                text,
+  child_level               text default 'beginner',    -- 'beginner' | 'intermediate'
   created_at          timestamptz not null default now(),
   updated_at          timestamptz not null default now()
 );
@@ -167,6 +176,16 @@ create table daily_activity (
 );
 create index idx_activity_user on daily_activity(user_id, activity_date desc);
 
+-- Kid Mode: đếm thời lượng dùng app/ngày (tách khỏi daily_activity)
+create table daily_kid_usage (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references auth.users(id) on delete cascade,
+  activity_date date not null,
+  seconds_used  int not null default 0,
+  unique (user_id, activity_date)
+);
+create index idx_kid_usage_user on daily_kid_usage(user_id, activity_date desc);
+
 create table saved_items (
   id                uuid primary key default gen_random_uuid(),
   user_id           uuid not null references auth.users(id) on delete cascade,
@@ -230,6 +249,7 @@ alter table messages               enable row level security;
 alter table pronunciation_attempts enable row level security;
 alter table user_progress          enable row level security;
 alter table daily_activity         enable row level security;
+alter table daily_kid_usage        enable row level security;
 alter table saved_items            enable row level security;
 
 create policy "own profile"        on profiles
@@ -248,6 +268,9 @@ create policy "own progress"       on user_progress
   for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create policy "own activity"       on daily_activity
+  for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+create policy "own kid_usage"      on daily_kid_usage
   for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create policy "own saved_items"    on saved_items

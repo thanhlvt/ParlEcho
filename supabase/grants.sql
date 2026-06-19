@@ -21,6 +21,7 @@ GRANT ALL ON TABLE messages               TO authenticated;
 GRANT ALL ON TABLE pronunciation_attempts TO authenticated;
 GRANT ALL ON TABLE user_progress          TO authenticated;
 GRANT ALL ON TABLE daily_activity         TO authenticated;
+GRANT ALL ON TABLE daily_kid_usage        TO authenticated;
 GRANT ALL ON TABLE saved_items            TO authenticated;
 
 -- ── service_role: dùng trong Edge Functions (bypasses RLS nhưng vẫn
@@ -31,6 +32,7 @@ GRANT ALL ON TABLE messages               TO service_role;
 GRANT ALL ON TABLE pronunciation_attempts TO service_role;
 GRANT ALL ON TABLE user_progress          TO service_role;
 GRANT ALL ON TABLE daily_activity         TO service_role;
+GRANT ALL ON TABLE daily_kid_usage        TO service_role;
 GRANT ALL ON TABLE saved_items            TO service_role;
 GRANT SELECT ON TABLE languages           TO service_role;
 GRANT SELECT ON TABLE scenario_groups     TO service_role;

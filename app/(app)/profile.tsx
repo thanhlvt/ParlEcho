@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Alert, ScrollView } from 'react-native';
+import { StyleSheet, Switch, Text, TouchableOpacity, View, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
 import { supabase } from '../../lib/supabase';
 import { Profile } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
+import { useProfile } from '../../providers/ProfileProvider';
 import { useSidebar } from './_layout';
 import { clearAllAudioCache, getAudioCacheSize } from '../../lib/audioCache';
 
@@ -22,11 +23,13 @@ export default function ProfileScreen() {
   const { colors, themeMode, setThemeMode } = useTheme();
   const styles = getStyles(colors);
   const { user, signOut } = useAuth();
+  const { refresh: refreshProfile } = useProfile();
   const router = useRouter();
   const { toggleSidebar } = useSidebar();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [totalLines, setTotalLines] = useState<number>(0);
   const [audioCacheSize, setAudioCacheSize] = useState<number>(0);
+  const [savingKid, setSavingKid] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -69,6 +72,23 @@ export default function ProfileScreen() {
         },
       ],
     );
+  };
+
+  // Bật/tắt Kid Mode. Khi bật, RouteGuard sẽ tự chuyển sang nhánh (kid).
+  const toggleKidMode = async (value: boolean) => {
+    if (!user) return;
+    setSavingKid(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_kid_mode: value })
+      .eq('id', user.id);
+    if (error) {
+      Alert.alert('Lỗi', 'Không thể cập nhật chế độ trẻ em.');
+    } else {
+      setProfile((p) => (p ? { ...p, is_kid_mode: value } : p));
+      await refreshProfile();
+    }
+    setSavingKid(false);
   };
 
   const initial = (profile?.name ?? user?.email ?? '?')[0].toUpperCase();
@@ -124,6 +144,25 @@ export default function ProfileScreen() {
             onPress={handleClearCache}
           />
           <SettingRow icon="information-circle-outline" label="Phiên bản" value="1.0.0" />
+        </View>
+
+        {/* Kid Mode */}
+        <View style={styles.section}>
+          <View style={styles.settingRow}>
+            <Ionicons
+              name="happy-outline"
+              size={20}
+              color={colors.textMuted}
+              style={styles.settingIcon}
+            />
+            <Text style={styles.settingLabel}>Chế độ trẻ em</Text>
+            <Switch
+              value={profile?.is_kid_mode ?? false}
+              onValueChange={toggleKidMode}
+              disabled={savingKid}
+              trackColor={{ true: colors.primary }}
+            />
+          </View>
         </View>
 
         {/* Theme Settings */}

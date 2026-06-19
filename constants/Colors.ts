@@ -46,5 +46,30 @@ export const darkColors = {
   ja: '#F87171',
 } as const;
 
+// Kid Mode — palette tươi sáng, tương phản cao, chữ to (dùng chung mọi màn Kid).
+// Phải có ĐỦ key như lightColors để getStyles(colors) hoạt động mọi nơi.
+export const kidColors: Record<keyof typeof lightColors, string> = {
+  primary: '#FF8A3D', // cam ấm, vui
+  primaryLight: '#FFF1E6',
+  secondary: '#3DC1FF', // xanh dương tươi
+
+  background: '#FFFDF6',
+  surface: '#FFFFFF',
+  surfaceAlt: '#FFF4DF',
+
+  textPrimary: '#27314E',
+  textSecondary: '#5A6480',
+  textMuted: '#9AA3BC',
+
+  success: '#34D399',
+  warning: '#FBBF24',
+  error: '#FB7185',
+
+  border: '#FFE2C2',
+
+  en: '#3DC1FF',
+  ja: '#FF6B9D',
+};
+
 // Cung cấp Colors mặc định để tránh lỗi trước khi migrate xong
 export const Colors = lightColors;

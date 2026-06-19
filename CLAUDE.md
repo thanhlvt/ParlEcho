@@ -19,8 +19,9 @@ conversation, pronunciation scoring). React Native + Expo, backend Supabase.
 
 ```
 app/                          # Expo Router
-  _layout.tsx                 # KeyboardProvider > ThemeProvider > AuthProvider > RouteGuard > Slot
+  _layout.tsx                 # KeyboardProvider > AuthProvider > ProfileProvider > ThemeProvider > RouteGuard > Slot
   (auth)/                     # login, register — Stack, no header
+  (kid)/                      # Kid Mode (is_kid_mode=true): UI riêng, RouteGuard cô lập khỏi (app)
   (app)/                      # Tab bar: home, practice, chat, live, profile (+ ẩn: notebook, analytics)
     index.tsx                 # Home: goal, streak, weekly chart, action cards
     practice/                 # index = list kịch bản, [scenarioId] = chi tiết shadowing
@@ -46,10 +47,12 @@ lib/
 
 providers/
   AuthProvider.tsx     # useAuth() -> { session, user, loading, signOut }
-  ThemeProvider.tsx    # useTheme() -> { themeMode, activeTheme, colors, isDark, setThemeMode }
+  ProfileProvider.tsx  # useProfile() -> { profile, isKidMode, loading, refresh } — phụ thuộc useAuth
+  ThemeProvider.tsx    # useTheme() -> { themeMode, activeTheme, colors, isDark, setThemeMode } — dùng kidColors khi isKidMode
 
 supabase/
-  schema.sql, grants.sql, seed_*.sql
+  grants.sql, seed_*.sql
+  kid_mode.sql       # Migration idempotent áp Kid Mode lên DB cũ (schema.sql là canonical)
   functions/
     chat/            # Claude — reply + translation + corrections + hints
     pronounce/        # Gemini STT + Levenshtein scoring (không gọi LLM để chấm điểm)
@@ -62,15 +65,24 @@ scripts/
   generate-audio.mjs           # Pre-generate TTS cho scenario_lines còn thiếu audio_url
   generate-scenarios-sql.mjs   # Sinh SQL seed từ định nghĩa kịch bản
   fix-group-ids.mjs            # Sửa scenario_group_id sai lệch
+
+schema.sql
 ```
 
 ## Database (schema.sql)
 
 `languages`, `scenario_groups`, `scenarios`, `scenario_lines` (kịch bản + audio
 mẫu) — `profiles`, `conversations`, `messages` (chat) —
-`pronunciation_attempts`, `user_progress`, `daily_activity` (tiến độ) —
-`saved_items` (flashcard). RLS: user chỉ đọc/ghi dữ liệu của chính mình (xem
-`grants.sql`).
+`pronunciation_attempts`, `user_progress`, `daily_activity`, `daily_kid_usage`
+(tiến độ) — `saved_items` (flashcard). RLS: user chỉ đọc/ghi dữ liệu của chính
+mình (xem `grants.sql`).
+
+**Kid Mode (đang triển khai theo `plan.md`):** `profiles` có `is_kid_mode`,
+`parent_pin`, `companion_id`, `screen_time_limit_minutes`, `child_name`,
+`child_level`. `scenarios.audience` (`'adult'|'child'`) phân loại nội dung.
+`daily_kid_usage` đếm screen time/ngày. Bật/tắt Kid Mode ở profile (adult) →
+`RouteGuard` cô lập trẻ trong nhánh `(kid)`. Roadmap đầy đủ + spike multimodal:
+xem `plan.md`.
 
 ## Code style & convention
 
