@@ -649,3 +649,43 @@ as $$
 $$;
 
 grant execute on function increment_biscuits(uuid, int) to authenticated;
+
+-- 32. Costume shop: trẻ mua costume bằng biscuit (thay cho mở tự động khi đạt 3 sao) -----
+alter table costumes add column if not exists price_biscuits int not null default 100;
+update costumes set price_biscuits =  100 + (sort_order - 1) * 20;
+
+-- 33. RPC mua costume bằng biscuit — atomic: trừ biscuit_count chỉ khi đủ tiền (điều kiện
+-- trong WHERE của UPDATE, tránh race double-spend), rồi mới insert user_costumes.
+-- SECURITY INVOKER nên vẫn theo RLS "own profile" / "own user_costumes".
+create or replace function purchase_costume(p_user_id uuid, p_costume_id text)
+returns boolean
+language plpgsql
+as $$
+declare
+  v_price int;
+  v_rows int;
+begin
+  if exists (
+    select 1 from user_costumes where user_id = p_user_id and costume_id = p_costume_id
+  ) then
+    return false;
+  end if;
+
+  select price_biscuits into v_price from costumes where id = p_costume_id;
+  if v_price is null then
+    return false;
+  end if;
+
+  update profiles set biscuit_count = biscuit_count - v_price
+  where id = p_user_id and biscuit_count >= v_price;
+  get diagnostics v_rows = row_count;
+  if v_rows = 0 then
+    return false;
+  end if;
+
+  insert into user_costumes (user_id, costume_id) values (p_user_id, p_costume_id);
+  return true;
+end;
+$$;
+
+grant execute on function purchase_costume(uuid, text) to authenticated;

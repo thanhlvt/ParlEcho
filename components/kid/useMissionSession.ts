@@ -21,7 +21,6 @@ import {
 import { supabase } from '../../lib/supabase';
 import {
   Companion as CompanionType,
-  Costume,
   LiveAudioSegment,
   LiveTurn,
   Mission,
@@ -68,7 +67,6 @@ export function useMissionSession(missionId: string) {
   const [showHint, setShowHint] = useState(false);
   const [stars, setStars] = useState(0);
   const [unlockedStickers, setUnlockedStickers] = useState<Sticker[]>([]);
-  const [unlockedCostume, setUnlockedCostume] = useState<Costume | null>(null);
   const [timeUp, setTimeUp] = useState(false);
   const [biscuitsAwarded, setBiscuitsAwarded] = useState(0);
   const [showLuckyWheel, setShowLuckyWheel] = useState(false);
@@ -522,31 +520,6 @@ export function useMissionSession(missionId: string) {
         if (stickerRows) setUnlockedStickers(stickerRows as Sticker[]);
       }
     }
-
-    // 3 sao tròn + đủ điều kiện → mở 1 trang phục mới cho companion hiện tại.
-    if (earnedStars === 3 && companion) {
-      const { data: ownedCostumes } = await supabase
-        .from('user_costumes')
-        .select('costume_id')
-        .eq('user_id', user.id);
-      const ownedCostumeIds = new Set(
-        (ownedCostumes ?? []).map((o: { costume_id: string }) => o.costume_id),
-      );
-      const { data: companionCostumes } = await supabase
-        .from('costumes')
-        .select('*')
-        .eq('companion_id', companion.id)
-        .order('sort_order');
-      const nextCostume = (companionCostumes as Costume[] | null)?.find(
-        (c) => !ownedCostumeIds.has(c.id),
-      );
-      if (nextCostume) {
-        await supabase
-          .from('user_costumes')
-          .insert({ user_id: user.id, costume_id: nextCostume.id });
-        setUnlockedCostume(nextCostume);
-      }
-    }
   }
 
   // Vòng quay may mắn — chỉ hiện khi đạt tròn 3 sao, quay 1 lần duy nhất/phiên.
@@ -576,7 +549,6 @@ export function useMissionSession(missionId: string) {
     timeUp,
     stars,
     unlockedStickers,
-    unlockedCostume,
     biscuitsAwarded,
     showLuckyWheel,
     luckyWheelResult,

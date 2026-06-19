@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Href, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { purchaseCostume } from '../../lib/biscuits';
 import { supabase } from '../../lib/supabase';
 import { Costume, Sticker } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
@@ -14,12 +15,13 @@ export default function CollectionScreen() {
   const styles = getStyles(colors);
   const router = useRouter();
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile, refresh: refreshProfile } = useProfile();
 
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [ownedStickerIds, setOwnedStickerIds] = useState<Set<string>>(new Set());
   const [costumes, setCostumes] = useState<Costume[]>([]);
   const [ownedCostumeIds, setOwnedCostumeIds] = useState<Set<string>>(new Set());
+  const [buyingId, setBuyingId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -61,6 +63,20 @@ export default function CollectionScreen() {
     }, [user, profile?.companion_id]),
   );
 
+  // Mua costume bằng biscuit — qua RPC purchase_costume (atomic, xem lib/biscuits.ts).
+  async function buyCostume(costume: Costume) {
+    if (!user || buyingId) return;
+    setBuyingId(costume.id);
+    const ok = await purchaseCostume(user.id, costume.id);
+    if (ok) {
+      setOwnedCostumeIds((prev) => new Set(prev).add(costume.id));
+      await refreshProfile();
+    } else {
+      Alert.alert('Chưa đủ bánh', `Con cần ${costume.price_biscuits} 🍪 để mua trang phục này.`);
+    }
+    setBuyingId(null);
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <TouchableOpacity
@@ -91,13 +107,29 @@ export default function CollectionScreen() {
         </View>
 
         <Text style={styles.sectionTitle}>Tủ trang phục</Text>
+        <Text style={styles.shopHint}>
+          🍪 {profile?.biscuit_count ?? 0} — dùng bánh để mua trang phục
+        </Text>
         <View style={styles.grid}>
           {costumes.map((c) => {
             const owned = ownedCostumeIds.has(c.id);
+            const canAfford = (profile?.biscuit_count ?? 0) >= c.price_biscuits;
             return (
-              <View key={c.id} style={[styles.cell, !owned && styles.cellLocked]}>
-                <Text style={styles.cellEmoji}>{owned ? c.emoji : '❓'}</Text>
-                <Text style={styles.cellLabel}>{owned ? c.name : '???'}</Text>
+              <View key={c.id} style={styles.cell}>
+                <Text style={[styles.cellEmoji, !owned && styles.cellEmojiLocked]}>{c.emoji}</Text>
+                <Text style={styles.cellLabel}>{c.name}</Text>
+                {!owned ? (
+                  <TouchableOpacity
+                    style={[styles.buyBtn, !canAfford && styles.buyBtnDisabled]}
+                    onPress={() => buyCostume(c)}
+                    disabled={buyingId === c.id}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={[styles.buyBtnText, !canAfford && styles.buyBtnTextDisabled]}>
+                      🍪 {c.price_biscuits}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
               </View>
             );
           })}
@@ -142,11 +174,23 @@ const getStyles = (colors: any) =>
     },
     cellLocked: { opacity: 0.45 },
     cellEmoji: { fontSize: 32 },
+    cellEmojiLocked: { opacity: 0.45 },
     cellLabel: {
       fontSize: 11,
       fontWeight: '700',
       color: colors.textMuted,
       textAlign: 'center',
     },
+    shopHint: { fontSize: 13, fontWeight: '700', color: colors.textMuted, marginBottom: 4 },
+    buyBtn: {
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      marginTop: 2,
+    },
+    buyBtnDisabled: { backgroundColor: colors.surfaceAlt },
+    buyBtnText: { fontSize: 12, fontWeight: '700', color: '#fff' },
+    buyBtnTextDisabled: { color: colors.textMuted },
     empty: { fontSize: 14, color: colors.textMuted },
   });

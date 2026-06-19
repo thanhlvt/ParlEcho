@@ -103,6 +103,7 @@ export type Costume = {
   name: string;
   emoji: string;
   sort_order: number;
+  price_biscuits: number;
 };
 
 export type UserSticker = {

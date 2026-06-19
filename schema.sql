@@ -112,13 +112,15 @@ create table stickers (
   sort_order int not null default 0
 );
 
--- Kid Mode: catalog trang phục cho companion (Pha 3)
+-- Kid Mode: catalog trang phục cho companion (Pha 3) — mở qua cửa hàng dùng biscuit
+-- (price_biscuits), KHÔNG còn tự mở khi đạt 3 sao (xem purchase_costume bên dưới).
 create table costumes (
-  id           text primary key,                  -- 'costume-bear-scarf'
-  companion_id text not null references companions(id) on delete cascade,
-  name         text not null,
-  emoji        text not null,                       -- huy hiệu/biểu tượng trang phục
-  sort_order   int not null default 0
+  id             text primary key,                -- 'costume-bear-scarf'
+  companion_id   text not null references companions(id) on delete cascade,
+  name           text not null,
+  emoji          text not null,                     -- huy hiệu/biểu tượng trang phục
+  sort_order     int not null default 0,
+  price_biscuits int not null default 20            -- giá mua bằng biscuit, tăng theo sort_order
 );
 
 -- Kid Mode: ảnh cho Image Exploration Mission (Pha 5) — upload bởi phụ huynh (Pha 6),
@@ -340,6 +342,43 @@ as $$
 $$;
 
 grant execute on function increment_biscuits(uuid, int) to authenticated;
+
+-- Mua costume bằng biscuit (cửa hàng trong Tủ trang phục) — atomic: trừ biscuit_count
+-- chỉ khi đủ tiền (điều kiện trong WHERE của UPDATE, không phải check-rồi-update riêng lẻ,
+-- để tránh race double-spend), rồi mới insert user_costumes. SECURITY INVOKER nên vẫn theo
+-- RLS "own profile" / "own user_costumes".
+create or replace function purchase_costume(p_user_id uuid, p_costume_id text)
+returns boolean
+language plpgsql
+as $$
+declare
+  v_price int;
+  v_rows int;
+begin
+  if exists (
+    select 1 from user_costumes where user_id = p_user_id and costume_id = p_costume_id
+  ) then
+    return false;
+  end if;
+
+  select price_biscuits into v_price from costumes where id = p_costume_id;
+  if v_price is null then
+    return false;
+  end if;
+
+  update profiles set biscuit_count = biscuit_count - v_price
+  where id = p_user_id and biscuit_count >= v_price;
+  get diagnostics v_rows = row_count;
+  if v_rows = 0 then
+    return false;
+  end if;
+
+  insert into user_costumes (user_id, costume_id) values (p_user_id, p_costume_id);
+  return true;
+end;
+$$;
+
+grant execute on function purchase_costume(uuid, text) to authenticated;
 
 -- =====================================================================
 -- 7. ROW LEVEL SECURITY
@@ -763,6 +802,9 @@ from (
   ) as t(name, emoji)
 ) s
 on conflict (id) do nothing;
+
+-- Kid Mode: giá costume tăng dần theo sort_order (100, 120, 140... biscuit) để trẻ dành dụm dần.
+update costumes set price_biscuits = 100 + (sort_order - 1) * 20;
 
 -- Kid Mode: gắn sticker_pool (3 sticker/nhiệm vụ) cho 29 nhiệm vụ mới — không có pool thì
 -- không mở được sticker nào khi đạt sao (xem useMissionSession.awardMissionResult).

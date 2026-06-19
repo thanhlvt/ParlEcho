@@ -56,7 +56,7 @@ export default function MissionLiveScreen() {
             <LuckyWheel result={session.luckyWheelResult} onSpin={session.spinLuckyWheel} />
           ) : null}
 
-          {session.unlockedStickers.length > 0 || session.unlockedCostume ? (
+          {session.unlockedStickers.length > 0 ? (
             <View style={styles.rewardBox}>
               <Text style={styles.rewardTitle}>Phần thưởng mới!</Text>
               <View style={styles.rewardRow}>
@@ -65,9 +65,6 @@ export default function MissionLiveScreen() {
                     {s.emoji}
                   </Text>
                 ))}
-                {session.unlockedCostume ? (
-                  <Text style={styles.rewardEmoji}>{session.unlockedCostume.emoji}</Text>
-                ) : null}
               </View>
             </View>
           ) : null}

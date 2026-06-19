@@ -29,3 +29,18 @@ export async function spinLuckyWheel(userId: string): Promise<number> {
   const amount = Math.floor(Math.random() * 5) + 1;
   return (await incrementBiscuits(userId, amount)) ? amount : 0;
 }
+
+// Mua costume bằng biscuit (cửa hàng trong Tủ trang phục) — qua RPC `purchase_costume`
+// (atomic: trừ biscuit_count + insert user_costumes trong cùng 1 transaction phía DB,
+// tránh client tự kiểm tra số dư rồi update riêng lẻ dưới race).
+export async function purchaseCostume(userId: string, costumeId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('purchase_costume', {
+    p_user_id: userId,
+    p_costume_id: costumeId,
+  });
+  if (error) {
+    console.warn('[biscuits] purchase_costume error:', error);
+    return false;
+  }
+  return Boolean(data);
+}
