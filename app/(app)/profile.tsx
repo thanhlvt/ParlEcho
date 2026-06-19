@@ -1,10 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Switch, Text, TouchableOpacity, View, Alert, ScrollView } from 'react-native';
+import {
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Alert,
+  Modal,
+  ScrollView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
 import { supabase } from '../../lib/supabase';
+import { hashPin } from '../../lib/pin';
 import { Profile } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { useProfile } from '../../providers/ProfileProvider';
@@ -31,6 +42,10 @@ export default function ProfileScreen() {
   const [audioCacheSize, setAudioCacheSize] = useState<number>(0);
   const [savingKid, setSavingKid] = useState(false);
   const [screenTimeLimit, setScreenTimeLimit] = useState(20);
+  const [pinModalVisible, setPinModalVisible] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinConfirmInput, setPinConfirmInput] = useState('');
+  const [savingPin, setSavingPin] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -101,6 +116,42 @@ export default function ProfileScreen() {
     const next = Math.max(5, Math.min(120, screenTimeLimit + delta));
     setScreenTimeLimit(next);
     await supabase.from('profiles').update({ screen_time_limit_minutes: next }).eq('id', user.id);
+  };
+
+  // PIN 4 số gate Parent Dashboard (Pha 6) — hash bằng expo-crypto, KHÔNG lưu plaintext.
+  const openPinModal = () => {
+    setPinInput('');
+    setPinConfirmInput('');
+    setPinModalVisible(true);
+  };
+
+  const savePin = async () => {
+    if (!user) return;
+    if (pinInput.length !== 4 || !/^\d{4}$/.test(pinInput)) {
+      Alert.alert('Lỗi', 'Mã PIN phải gồm đúng 4 chữ số.');
+      return;
+    }
+    if (pinInput !== pinConfirmInput) {
+      Alert.alert('Lỗi', 'Hai mã PIN không khớp.');
+      return;
+    }
+    setSavingPin(true);
+    try {
+      const hashed = await hashPin(pinInput);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ parent_pin: hashed })
+        .eq('id', user.id);
+      if (error) throw error;
+      setProfile((p) => (p ? { ...p, parent_pin: hashed } : p));
+      setPinModalVisible(false);
+      Alert.alert('Đã lưu', 'Mã PIN phụ huynh đã được cập nhật.');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Lỗi', 'Không thể lưu mã PIN.');
+    } finally {
+      setSavingPin(false);
+    }
   };
 
   const initial = (profile?.name ?? user?.email ?? '?')[0].toUpperCase();
@@ -202,6 +253,20 @@ export default function ProfileScreen() {
               </View>
             </View>
           ) : null}
+
+          {profile?.is_kid_mode ? (
+            <TouchableOpacity style={styles.settingRow} onPress={openPinModal} activeOpacity={0.7}>
+              <Ionicons
+                name="lock-closed-outline"
+                size={20}
+                color={colors.textMuted}
+                style={styles.settingIcon}
+              />
+              <Text style={styles.settingLabel}>Mã PIN phụ huynh</Text>
+              <Text style={styles.settingValue}>{profile?.parent_pin ? 'Đã đặt' : 'Chưa đặt'}</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         {/* Theme Settings */}
@@ -232,6 +297,48 @@ export default function ProfileScreen() {
           <Text style={styles.signOutText}>Đăng xuất</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal visible={pinModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Đặt mã PIN phụ huynh</Text>
+            <Text style={styles.modalHint}>
+              Dùng mã này để mở Parent Dashboard từ Kid Mode. Chỉ phụ huynh nên biết mã này.
+            </Text>
+            <TextInput
+              style={styles.pinInput}
+              value={pinInput}
+              onChangeText={(t) => setPinInput(t.replace(/\D/g, '').slice(0, 4))}
+              placeholder="Mã PIN (4 số)"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="number-pad"
+              secureTextEntry
+              maxLength={4}
+            />
+            <TextInput
+              style={styles.pinInput}
+              value={pinConfirmInput}
+              onChangeText={(t) => setPinConfirmInput(t.replace(/\D/g, '').slice(0, 4))}
+              placeholder="Nhập lại mã PIN"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="number-pad"
+              secureTextEntry
+              maxLength={4}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setPinModalVisible(false)}
+              >
+                <Text style={styles.modalCancelText}>Huỷ</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalSaveBtn} onPress={savePin} disabled={savingPin}>
+                <Text style={styles.modalSaveText}>{savingPin ? 'Đang lưu...' : 'Lưu'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -382,4 +489,41 @@ const getStyles = (colors: any) =>
       color: colors.primary,
       fontWeight: '700',
     },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    modalCard: {
+      alignSelf: 'stretch',
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 20,
+      gap: 12,
+    },
+    modalTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary },
+    modalHint: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+    pinInput: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      fontSize: 16,
+      color: colors.textPrimary,
+      backgroundColor: colors.background,
+      letterSpacing: 8,
+    },
+    modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 4 },
+    modalCancelBtn: { paddingVertical: 10, paddingHorizontal: 16 },
+    modalCancelText: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
+    modalSaveBtn: {
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+    },
+    modalSaveText: { fontSize: 14, fontWeight: '700', color: '#fff' },
   });

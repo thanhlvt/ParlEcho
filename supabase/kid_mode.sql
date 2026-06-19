@@ -265,3 +265,34 @@ create policy "exploration-images: public read"
 -- 19. GRANT --------------------------------------------------------------
 grant select on table exploration_images to anon, authenticated;
 grant all on table exploration_images to service_role;
+
+-- =====================================================================
+-- Pha 6 — Parent Dashboard
+-- =====================================================================
+
+-- 20. exploration_images: phụ huynh upload ảnh + xem trạng thái duyệt của chính mình ----
+drop policy if exists "read approved exploration_images" on exploration_images;
+drop policy if exists "read exploration_images" on exploration_images;
+create policy "read exploration_images" on exploration_images
+  for select to authenticated using (is_approved = true or uploader = auth.uid());
+drop policy if exists "insert own exploration_images" on exploration_images;
+create policy "insert own exploration_images" on exploration_images
+  for insert to authenticated with check (uploader = auth.uid());
+
+-- 21. priority_vocab — từ vựng/câu phụ huynh ưu tiên, đẩy lên đầu mission selection -----
+create table if not exists priority_vocab (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  language_id text not null references languages(id),
+  content     text not null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists idx_priority_vocab_user on priority_vocab(user_id, language_id);
+
+alter table priority_vocab enable row level security;
+drop policy if exists "own priority_vocab" on priority_vocab;
+create policy "own priority_vocab" on priority_vocab
+  for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- 22. GRANT --------------------------------------------------------------
+grant all on table priority_vocab to authenticated, service_role;

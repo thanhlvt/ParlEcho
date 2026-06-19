@@ -6,7 +6,8 @@ import { ScreenTimeProvider, useScreenTime } from '../../providers/ScreenTimePro
 
 // Hết giờ chơi/ngày → chặn mọi màn (kid) khác, đẩy về day-summary. Bỏ qua mission-live/
 // exploration để useMissionSession/useExplorationSession tự kết thúc phiên sau lượt nói
-// hiện tại (không cắt giữa câu).
+// hiện tại (không cắt giữa câu). Bỏ qua parent-gate/parent để phụ huynh không bị đẩy ra
+// giữa lúc đang xem Parent Dashboard.
 function ScreenTimeGate() {
   const { limitReached } = useScreenTime();
   const segments = useSegments();
@@ -15,7 +16,14 @@ function ScreenTimeGate() {
   useEffect(() => {
     if (!limitReached) return;
     const screen = segments[1] as string | undefined;
-    if (screen === 'mission-live' || screen === 'exploration' || screen === 'day-summary') return;
+    if (
+      screen === 'mission-live' ||
+      screen === 'exploration' ||
+      screen === 'day-summary' ||
+      screen === 'parent-gate' ||
+      screen === 'parent'
+    )
+      return;
     router.replace('/(kid)/day-summary' as Href);
   }, [limitReached, segments, router]);
 

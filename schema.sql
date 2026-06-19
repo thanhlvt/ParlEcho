@@ -133,6 +133,17 @@ create table exploration_images (
 );
 create index idx_exploration_images_approved on exploration_images(is_approved);
 
+-- Kid Mode: từ vựng/câu phụ huynh ưu tiên (Pha 6 — Parent Dashboard) — đẩy mission khớp
+-- title/topic/target_sentence lên đầu danh sách (app/(kid)/missions.tsx).
+create table priority_vocab (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  language_id text not null references languages(id),
+  content     text not null,
+  created_at  timestamptz not null default now()
+);
+create index idx_priority_vocab_user on priority_vocab(user_id, language_id);
+
 -- =====================================================================
 -- 2. NGƯỜI DÙNG  (1-1 với auth.users của Supabase)
 -- =====================================================================
@@ -340,9 +351,12 @@ create policy "read scenario_lines"  on scenario_lines  for select to authentica
 create policy "read companions"      on companions      for select to authenticated using (true);
 create policy "read missions"        on missions        for select to authenticated using (true);
 create policy "read mission_steps"   on mission_steps    for select to authenticated using (true);
--- Chỉ ảnh đã duyệt (is_approved=true) mới đọc được; ghi/duyệt do service_role (edge function).
-create policy "read approved exploration_images" on exploration_images
-  for select to authenticated using (is_approved = true);
+-- Ảnh đã duyệt đọc được cho mọi user; phụ huynh upload (Pha 6) còn thấy ảnh của chính mình
+-- khi đang chờ duyệt (is_approved=false) để theo dõi trạng thái. Duyệt do service_role.
+create policy "read exploration_images" on exploration_images
+  for select to authenticated using (is_approved = true or uploader = auth.uid());
+create policy "insert own exploration_images" on exploration_images
+  for insert to authenticated with check (uploader = auth.uid());
 create policy "read stickers"        on stickers        for select to authenticated using (true);
 create policy "read costumes"        on costumes        for select to authenticated using (true);
 -- Ghi nội dung: làm bằng service_role (bypass RLS) trong admin/seed, không cấp policy write.
@@ -359,6 +373,7 @@ alter table saved_items            enable row level security;
 alter table user_stickers          enable row level security;
 alter table user_costumes          enable row level security;
 alter table mission_results        enable row level security;
+alter table priority_vocab         enable row level security;
 
 create policy "own profile"        on profiles
   for all to authenticated using (id = auth.uid()) with check (id = auth.uid());
@@ -391,6 +406,9 @@ create policy "own user_costumes"  on user_costumes
   for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create policy "own mission_results" on mission_results
+  for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+create policy "own priority_vocab" on priority_vocab
   for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- =====================================================================

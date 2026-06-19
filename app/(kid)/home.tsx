@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Href, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -63,6 +64,15 @@ export default function KidHome() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Cổng phụ huynh — không phải nút nổi bật, không có chữ gợi ý cho trẻ. */}
+      <TouchableOpacity
+        style={styles.parentGateBtn}
+        onPress={() => router.push('/(kid)/parent-gate' as Href)}
+        hitSlop={10}
+      >
+        <Ionicons name="ellipsis-horizontal" size={18} color={colors.textMuted} />
+      </TouchableOpacity>
+
       <View style={styles.center}>
         <TouchableOpacity activeOpacity={0.9} onPress={react}>
           <Companion companionId={profile?.companion_id} expression={expression} size={180} />
@@ -114,6 +124,14 @@ const getStyles = (colors: any) =>
       paddingBottom: 24,
     },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+    parentGateBtn: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+      zIndex: 1,
+      padding: 10,
+      opacity: 0.5,
+    },
     greeting: {
       fontSize: 26,
       fontWeight: '800',

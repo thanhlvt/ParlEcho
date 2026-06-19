@@ -109,8 +109,11 @@ export interface LiveClientCallbacks {
   onTurnTimeout?: () => void;
   /** Kid Mode (guided): AI báo đã hoàn thành bước hiện tại, sang bước kế */
   onStepAdvance?: () => void;
-  /** Kid Mode (guided): AI báo trẻ đang lạc đề; streak = số lượt liên tiếp lạc đề */
-  onOffTopic?: (streak: number) => void;
+  /**
+   * Kid Mode (guided): AI báo trẻ đang lạc đề; streak = số lượt liên tiếp lạc đề,
+   * sortOrder = sort_order của lượt AI này (dùng để Parent Dashboard đánh dấu, Pha 6)
+   */
+  onOffTopic?: (streak: number, sortOrder: number) => void;
 }
 
 export interface LiveSessionResult {
@@ -556,7 +559,7 @@ export class LiveClient {
     if (cleaned.includes(OFFTOPIC_MARKER)) {
       cleaned = cleaned.split(OFFTOPIC_MARKER).join('').trim();
       this.offTopicStreak++;
-      this.cb.onOffTopic?.(this.offTopicStreak);
+      this.cb.onOffTopic?.(this.offTopicStreak, this.turnOrder);
     } else if (this.turnLimitMs > 0) {
       // Chỉ reset streak trong Kid Mode guided — AI quay lại đúng nhiệm vụ
       this.offTopicStreak = 0;

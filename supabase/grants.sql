@@ -19,6 +19,7 @@ GRANT SELECT ON TABLE mission_steps   TO anon, authenticated;
 GRANT SELECT ON TABLE stickers        TO anon, authenticated;
 GRANT SELECT ON TABLE costumes        TO anon, authenticated;
 GRANT SELECT ON TABLE exploration_images TO anon, authenticated;
+GRANT INSERT ON TABLE exploration_images TO authenticated;
 
 -- ── Dữ liệu người dùng: chỉ authenticated ────────────────────────────
 GRANT ALL ON TABLE profiles               TO authenticated;
@@ -32,6 +33,7 @@ GRANT ALL ON TABLE saved_items            TO authenticated;
 GRANT ALL ON TABLE user_stickers          TO authenticated;
 GRANT ALL ON TABLE user_costumes          TO authenticated;
 GRANT ALL ON TABLE mission_results        TO authenticated;
+GRANT ALL ON TABLE priority_vocab         TO authenticated;
 
 -- ── service_role: dùng trong Edge Functions (bypasses RLS nhưng vẫn
 --    cần table permission) ─────────────────────────────────────────────
@@ -46,6 +48,7 @@ GRANT ALL ON TABLE saved_items            TO service_role;
 GRANT ALL ON TABLE user_stickers          TO service_role;
 GRANT ALL ON TABLE user_costumes          TO service_role;
 GRANT ALL ON TABLE mission_results        TO service_role;
+GRANT ALL ON TABLE priority_vocab         TO service_role;
 GRANT SELECT ON TABLE languages           TO service_role;
 GRANT SELECT ON TABLE scenario_groups     TO service_role;
 GRANT SELECT ON TABLE scenarios           TO service_role;

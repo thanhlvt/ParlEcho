@@ -14,7 +14,9 @@ conversation, pronunciation scoring). React Native + Expo, backend Supabase.
 - **Audio:** `expo-audio`, `expo-speech`, `@siteed/expo-audio-studio` (mic
   streaming + AEC), `react-native-audio-api` (buffer queue cho Live)
 - **Image:** `expo-image-manipulator` (resize + nén ảnh trước khi gửi multimodal
-  cho Image Exploration Mission, Pha 5)
+  cho Image Exploration Mission, Pha 5), `expo-image-picker` (chọn ảnh từ thư
+  viện cho Parent Dashboard upload, Pha 6)
+- **Security:** `expo-crypto` (hash SHA-256 mã PIN phụ huynh, Pha 6)
 - **Animation:** react-native-reanimated ~4
 
 ## Cấu trúc thư mục
@@ -30,6 +32,11 @@ app/                          # Expo Router
                               #   exploration = phiên Image Exploration Mission (LiveClient gửi ảnh multimodal, Pha 5)
                               #   collection = Album sticker + tủ trang phục (Reward System)
                               #   day-summary = màn hết giờ chơi/ngày (Screen Time)
+                              #   parent-gate = nhập PIN phụ huynh (icon mờ, không nổi bật, ở góc home, Pha 6)
+                              #   parent/dashboard = KPI + biểu đồ phiên/điểm phát âm, parent/sessions = list
+                              #   phiên kid_guided/kid_exploration, parent/session/[conversationId] = transcript +
+                              #   nghe lại audio + highlight lượt lạc đề, parent/images = upload ảnh Image Mission,
+                              #   parent/vocab = CRUD từ vựng ưu tiên (Pha 6)
   (app)/                      # Tab bar: home, practice, chat, live, profile (+ ẩn: notebook, analytics)
     index.tsx                 # Home: goal, streak, weekly chart, action cards
     practice/                 # index = list kịch bản, [scenarioId] = chi tiết shadowing
@@ -62,6 +69,7 @@ lib/
   audioPlayback.ts    # Singleton chống phát audio chồng lấp (xem chi tiết bên dưới)
   audioCache.ts        # Quản lý file audio local (cleanup folder live/)
   liveClient.ts        # WebSocket client cho Gemini Live API
+  pin.ts                # hashPin() — SHA-256 mã PIN phụ huynh qua expo-crypto (Pha 6)
 
 providers/
   AuthProvider.tsx        # useAuth() -> { session, user, loading, signOut }
@@ -157,6 +165,23 @@ chọn ngẫu nhiên 1 ảnh đã duyệt, resize ≤1024px + nén JPEG (`expo-i
   như Guided Conversation, rồi **tự động** lưu `vocab_to_learn`/`corrections` vào
   `saved_items` (Kid Mode chưa có UI tap-to-save như màn review của adult).
 
+**Parent Dashboard (Pha 6):** `profiles.parent_pin` lưu hash SHA-256 (xem
+`lib/pin.ts`), so khớp client-side ở `(kid)/parent-gate.tsx` — không có hàm
+verify phía server. `conversations.summary` (jsonb, trước đây chỉ ghi cho
+review của adult) nay cũng được `useMissionSession` ghi cho `kid_guided`:
+`{ avg_pronunciation, offtopic_turns: number[] }` — `offtopic_turns` là danh
+sách `sort_order` của các lượt AI bị đánh dấu lạc đề (lấy từ
+`LiveClient.onOffTopic(streak, sortOrder)`, xem `lib/liveClient.ts`), dùng để
+highlight transcript ở `parent/session/[conversationId].tsx`. `priority_vocab`
+(owner-only, `user_id`/`language_id`/`content`) là từ vựng phụ huynh thêm qua
+`parent/vocab.tsx`; `(kid)/missions.tsx` đẩy lên đầu danh sách (badge "⭐ Ưu
+tiên") mọi mission có `title`/`topic` chứa một `content` trong đó.
+`exploration_images` có thêm policy insert (`uploader = auth.uid()`) và SELECT
+mở rộng (`is_approved = true or uploader = auth.uid()`) để `parent/images.tsx`
+upload ảnh mới (qua `expo-image-picker` + bucket `exploration-images`) và theo
+dõi trạng thái duyệt của ảnh mình tải lên, gọi lại edge function
+`image-moderation` (Pha 5) ngay sau insert.
+
 Roadmap đầy đủ + spike multimodal: xem `plan.md`.
 
 ## Code style & convention
@@ -227,6 +252,15 @@ Roadmap đầy đủ + spike multimodal: xem `plan.md`.
 - **`image-moderation` function tái dùng `GOOGLE_GENAI_API_KEY`** cho Google
   Cloud Vision SafeSearch — không cần thêm secret riêng, miễn Cloud Vision API
   đã enable trên cùng GCP project với Gemini.
+- **PIN phụ huynh không bao giờ lưu plaintext** — `profiles.parent_pin` chỉ
+  lưu hash SHA-256 (`lib/pin.ts#hashPin`); `(kid)/parent-gate.tsx` hash input
+  rồi so chuỗi, không có verify phía Edge Function. Cổng vào PIN gate
+  (`(kid)/home.tsx`) là icon mờ, không nhãn, theo đúng yêu cầu "không hiện
+  trong UI Kid" — không tự ý làm nó nổi bật hơn.
+- **TODO (Pha 6, hoãn):** Parent Dashboard chưa có push/email notification
+  (vd. báo phụ huynh khi có ảnh mới cần duyệt, khi đạt sao, khi gần hết giờ
+  chơi) — cần chọn provider (Expo Push/FCM hoặc email service) và bảng lưu
+  device token/preference trước khi triển khai.
 
 ## Lệnh hay dùng
 

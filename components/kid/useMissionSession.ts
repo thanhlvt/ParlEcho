@@ -79,6 +79,7 @@ export function useMissionSession(missionId: string) {
   const missionCompletedRef = useRef(false);
   const hintUsedRef = useRef(false);
   const timeUpPendingRef = useRef(false);
+  const offTopicTurnsRef = useRef<number[]>([]);
   const audioCtxRef = useRef<InstanceType<typeof AudioContext> | null>(null);
   const audioQueueRef = useRef<AudioBufferQueueSourceNode | null>(null);
   const audioEmitter = useRef(new LegacyEventEmitter(ExpoAudioStreamModule));
@@ -215,6 +216,7 @@ export function useMissionSession(missionId: string) {
     missionCompletedRef.current = false;
     hintUsedRef.current = false;
     timeUpPendingRef.current = false;
+    offTopicTurnsRef.current = [];
     setElapsedSec(0);
     setCurrentStepIndex(0);
     setShowHint(false);
@@ -302,7 +304,8 @@ export function useMissionSession(missionId: string) {
           return next;
         });
       },
-      onOffTopic: () => {
+      onOffTopic: (_streak, sortOrder) => {
+        offTopicTurnsRef.current = [...offTopicTurnsRef.current, sortOrder];
         setReaction('surprised', REACTION_DISPLAY_MS);
       },
     });
@@ -422,11 +425,6 @@ export function useMissionSession(missionId: string) {
         }
       }
 
-      await supabase
-        .from('conversations')
-        .update({ ended_at: new Date().toISOString() })
-        .eq('id', conversationId);
-
       setSavingMsg('Đang chấm điểm...');
       let avgPronunciation: number | null = null;
       try {
@@ -447,6 +445,19 @@ export function useMissionSession(missionId: string) {
       } catch (reviewErr) {
         console.warn('[MissionSession] session-review call failed:', reviewErr);
       }
+
+      // Lưu avg_pronunciation + các lượt lạc đề vào summary jsonb — Parent Dashboard (Pha 6)
+      // đọc lại để đánh dấu thời điểm lạc đề trong transcript.
+      await supabase
+        .from('conversations')
+        .update({
+          ended_at: new Date().toISOString(),
+          summary: {
+            avg_pronunciation: avgPronunciation,
+            offtopic_turns: offTopicTurnsRef.current,
+          },
+        })
+        .eq('id', conversationId);
 
       await awardMissionResult(conversationId, avgPronunciation);
 

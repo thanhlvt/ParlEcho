@@ -147,6 +147,15 @@ export type DailyKidUsage = {
   seconds_used: number;
 };
 
+// Kid Mode: từ vựng/câu phụ huynh ưu tiên — đẩy lên đầu danh sách mission (Pha 6)
+export type PriorityVocab = {
+  id: string;
+  user_id: string;
+  language_id: LanguageId;
+  content: string;
+  created_at: string;
+};
+
 export type Profile = {
   id: string;
   name: string | null;
@@ -172,6 +181,8 @@ export type ConversationSummary = {
   overall_feedback?: string;
   /** Nhận xét về độ trôi chảy */
   fluency_notes?: string;
+  /** Kid Mode (guided): sort_order các lượt AI báo trẻ lạc đề — Parent Dashboard đánh dấu (Pha 6) */
+  offtopic_turns?: number[];
 };
 
 export type Conversation = {
