@@ -140,6 +140,16 @@ export type ExplorationImage = {
   created_at: string;
 };
 
+// Kid Mode: kết quả mỗi lần khám phá xong 1 ảnh (tương tự MissionResult nhưng theo ảnh)
+export type ExplorationResult = {
+  id: string;
+  user_id: string;
+  exploration_image_id: string;
+  conversation_id: string | null;
+  stars: number;
+  completed_at: string;
+};
+
 // Kid Mode: đếm thời lượng dùng app/ngày (Pha 4 — Screen Time)
 export type DailyKidUsage = {
   id: string;

@@ -305,6 +305,20 @@ create table mission_results (
 );
 create index idx_mission_results_user on mission_results(user_id, completed_at desc);
 
+-- Kid Mode: kết quả mỗi lần khám phá xong 1 ảnh — chấm sao theo điểm phát âm trung bình
+-- (tương tự mission_results nhưng theo exploration_image_id thay vì mission_id), để màn
+-- chọn ảnh hiển thị số sao cao nhất đã đạt với từng ảnh.
+create table exploration_results (
+  id                    uuid primary key default gen_random_uuid(),
+  user_id               uuid not null references auth.users(id) on delete cascade,
+  exploration_image_id  uuid not null references exploration_images(id) on delete cascade,
+  conversation_id       uuid references conversations(id) on delete set null,
+  stars                 int not null default 0 check (stars between 0 and 3),
+  completed_at          timestamptz not null default now()
+);
+create index idx_exploration_results_user_image
+  on exploration_results(user_id, exploration_image_id);
+
 -- =====================================================================
 -- 6. TRIGGER: tự tạo profile khi có user mới + cập nhật updated_at
 -- =====================================================================
@@ -427,6 +441,7 @@ alter table saved_items            enable row level security;
 alter table user_stickers          enable row level security;
 alter table user_costumes          enable row level security;
 alter table mission_results        enable row level security;
+alter table exploration_results    enable row level security;
 alter table priority_vocab         enable row level security;
 
 create policy "own profile"        on profiles
@@ -460,6 +475,9 @@ create policy "own user_costumes"  on user_costumes
   for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create policy "own mission_results" on mission_results
+  for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+create policy "own exploration_results" on exploration_results
   for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create policy "own priority_vocab" on priority_vocab

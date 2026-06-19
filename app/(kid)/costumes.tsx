@@ -5,20 +5,18 @@ import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { purchaseCostume } from '../../lib/biscuits';
 import { supabase } from '../../lib/supabase';
-import { Costume, Sticker } from '../../lib/types';
+import { Costume } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { useProfile } from '../../providers/ProfileProvider';
 import { useTheme } from '../../providers/ThemeProvider';
 
-export default function CollectionScreen() {
+export default function CostumesScreen() {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const router = useRouter();
   const { user } = useAuth();
   const { profile, refresh: refreshProfile } = useProfile();
 
-  const [stickers, setStickers] = useState<Sticker[]>([]);
-  const [ownedStickerIds, setOwnedStickerIds] = useState<Set<string>>(new Set());
   const [costumes, setCostumes] = useState<Costume[]>([]);
   const [ownedCostumeIds, setOwnedCostumeIds] = useState<Set<string>>(new Set());
   const [buyingId, setBuyingId] = useState<string | null>(null);
@@ -26,22 +24,6 @@ export default function CollectionScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!user) return;
-      supabase
-        .from('stickers')
-        .select('*')
-        .order('sort_order')
-        .then(({ data }) => setStickers((data as Sticker[]) ?? []));
-
-      supabase
-        .from('user_stickers')
-        .select('sticker_id')
-        .eq('user_id', user.id)
-        .then(({ data }) =>
-          setOwnedStickerIds(
-            new Set((data ?? []).map((r: { sticker_id: string }) => r.sticker_id)),
-          ),
-        );
-
       if (profile?.companion_id) {
         supabase
           .from('costumes')
@@ -88,28 +70,11 @@ export default function CollectionScreen() {
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>Bộ sưu tập 🎁</Text>
-
-        <Text style={styles.sectionTitle}>Album sticker</Text>
-        <View style={styles.grid}>
-          {stickers.map((s) => {
-            const owned = ownedStickerIds.has(s.id);
-            return (
-              <View key={s.id} style={[styles.cell, !owned && styles.cellLocked]}>
-                <Text style={styles.cellEmoji}>{owned ? s.emoji : '❓'}</Text>
-                <Text style={styles.cellLabel}>{owned ? s.name : '???'}</Text>
-              </View>
-            );
-          })}
-          {stickers.length === 0 ? (
-            <Text style={styles.empty}>Chưa có sticker nào, hoàn thành nhiệm vụ để mở khoá!</Text>
-          ) : null}
-        </View>
-
-        <Text style={styles.sectionTitle}>Tủ trang phục</Text>
+        <Text style={styles.title}>Tủ trang phục 👕</Text>
         <Text style={styles.shopHint}>
           🍪 {profile?.biscuit_count ?? 0} — dùng bánh để mua trang phục
         </Text>
+
         <View style={styles.grid}>
           {costumes.map((c) => {
             const owned = ownedCostumeIds.has(c.id);
@@ -154,13 +119,6 @@ const getStyles = (colors: any) =>
     backText: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
     scroll: { padding: 24, gap: 8 },
     title: { fontSize: 26, fontWeight: '800', color: colors.primary, marginBottom: 8 },
-    sectionTitle: {
-      fontSize: 18,
-      fontWeight: '800',
-      color: colors.textPrimary,
-      marginTop: 20,
-      marginBottom: 12,
-    },
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
     cell: {
       width: 92,
@@ -172,7 +130,6 @@ const getStyles = (colors: any) =>
       paddingVertical: 14,
       gap: 6,
     },
-    cellLocked: { opacity: 0.45 },
     cellEmoji: { fontSize: 32 },
     cellEmojiLocked: { opacity: 0.45 },
     cellLabel: {

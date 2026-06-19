@@ -24,9 +24,24 @@ export default function MissionsScreen() {
 
   const [missions, setMissions] = useState<Mission[]>([]);
   const [priorityMissionIds, setPriorityMissionIds] = useState<Set<string>>(new Set());
+  const [bestStarsByMission, setBestStarsByMission] = useState<Record<string, number>>({});
 
   useFocusEffect(
     useCallback(() => {
+      if (user) {
+        supabase
+          .from('mission_results')
+          .select('mission_id, stars')
+          .eq('user_id', user.id)
+          .then(({ data }) => {
+            const best: Record<string, number> = {};
+            for (const r of (data as { mission_id: string; stars: number }[]) ?? []) {
+              best[r.mission_id] = Math.max(best[r.mission_id] ?? 0, r.stars);
+            }
+            setBestStarsByMission(best);
+          });
+      }
+
       const languageId = profile?.active_language_id ?? 'en';
       Promise.all([
         supabase.from('missions').select('*').eq('language_id', languageId).order('created_at'),
@@ -99,6 +114,10 @@ export default function MissionsScreen() {
             <View style={styles.cardMetaRow}>
               <Text style={styles.cardMeta}>{LEVEL_LABEL[item.level] ?? item.level}</Text>
               <Text style={styles.cardMeta}>{item.step_count} bước</Text>
+              <Text style={styles.cardStars}>
+                {'⭐'.repeat(bestStarsByMission[item.id] ?? 0) +
+                  '☆'.repeat(3 - (bestStarsByMission[item.id] ?? 0))}
+              </Text>
             </View>
           </TouchableOpacity>
         )}
@@ -126,6 +145,7 @@ const getStyles = (colors: any) =>
     cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
     cardTitle: { fontSize: 19, fontWeight: '800', color: colors.textPrimary },
     priorityBadge: { fontSize: 12, fontWeight: '700', color: colors.warning },
-    cardMetaRow: { flexDirection: 'row', gap: 14, marginTop: 8 },
+    cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 8 },
     cardMeta: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
+    cardStars: { fontSize: 13, marginLeft: 'auto' },
   });

@@ -31,8 +31,9 @@ huynh tự thêm).
 **Dữ liệu user** (RLS owner-only qua `auth.uid()`): `profiles`,
 `conversations`, `messages`, `pronunciation_attempts`, `user_progress`,
 `daily_activity`, `daily_kid_usage`, `saved_items`, `user_stickers`,
-`user_costumes`, `mission_results`, `exploration_images` (ngoại lệ: SELECT
-mở rộng cho ảnh `is_approved = true` bất kể chủ sở hữu).
+`user_costumes`, `mission_results`, `exploration_results`,
+`exploration_images` (ngoại lệ: SELECT mở rộng cho ảnh `is_approved =
+true` bất kể chủ sở hữu).
 
 ## `profiles` — các cột liên quan Kid Mode
 
@@ -69,7 +70,7 @@ biscuit_count = biscuit_count + p_amount where id = p_user_id`. Dùng vì
 ## Costume shop
 
 `costumes.price_biscuits` tăng dần theo `sort_order` (20, 30, 40...). Trẻ
-tự mua bằng biscuit đã gom ở `(kid)/collection.tsx` qua RPC
+tự mua bằng biscuit đã gom ở `(kid)/costumes.tsx` qua RPC
 `purchase_costume` (xem trên) — costume KHÔNG tự mở theo số sao đạt được,
 chỉ sticker mới mở tự động khi hoàn thành mission (qua `sticker_pool`).
 
@@ -80,6 +81,12 @@ chỉ sticker mới mở tự động khi hoàn thành mission (qua `sticker_poo
 bảng (trừ chủ ảnh luôn đọc được ảnh của mình để theo dõi trạng thái
 duyệt). Duyệt bởi Edge Function `image-moderation` (xem skill
 `edge-functions`), kết quả lưu vào `safesearch_result` jsonb.
+
+`exploration_results` lưu kết quả mỗi lần khám phá xong 1 ảnh
+(`exploration_image_id`, `stars` 0-3, `conversation_id`) — tương tự
+`mission_results` nhưng theo ảnh thay vì mission; `(kid)/exploration.tsx`
+dùng max(stars) theo `exploration_image_id` để hiện số sao đã đạt trên
+mỗi ảnh ở lưới chọn.
 
 ## RLS & Storage — 2 lớp kiểm tra độc lập
 

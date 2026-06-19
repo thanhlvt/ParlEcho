@@ -689,3 +689,23 @@ end;
 $$;
 
 grant execute on function purchase_costume(uuid, text) to authenticated;
+
+-- 34. exploration_results — kết quả mỗi lần khám phá xong 1 ảnh (tương tự mission_results
+-- nhưng theo exploration_image_id), để màn chọn ảnh hiển thị số sao cao nhất đã đạt.
+create table if not exists exploration_results (
+  id                    uuid primary key default gen_random_uuid(),
+  user_id               uuid not null references auth.users(id) on delete cascade,
+  exploration_image_id  uuid not null references exploration_images(id) on delete cascade,
+  conversation_id       uuid references conversations(id) on delete set null,
+  stars                 int not null default 0 check (stars between 0 and 3),
+  completed_at          timestamptz not null default now()
+);
+create index if not exists idx_exploration_results_user_image
+  on exploration_results(user_id, exploration_image_id);
+
+alter table exploration_results enable row level security;
+drop policy if exists "own exploration_results" on exploration_results;
+create policy "own exploration_results" on exploration_results
+  for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+grant all on table exploration_results to authenticated, service_role;

@@ -112,10 +112,18 @@ export default function KidHome() {
 
         <TouchableOpacity
           style={styles.collectionBtn}
-          onPress={() => router.push('/(kid)/collection' as Href)}
+          onPress={() => router.push('/(kid)/stickers' as Href)}
           activeOpacity={0.85}
         >
-          <Text style={styles.collectionBtnText}>Bộ sưu tập 🎁</Text>
+          <Text style={styles.collectionBtnText}>Sticker 🎴</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.collectionBtn}
+          onPress={() => router.push('/(kid)/costumes' as Href)}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.collectionBtnText}>Trang phục 👕</Text>
         </TouchableOpacity>
       </View>
 

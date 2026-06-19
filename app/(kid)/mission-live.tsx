@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BiscuitReward } from '../../components/kid/BiscuitReward';
 import { Companion } from '../../components/kid/Companion';
@@ -45,7 +45,7 @@ export default function MissionLiveScreen() {
   if (session.view === 'finished') {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.centerFull}>
+        <ScrollView contentContainerStyle={styles.finishedScroll}>
           <Companion companionId={session.companion?.id} expression="cheering" size={140} />
           <Text style={styles.finishedTitle}>Tuyệt vời! 🎉</Text>
           <Text style={styles.statusText}>Con đã hoàn thành một phần nhiệm vụ rồi đó!</Text>
@@ -72,7 +72,7 @@ export default function MissionLiveScreen() {
           <TouchableOpacity style={styles.homeBtn} onPress={session.goHome} activeOpacity={0.85}>
             <Text style={styles.homeBtnText}>Về nhà</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -146,6 +146,13 @@ const getStyles = (colors: any) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.background },
     centerFull: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 },
+    finishedScroll: {
+      flexGrow: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 16,
+      padding: 24,
+    },
     statusText: { fontSize: 16, color: colors.textSecondary, textAlign: 'center' },
     finishedTitle: { fontSize: 26, fontWeight: '800', color: colors.primary },
 

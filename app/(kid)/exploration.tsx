@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -63,6 +64,13 @@ export default function ExplorationScreen() {
               activeOpacity={0.85}
             >
               <Image source={{ uri: item.url }} style={styles.pickThumb} resizeMode="cover" />
+              {session.bestStarsByImage[item.id] ? (
+                <View style={styles.pickStarsBadge}>
+                  <Text style={styles.pickStarsText}>
+                    {'⭐'.repeat(session.bestStarsByImage[item.id])}
+                  </Text>
+                </View>
+              ) : null}
               {session.pickingImageId === item.id ? (
                 <View style={styles.pickOverlay}>
                   <ActivityIndicator color="#fff" />
@@ -92,7 +100,7 @@ export default function ExplorationScreen() {
   if (session.view === 'finished') {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.centerFull}>
+        <ScrollView contentContainerStyle={styles.finishedScroll}>
           <Companion companionId={session.companion?.id} expression="cheering" size={140} />
           <Text style={styles.finishedTitle}>Khám phá xong rồi! 🎉</Text>
           <Text style={styles.statusText}>Con đã quan sát và trả lời rất giỏi đó!</Text>
@@ -119,7 +127,7 @@ export default function ExplorationScreen() {
           <TouchableOpacity style={styles.homeBtn} onPress={session.goHome} activeOpacity={0.85}>
             <Text style={styles.homeBtnText}>Về nhà</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -171,6 +179,13 @@ const getStyles = (colors: any) =>
     },
     backText: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
     centerFull: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 },
+    finishedScroll: {
+      flexGrow: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 16,
+      padding: 24,
+    },
     statusText: { fontSize: 16, color: colors.textSecondary, textAlign: 'center' },
     finishedTitle: { fontSize: 26, fontWeight: '800', color: colors.primary },
 
@@ -188,6 +203,16 @@ const getStyles = (colors: any) =>
       borderColor: colors.border,
     },
     pickThumb: { width: '100%', height: '100%' },
+    pickStarsBadge: {
+      position: 'absolute',
+      bottom: 6,
+      right: 6,
+      backgroundColor: 'rgba(0,0,0,0.55)',
+      borderRadius: 10,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    pickStarsText: { fontSize: 12 },
     pickOverlay: {
       position: 'absolute',
       top: 0,

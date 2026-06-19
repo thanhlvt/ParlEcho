@@ -69,6 +69,7 @@ export function useExplorationSession() {
   const [view, setView] = useState<ExplorationView>('loading');
   const [companion, setCompanion] = useState<CompanionType | null>(null);
   const [pickableImages, setPickableImages] = useState<PickableImage[]>([]);
+  const [bestStarsByImage, setBestStarsByImage] = useState<Record<string, number>>({});
   const [pickingImageId, setPickingImageId] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [expression, setExpression] = useState<CompanionExpression>('idle');
@@ -90,6 +91,7 @@ export function useExplorationSession() {
   const turnsRef = useRef<LiveTurn[]>([]);
   const timeUpPendingRef = useRef(false);
   const imageBase64Ref = useRef<string | null>(null);
+  const pickedImageIdRef = useRef<string | null>(null);
   const audioCtxRef = useRef<InstanceType<typeof AudioContext> | null>(null);
   const audioQueueRef = useRef<AudioBufferQueueSourceNode | null>(null);
   const audioEmitter = useRef(new LegacyEventEmitter(ExpoAudioStreamModule));
@@ -135,6 +137,19 @@ export function useExplorationSession() {
       }));
       setPickableImages(pickable);
       setView('picking');
+
+      if (user) {
+        const { data: results } = await supabase
+          .from('exploration_results')
+          .select('exploration_image_id, stars')
+          .eq('user_id', user.id);
+        if (cancelled) return;
+        const best: Record<string, number> = {};
+        for (const r of (results as { exploration_image_id: string; stars: number }[]) ?? []) {
+          best[r.exploration_image_id] = Math.max(best[r.exploration_image_id] ?? 0, r.stars);
+        }
+        setBestStarsByImage(best);
+      }
     }
     load();
     return () => {
@@ -146,6 +161,7 @@ export function useExplorationSession() {
   // ── Trẻ chọn 1 ảnh trong danh sách → resize/nén ảnh đó trước khi mở WS ────
   async function pickImage(image: PickableImage) {
     setPickingImageId(image.id);
+    pickedImageIdRef.current = image.id;
     try {
       const result = await manipulateAsync(
         image.url,
@@ -443,7 +459,7 @@ export function useExplorationSession() {
         if (reviewErr) console.warn('[ExplorationSession] session-review error:', reviewErr);
         const review = reviewData as SessionReviewApiResponse | null;
         if (review) await saveLearnedItems(review);
-        await awardExplorationResult(review?.avg_pronunciation ?? null);
+        await awardExplorationResult(review?.avg_pronunciation ?? null, conversationId);
       } catch (reviewErr) {
         console.warn('[ExplorationSession] session-review call failed:', reviewErr);
       }
@@ -506,13 +522,22 @@ export function useExplorationSession() {
 
   // Tính sao theo điểm phát âm + thưởng biscuit — Image Exploration không có bước/hint
   // như Guided Conversation nên không dùng mission_results, chỉ thưởng biscuit/biscuit_count.
-  async function awardExplorationResult(avgPronunciation: number | null) {
+  async function awardExplorationResult(avgPronunciation: number | null, conversationId: string) {
     if (!user) return;
     const starExcellent =
       avgPronunciation !== null && avgPronunciation >= PRONUNCIATION_EXCELLENT_THRESHOLD;
     const starGood = avgPronunciation !== null && avgPronunciation >= PRONUNCIATION_STAR_THRESHOLD;
     const earnedStars = 1 + (starGood ? 1 : 0) + (starExcellent ? 1 : 0);
     setStars(earnedStars);
+
+    if (pickedImageIdRef.current) {
+      await supabase.from('exploration_results').insert({
+        user_id: user.id,
+        exploration_image_id: pickedImageIdRef.current,
+        conversation_id: conversationId,
+        stars: earnedStars,
+      });
+    }
 
     const amount = await awardBiscuits(user.id, earnedStars);
     setBiscuitsAwarded(amount);
@@ -538,6 +563,7 @@ export function useExplorationSession() {
     view,
     companion,
     pickableImages,
+    bestStarsByImage,
     pickingImageId,
     pickImage,
     imageUrl,

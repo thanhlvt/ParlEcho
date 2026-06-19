@@ -22,11 +22,17 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
     **đổi** nhân vật (nút "Đổi bạn đồng hành" ở `home`) — phân biệt qua
     `profile.companion_id` đã có sẵn hay chưa (preselect, đổi nhãn nút/nút
     quay lại); `home` = màn chính (gate sang `onboarding` nếu chưa chọn).
-  - `missions` = list nhiệm vụ; `mission-live` = phiên Guided Conversation
-    (`useMissionSession` + `LiveClient` + companion).
-  - `exploration` = phiên Image Exploration Mission (`useExplorationSession`
-    — `LiveClient` gửi ảnh multimodal).
-  - `collection` = Album sticker + Tủ trang phục (cửa hàng costume).
+  - `missions` = list nhiệm vụ (hiện số sao cao nhất đã đạt mỗi nhiệm vụ,
+    lấy max(stars) từ `mission_results` theo `mission_id`); `mission-live`
+    = phiên Guided Conversation (`useMissionSession` + `LiveClient` +
+    companion).
+  - `exploration` = chọn ảnh (hiện số sao cao nhất đã đạt mỗi ảnh, lấy
+    max(stars) từ `exploration_results` theo `exploration_image_id`) +
+    phiên Image Exploration Mission (`useExplorationSession` —
+    `LiveClient` gửi ảnh multimodal).
+  - `stickers` = Album sticker; `costumes` = Tủ trang phục (cửa hàng
+    costume, mua bằng biscuit) — 2 màn riêng, đều có nút "Về nhà" và đều
+    được mở từ `home`.
   - `day-summary` = màn hết giờ chơi (Screen Time, giới hạn theo phiên).
   - `parent-gate` = nhập PIN phụ huynh (icon mờ, không nhãn, ở góc `home`).
   - `parent/dashboard` = KPI + biểu đồ phiên/điểm phát âm; `parent/sessions`
@@ -49,18 +55,20 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
   - `BiscuitBadge` (bộ đếm biscuit, đặt ở `(kid)/_layout.tsx`, đọc
     `profile.biscuit_count`, góc phải — ngay dưới `ScreenTimeBadge` để
     không đè lên nút "..."/nút "Về nhà" ở góc trái các màn `home`/
-    `exploration`/`collection`), `BiscuitReward` (animation "+N 🍪" khi
-    thưởng), `LuckyWheel` (vòng quay may mắn khi đạt tròn 3 sao — vẽ bằng
-    `react-native-svg` thành các miếng pie có emoji riêng theo mức thưởng
-    1-5; gọi RPC lấy kết quả trước rồi xoay dừng đúng miếng tương ứng).
+    `exploration`/`stickers`/`costumes`), `BiscuitReward` (animation "+N 🍪"
+    khi thưởng), `LuckyWheel` (vòng quay may mắn khi đạt tròn 3 sao — vẽ
+    bằng `react-native-svg` thành các miếng pie có emoji riêng theo mức
+    thưởng 1-5; gọi RPC lấy kết quả trước rồi xoay dừng đúng miếng tương
+    ứng).
   - `ScreenTimeBadge` (bộ đếm góc màn hình phải + toast cảnh báo còn 2
     phút, đặt ở `(kid)/_layout.tsx`).
   - `useMissionSession`: state machine cho Guided Conversation — tải
     mission/steps/companion, mở `LiveClient`, theo dõi turn timeout/step
-    advance/off-topic, gọi `/session-review` chấm phát âm, chấm sao + mở
-    sticker + thưởng biscuit (`lib/biscuits.ts`) + Lucky Wheel khi tròn 3
-    sao (costume KHÔNG mở qua đây — mua bằng biscuit ở `collection.tsx`),
-    lưu `conversations.mode='kid_guided'`, kết thúc sau lượt nói hiện tại
+    advance/off-topic, gọi `/session-review` chấm phát âm, chấm sao + lưu
+    `mission_results` (dùng để hiện sao ở `missions.tsx`) + mở sticker +
+    thưởng biscuit (`lib/biscuits.ts`) + Lucky Wheel khi tròn 3 sao
+    (costume KHÔNG mở qua đây — mua bằng biscuit ở `costumes.tsx`), lưu
+    `conversations.mode='kid_guided'`, kết thúc sau lượt nói hiện tại
     khi hết giờ chơi.
   - `useExplorationSession`: state machine cho Image Exploration Mission —
     trẻ tự chọn 1 ảnh trong danh sách đã duyệt (`exploration_images`),
@@ -68,8 +76,9 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
     `sendImageTurn()`, gọi `/session-review` rồi tự lưu
     `vocab_to_learn`/`corrections` vào `saved_items` (Kid Mode chưa có UI
     tap-to-save), lưu `conversations.mode='kid_exploration'`; chấm sao theo
-    `avg_pronunciation` (không có bước/hint) + thưởng biscuit + Lucky Wheel
-    giống `useMissionSession`.
+    `avg_pronunciation` (không có bước/hint), lưu `exploration_results`
+    (theo `exploration_image_id` đã chọn — dùng để hiện sao ở lưới chọn
+    ảnh) + thưởng biscuit + Lucky Wheel giống `useMissionSession`.
 - `SwipeableRow.tsx`: dùng cho list có hành động xoá (vd. lịch sử phiên).
 
 ## Lib (`lib/`)
