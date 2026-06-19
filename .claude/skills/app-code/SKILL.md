@@ -98,6 +98,17 @@ remainingSeconds, limitReached, showWarning }` — chỉ bọc nhánh `(kid)`.
   `registerActiveSpeech`). Khi player bị huỷ phải gọi
   `clearActiveAudio(player)`/`clearActiveSpeech()`. Đây là singleton
   module-level — không tự ý bỏ qua bước này khi thêm chỗ phát audio mới.
+- **`registerActiveAudio` tự có watchdog chống "kẹt nút play"**: module
+  `AudioPlayer` của `expo-audio` trên Android không bao giờ bắn event báo lỗi
+  khi nguồn audio load thất bại (file cục bộ bị xoá, URL hỏng/hết hạn, sai
+  định dạng) — `player.play()` chạy "thành công" về mặt JS nhưng không phát
+  ra tiếng và không bao giờ bắn `didJustFinish`, khiến nút Play kẹt ở trạng
+  thái "đang phát" vĩnh viễn (khởi động lại app không tự hết, vì nguồn audio
+  vẫn hỏng y như cũ). `registerActiveAudio` tự poll `player.playing`/
+  `player.isBuffering` sau ~8s (tối đa 2 lần nếu vẫn đang buffer) — nếu chưa
+  từng phát được thì tự `stopActiveAudio()` (đưa UI về trạng thái idle qua
+  `onStop`) + hiện `Alert` báo lỗi. Không cần tự xử lý lại ở từng màn hình
+  gọi `registerActiveAudio`.
 - **Kid Mode toggle ở `(app)/profile.tsx`** bắt đặt `parent_pin` trước (mở
   PIN modal ngay khi gạt switch nếu chưa có PIN) — KHÔNG tự động điều
   hướng vào `(kid)`, để phụ huynh còn ở lại thiết lập tiếp (giới hạn giờ,
