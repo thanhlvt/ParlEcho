@@ -92,6 +92,13 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
 - `biscuits.ts`: `awardBiscuits()`, `spinLuckyWheel()`, `purchaseCostume()`
   — gọi các RPC atomic (`increment_biscuits`, `purchase_costume`), xem
   skill `db-schema`.
+- `sentry.ts`: `initSentry()` (gọi 1 lần ở `app/_layout.tsx`, đọc
+  `EXPO_PUBLIC_SENTRY_DSN`, no-op nếu rỗng), `logError(context, err)` —
+  dùng thay `console.error` ở các điểm lỗi runtime quan trọng (WebSocket
+  Live, audio playback/cache) để Sentry bắt được trên máy người dùng thật.
+- `audioFormat.ts`, `markerProtocol.ts`, `streak.ts`, `scoring.ts`: logic
+  thuần tách ra để unit-test được (xem skill `unit-test`) — sửa công thức
+  ở đây thay vì viết lại inline trong component/hook.
 
 ## Providers (`providers/`)
 
@@ -140,8 +147,9 @@ remainingSeconds, limitReached, showWarning }` — chỉ bọc nhánh `(kid)`.
   để nói (`TURN_LIMIT_SEC` trong `useMissionSession.ts`) trước khi
   companion nhắc lại. Tiến trình bước (`[STEP_DONE]`) và lạc đề
   (`[OFFTOPIC]`) được AI chèn marker vào cuối lời nói (`live-token` yêu cầu
-  trong system prompt, `LiveClient._consumeMarkers` match fuzzy rồi strip —
-  xem skill `edge-functions`) — KHÔNG dùng heuristic phía client để suy
+  trong system prompt, `LiveClient._consumeMarkers` gọi
+  `lib/markerProtocol.ts` để match fuzzy rồi strip, có unit test riêng —
+  xem skill `edge-functions`/`unit-test`) — KHÔNG dùng heuristic phía client để suy
   đoán, tránh sai lệch với system prompt. Kid Mode đặt `realtimeInputConfig`
   (silenceDurationMs cao + `NO_INTERRUPTION`) ở setup message để trẻ ngắt
   quãng không bị AI chen lời và tránh echo làm AI lặp câu.

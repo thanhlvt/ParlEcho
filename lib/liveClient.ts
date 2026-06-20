@@ -17,61 +17,11 @@
 
 import { supabase } from './supabase';
 import { logError } from './sentry';
+import { buildWavHeader, pcmToWav, bytesToBase64 } from './audioFormat';
+import { stripStepDoneMarker, stripOffTopicMarker } from './markerProtocol';
 import { LiveAudioSegment, LiveTokenApiResponse, LiveTurn } from './types';
 
-// WAV header mono 16-bit
-export function buildWavHeader(
-  pcmByteLength: number,
-  sampleRate = 16000,
-  bitDepth = 16,
-): Uint8Array {
-  const numChannels = 1;
-  const byteRate = sampleRate * numChannels * (bitDepth / 8);
-  const blockAlign = numChannels * (bitDepth / 8);
-
-  const header = new ArrayBuffer(44);
-  const v = new DataView(header);
-  const w = (o: number, s: string) => {
-    for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i));
-  };
-
-  w(0, 'RIFF');
-  v.setUint32(4, 36 + pcmByteLength, true);
-  w(8, 'WAVE');
-  w(12, 'fmt ');
-  v.setUint32(16, 16, true);
-  v.setUint16(20, 1, true);
-  v.setUint16(22, numChannels, true);
-  v.setUint32(24, sampleRate, true);
-  v.setUint32(28, byteRate, true);
-  v.setUint16(32, blockAlign, true);
-  v.setUint16(34, bitDepth, true);
-  w(36, 'data');
-  v.setUint32(40, pcmByteLength, true);
-
-  return new Uint8Array(header);
-}
-
-export function pcmToWav(pcm: Uint8Array, sampleRate = 16000, bitDepth = 16): Uint8Array {
-  const header = buildWavHeader(pcm.length, sampleRate, bitDepth);
-  const wav = new Uint8Array(44 + pcm.length);
-  wav.set(header, 0);
-  wav.set(pcm, 44);
-  return wav;
-}
-
-// Convert Uint8Array to Base64 (safe for large arrays in React Native)
-export function bytesToBase64(bytes: Uint8Array): string {
-  let binary = '';
-  const len = bytes.byteLength;
-  const CHUNK_SIZE = 8192;
-  for (let i = 0; i < len; i += CHUNK_SIZE) {
-    const chunk = bytes.subarray(i, i + CHUNK_SIZE);
-    // @ts-ignore
-    binary += String.fromCharCode.apply(null, chunk);
-  }
-  return btoa(binary);
-}
+export { buildWavHeader, pcmToWav, bytesToBase64 };
 
 // Ghép nhiều Uint8Array thành một
 function concat(arrays: Uint8Array[]): Uint8Array {
@@ -89,12 +39,10 @@ export type LiveState = 'idle' | 'connecting' | 'live' | 'ended' | 'error';
 
 // Kid Mode (guided): marker AI chèn cuối lời nói (qua outputTranscription) để báo tiến trình
 // nhiệm vụ — `[STEP_DONE]` (xong bước) và `[OFFTOPIC]` (lạc đề), khớp với live-token/index.ts.
-// Match FUZZY vì output chỉ là AUDIO nên marker phải qua vòng audio→transcription, model có thể
-// đọc trại hoặc transcription bỏ ngoặc/đổi gạch dưới. KHÔNG dùng function-calling: model Live
-// 3.1 chỉ hỗ trợ FC blocking và không nói tiếp sau toolResponse (treo phiên).
-// Fuzzy: không phân biệt hoa/thường, ngoặc tuỳ chọn, gạch dưới/khoảng trắng giữa 2 từ tuỳ ý.
-const STEP_DONE_RE = /\[?\s*step[\s_]*done\s*\]?/gi;
-const OFFTOPIC_RE = /\[?\s*off[\s_]*topic\s*\]?/gi;
+// Match FUZZY (xem lib/markerProtocol.ts) vì output chỉ là AUDIO nên marker phải qua vòng
+// audio→transcription, model có thể đọc trại hoặc transcription bỏ ngoặc/đổi gạch dưới.
+// KHÔNG dùng function-calling: model Live 3.1 chỉ hỗ trợ FC blocking và không nói tiếp sau
+// toolResponse (treo phiên).
 // PHẢI khớp STEP_DONE_MARKER trong supabase/functions/live-token/index.ts — dùng khi soạn
 // reminder gửi lại cho model (xem _sendStepReminder).
 const STEP_DONE_MARKER = '[STEP_DONE]';
@@ -661,15 +609,14 @@ export class LiveClient {
   }
 
   // Kid Mode (guided): tách marker tiến trình khỏi text hiển thị/lưu trữ + bắn callback.
-  // Match fuzzy (STEP_DONE_RE/OFFTOPIC_RE) để chịu được transcription bỏ ngoặc/đọc trại.
-  // Dùng replace-rồi-so-sánh thay vì .test() vì regex global giữ lastIndex giữa các lần gọi.
+  // Fuzzy-match thực tế nằm ở lib/markerProtocol.ts (pure, có unit test riêng).
   private _consumeMarkers(text: string): string {
     let cleaned = text;
     this.lastFlushAdvancedStep = false;
 
-    const afterStep = cleaned.replace(STEP_DONE_RE, '').trim();
-    if (afterStep !== cleaned) {
-      cleaned = afterStep;
+    const step = stripStepDoneMarker(cleaned);
+    if (step.matched) {
+      cleaned = step.cleaned;
       this.offTopicStreak = 0;
       this.lastFlushAdvancedStep = true;
       this.stepIndex = Math.min(this.stepIndex + 1, this.missionSteps.length);
@@ -678,9 +625,9 @@ export class LiveClient {
       this.cb.onStepAdvance?.();
     }
 
-    const afterOffTopic = cleaned.replace(OFFTOPIC_RE, '').trim();
-    if (afterOffTopic !== cleaned) {
-      cleaned = afterOffTopic;
+    const offTopic = stripOffTopicMarker(cleaned);
+    if (offTopic.matched) {
+      cleaned = offTopic.cleaned;
       this.offTopicStreak++;
       this.cb.onOffTopic?.(this.offTopicStreak, this.turnOrder);
     } else if (this.turnLimitMs > 0) {

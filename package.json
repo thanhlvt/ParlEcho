@@ -10,6 +10,7 @@
     "generate-audio": "node scripts/generate-audio.mjs",
     "generate-scenarios-sql": "node scripts/generate-scenarios-sql.mjs",
     "lint": "expo lint",
+    "test": "jest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "eas-build-pre-install": "if command -v sdkmanager >/dev/null 2>&1; then yes | sdkmanager --install \"cmake;3.31.6\"; fi"
@@ -35,6 +36,7 @@
     "expo-speech": "~14.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
+    "promise": "^8.3.0",
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-audio-api": "^0.12.2",
@@ -48,12 +50,21 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@types/jest": "^29.5.14",
     "@types/react": "~19.1.10",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~10.0.0",
     "eslint-config-prettier": "^10.1.8",
+    "jest": "^29.7.0",
+    "jest-expo": "~54.0.17",
     "prettier": "3.8.4",
     "typescript": "^5.3.3"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1"
+    }
   },
   "expo": {
     "doctor": {

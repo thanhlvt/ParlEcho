@@ -36,14 +36,25 @@ Dùng checklist này khi review thay đổi liên quan các vùng nhạy cảm d
       message gần nhất của user.
 - [ ] Marker (`[STEP_DONE]`/`[OFFTOPIC]`) là nguồn duy nhất báo tiến trình
       — không thêm heuristic suy đoán phía client. Marker trong system
-      prompt (`live-token`) phải khớp regex `_consumeMarkers` (`LiveClient`,
-      match fuzzy). KHÔNG dùng function-calling cho model Live 3.1 (FC
-      blocking → treo phiên sau `toolResponse`).
+      prompt (`live-token`) phải khớp regex fuzzy-match ở
+      `lib/markerProtocol.ts` (dùng trong `LiveClient._consumeMarkers`) —
+      sửa regex phải cập nhật cả `lib/markerProtocol.test.ts`. KHÔNG dùng
+      function-calling cho model Live 3.1 (FC blocking → treo phiên sau
+      `toolResponse`).
 - [ ] Kid Mode đặt `realtimeInputConfig` (silenceDurationMs cao +
       `NO_INTERRUPTION`) ở setup message; đổi giá trị này có thể làm AI
       chen lời/lặp câu — chỉ áp cho kid mode, không đụng barge-in adult.
 - [ ] `image-moderation` mặc định `is_safe: false` khi không parse được
       JSON (fail-closed, không fail-open).
+
+## Unit test (xem skill `unit-test`)
+
+- [ ] Sửa `lib/streak.ts`/`lib/scoring.ts`/`lib/markerProtocol.ts`/
+      `lib/audioFormat.ts` có cập nhật `*.test.ts` tương ứng trong cùng
+      commit, và `npm test` pass.
+- [ ] Test mới thêm chỉ test pure logic (không network/React/native
+      module) — nếu logic mới có nhánh đáng test nhưng đang lẫn trong
+      component/hook, tách ra `lib/` trước khi viết test.
 
 ## Kid Mode UX-critical
 

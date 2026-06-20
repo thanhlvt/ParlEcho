@@ -11,6 +11,7 @@ import {
   decodePCMInBase64,
 } from 'react-native-audio-api';
 import { awardBiscuits, spinLuckyWheel as spinLuckyWheelReward } from '../../lib/biscuits';
+import { calculateMissionStars } from '../../lib/scoring';
 import {
   bytesToBase64,
   LiveClient,
@@ -507,11 +508,12 @@ export function useMissionSession(missionId: string) {
   async function awardMissionResult(conversationId: string, avgPronunciation: number | null) {
     if (!mission || !user) return;
 
-    const starCompleted = missionCompletedRef.current;
-    const starPronunciation =
-      avgPronunciation !== null && avgPronunciation >= PRONUNCIATION_STAR_THRESHOLD;
-    const starNoHint = !hintUsedRef.current;
-    const earnedStars = [starCompleted, starPronunciation, starNoHint].filter(Boolean).length;
+    const earnedStars = calculateMissionStars({
+      completed: missionCompletedRef.current,
+      avgPronunciation,
+      usedHint: hintUsedRef.current,
+      pronunciationThreshold: PRONUNCIATION_STAR_THRESHOLD,
+    });
     setStars(earnedStars);
 
     await supabase.from('mission_results').insert({

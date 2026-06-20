@@ -20,8 +20,14 @@ Screen Time, Parent Dashboard). React Native + Expo, backend Supabase.
   camera hoặc chọn từ thư viện cho Parent Dashboard upload — cần plugin
   `expo-image-picker` trong `app.json` để khai báo `cameraPermission`)
 - **Security:** `expo-crypto` (hash SHA-256 mã PIN phụ huynh)
+- **Error tracking:** `@sentry/react-native` (qua Expo Config Plugin
+  `@sentry/react-native/expo`) — DSN đọc từ `EXPO_PUBLIC_SENTRY_DSN`, no-op
+  nếu thiếu; dùng `lib/sentry.ts#logError()` thay `console.error` ở các
+  điểm lỗi runtime quan trọng (WebSocket Live, audio).
 - **Animation:** react-native-reanimated ~4
 - **Vector graphics:** `react-native-svg` (vòng quay may mắn dạng pie chart trong Kid Mode)
+- **Testing:** Jest (`jest-expo` preset) — chỉ test pure logic trong `lib/`,
+  xem skill `unit-test`.
 
 ## Cấu trúc thư mục
 
@@ -37,7 +43,8 @@ components/
   kid/                                              # components + hooks riêng cho Kid Mode
   SwipeableRow.tsx
 
-lib/                  # Supabase client, types, audio, LiveClient, biscuits, pin
+lib/                  # Supabase client, types, audio, LiveClient, biscuits, pin, sentry
+  audioFormat.ts, markerProtocol.ts, streak.ts, scoring.ts   # pure logic, có *.test.ts
 providers/            # AuthProvider, ProfileProvider, ThemeProvider, ScreenTimeProvider
 
 supabase/
@@ -63,6 +70,8 @@ hoặc gọi trực tiếp bằng `/<skill-name>`):
   image moderation...).
 - **`code-review`** — checklist các lỗi/gotcha đặc thù dự án cần soát lại
   trước khi duyệt thay đổi.
+- **`unit-test`** — quy ước viết unit test (Jest/jest-expo), pattern tách
+  pure logic ra `lib/*.ts` để test được, phạm vi nên/không nên test.
 
 ## Code style & convention
 
@@ -93,6 +102,7 @@ hoặc gọi trực tiếp bằng `/<skill-name>`):
 ## Lệnh hay dùng
 
 - `npm run lint` — `expo lint`
+- `npm test` — Jest (unit test pure logic trong `lib/`, xem skill `unit-test`)
 - `npm run format` / `format:check` — Prettier
 - `npm run generate-audio` — sinh audio mẫu còn thiếu cho scenario_lines (cần
   `.env.scripts` với `SUPABASE_SERVICE_ROLE_KEY`, `GOOGLE_GENAI_API_KEY`)
@@ -102,7 +112,7 @@ hoặc gọi trực tiếp bằng `/<skill-name>`):
 Sau khi thêm chức năng mới, thêm/xoá/đổi tên file-thư mục, đổi tech
 stack/dependency quan trọng, đổi schema DB, hoặc đổi quy tắc nghiệp vụ — PHẢI
 cập nhật CLAUDE.md **và** skill liên quan (`.claude/skills/app-code`,
-`db-schema`, `edge-functions`, `code-review`) trong cùng lần thay đổi đó,
+`db-schema`, `edge-functions`, `code-review`, `unit-test`) trong cùng lần thay đổi đó,
 không để lại cho lần sau. Chỉ ghi thông tin chức năng hiện tại (cấu trúc,
 quy tắc, lý do kỹ thuật) — không ghi lịch sử triển khai (phase, ngày tháng,
 commit).

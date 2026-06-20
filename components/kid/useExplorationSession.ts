@@ -12,6 +12,7 @@ import {
   decodePCMInBase64,
 } from 'react-native-audio-api';
 import { awardBiscuits, spinLuckyWheel as spinLuckyWheelReward } from '../../lib/biscuits';
+import { calculateExplorationStars } from '../../lib/scoring';
 import {
   bytesToBase64,
   EXPLORATION_OPENING_TEXT,
@@ -551,10 +552,11 @@ export function useExplorationSession() {
   // như Guided Conversation nên không dùng mission_results, chỉ thưởng biscuit/biscuit_count.
   async function awardExplorationResult(avgPronunciation: number | null, conversationId: string) {
     if (!user) return;
-    const starExcellent =
-      avgPronunciation !== null && avgPronunciation >= PRONUNCIATION_EXCELLENT_THRESHOLD;
-    const starGood = avgPronunciation !== null && avgPronunciation >= PRONUNCIATION_STAR_THRESHOLD;
-    const earnedStars = 1 + (starGood ? 1 : 0) + (starExcellent ? 1 : 0);
+    const earnedStars = calculateExplorationStars({
+      avgPronunciation,
+      goodThreshold: PRONUNCIATION_STAR_THRESHOLD,
+      excellentThreshold: PRONUNCIATION_EXCELLENT_THRESHOLD,
+    });
     setStars(earnedStars);
 
     if (pickedImageIdRef.current) {

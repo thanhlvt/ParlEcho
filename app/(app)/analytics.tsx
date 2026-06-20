@@ -18,6 +18,8 @@ import { supabase } from '../../lib/supabase';
 import { DailyActivity } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { NotebookPieChart } from '../../components/analytics/NotebookPieChart';
+import { computeStreak } from '../../lib/streak';
+import { calculateScoreStats } from '../../lib/scoring';
 
 const { width } = Dimensions.get('window');
 
@@ -78,64 +80,10 @@ export default function AnalyticsScreen() {
   const totalMinutes = activities.reduce((sum, act) => sum + act.minutes_practiced, 0);
   const totalConvs = activities.reduce((sum, act) => sum + act.conversations_count, 0);
 
-  const scoredActivities = activities.filter((act) => act.avg_pronunciation_score !== null);
-  const avgOverallScore =
-    scoredActivities.length > 0
-      ? Math.round(
-          scoredActivities.reduce((sum, act) => sum + (act.avg_pronunciation_score ?? 0), 0) /
-            scoredActivities.length,
-        )
-      : 0;
-
-  const maxOverallScore =
-    scoredActivities.length > 0
-      ? Math.max(...scoredActivities.map((act) => act.avg_pronunciation_score ?? 0))
-      : 0;
+  const { avg: avgOverallScore, max: maxOverallScore } = calculateScoreStats(activities);
 
   // Streak calculation
-  const currentStreak = calculateStreak(activities);
-
-  function calculateStreak(activityList: DailyActivity[]): number {
-    if (activityList.length === 0) return 0;
-
-    const sortedDates = [...new Set(activityList.map((a) => a.activity_date))]
-      .map((d) => new Date(d))
-      .sort((a, b) => b.getTime() - a.getTime());
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const mostRecent = sortedDates[0];
-    mostRecent.setHours(0, 0, 0, 0);
-
-    // If most recent is not today or yesterday, streak is 0
-    if (mostRecent.getTime() !== today.getTime() && mostRecent.getTime() !== yesterday.getTime()) {
-      return 0;
-    }
-
-    let streak = 1;
-    let currentRef = mostRecent;
-
-    for (let i = 1; i < sortedDates.length; i++) {
-      const nextDate = sortedDates[i];
-      nextDate.setHours(0, 0, 0, 0);
-
-      const diffTime = Math.abs(currentRef.getTime() - nextDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 1) {
-        streak++;
-        currentRef = nextDate;
-      } else if (diffDays > 1) {
-        break;
-      }
-    }
-
-    return streak;
-  }
+  const currentStreak = computeStreak(activities);
 
   // ── Process last 7 days chart data ───────────────────────────────────
   const chartData = getLast7DaysData(activities);

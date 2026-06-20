@@ -22,6 +22,7 @@ import {
   registerActiveAudio,
   stopActiveAudio,
 } from '../../../../lib/audioPlayback';
+import { getScoreColor } from '../../../../lib/scoring';
 
 type ConversationWithReview = Conversation & {
   overall_feedback?: string;
@@ -397,13 +398,6 @@ function PronunciationDetail({ attempt }: { attempt: PronunciationAttempt | unde
       ))}
     </View>
   );
-}
-
-function getScoreColor(score: number | null, colors: any): string {
-  if (score == null) return colors.textMuted;
-  if (score >= 80) return colors.success;
-  if (score >= 60) return colors.warning;
-  return colors.error;
 }
 
 function CorrectionRow({ correction }: { correction: Correction }) {

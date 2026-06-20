@@ -20,53 +20,11 @@ import { DailyActivity, LanguageId, Profile } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { useSidebar } from './_layout';
 import { ProgressRing } from '../../components/analytics/ProgressRing';
+import { toLocalDateKey, buildWeekData, computeStreak } from '../../lib/streak';
 
 const { width } = Dimensions.get('window');
 
 // ── helpers ────────────────────────────────────────────────────────────
-const DAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-
-// activity_date is stored as a local calendar day (YYYY-MM-DD) — must format
-// using local Y/M/D, not toISOString() (UTC), otherwise dates shift by one
-// day for any timezone ahead of UTC (e.g. Vietnam, UTC+7).
-function toLocalDateKey(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-function buildWeekData(activities: DailyActivity[]) {
-  const today = new Date();
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(d.getDate() - (6 - i));
-    const dateStr = toLocalDateKey(d);
-    const act = activities.find((a) => a.activity_date === dateStr);
-    return {
-      label: DAY_LABELS[d.getDay()],
-      lines: act?.lines_practiced ?? 0,
-      isToday: i === 6,
-    };
-  });
-}
-
-function computeStreak(activities: DailyActivity[]): number {
-  const dateSet = new Set(activities.map((a) => a.activity_date));
-  let streak = 0;
-  const cursor = new Date();
-  cursor.setHours(0, 0, 0, 0);
-  while (true) {
-    const key = toLocalDateKey(cursor);
-    if (dateSet.has(key)) {
-      streak++;
-      cursor.setDate(cursor.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-  return streak;
-}
 
 function greeting() {
   const h = new Date().getHours();
