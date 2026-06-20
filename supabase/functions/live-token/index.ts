@@ -78,7 +78,8 @@ function buildKidGuidedPrompt(opts: {
     `5. Never include "${STEP_DONE_MARKER}" and "${OFFTOPIC_MARKER}" in the same reply.\n` +
     `6. Do NOT correct grammar or pronunciation — just keep the mission moving forward warmly.\n` +
     `7. If the child speaks Vietnamese, gently encourage them to try in ${langLabel}.\n` +
-    `8. Say each thing only ONCE per turn — never repeat or rephrase the same praise/question/goodbye again in the same reply, even with different wording.`
+    `8. Say each thing only ONCE per turn — never repeat or rephrase the same praise/question/goodbye again in the same reply, even with different wording.\n` +
+    `9. CRITICAL — never forget rule 2/3: forgetting to append "${STEP_DONE_MARKER}" when a step's goal is met is the single worst mistake you can make, because it silently breaks the child's progress tracking. If you see a message marked "(Reminder for you, the AI — do not say this out loud...)", that means you already forgot it at least once — follow it immediately and do not mention the reminder to the child.`
   );
 }
 

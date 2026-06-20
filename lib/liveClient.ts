@@ -94,6 +94,16 @@ export type LiveState = 'idle' | 'connecting' | 'live' | 'ended' | 'error';
 // Fuzzy: không phân biệt hoa/thường, ngoặc tuỳ chọn, gạch dưới/khoảng trắng giữa 2 từ tuỳ ý.
 const STEP_DONE_RE = /\[?\s*step[\s_]*done\s*\]?/gi;
 const OFFTOPIC_RE = /\[?\s*off[\s_]*topic\s*\]?/gi;
+// PHẢI khớp STEP_DONE_MARKER trong supabase/functions/live-token/index.ts — dùng khi soạn
+// reminder gửi lại cho model (xem _sendStepReminder).
+const STEP_DONE_MARKER = '[STEP_DONE]';
+
+// Model có thể quên gắn [STEP_DONE] khi hội thoại kéo dài (instruction drift của Live API).
+// Sau N lượt AI liên tiếp không thấy marker dù vẫn ở cùng bước, gửi 1 lần reminder ẩn nhắc
+// lại mục tiêu bước hiện tại; sau M lượt vẫn không có marker thì coi như model bị kẹt và tự
+// force-advance ở client để progress bar không treo vĩnh viễn.
+const STEP_REMINDER_AFTER_TURNS = 2;
+const STEP_FORCE_ADVANCE_AFTER_TURNS = 4;
 
 // Image Exploration (Pha 5): câu mở đầu cố định gửi kèm ảnh qua clientContent — chỉ là
 // chỉ dẫn nội bộ cho model, không hiển thị cho trẻ (không qua inputAudioTranscription).
@@ -164,6 +174,14 @@ export class LiveClient {
   private turnLimitMs = 0;
   private turnTimer: ReturnType<typeof setTimeout> | null = null;
   private offTopicStreak = 0;
+
+  // Kid Mode (guided): theo dõi bước hiện tại để soạn reminder + force-advance khi model
+  // quên gắn marker (xem STEP_REMINDER_AFTER_TURNS/STEP_FORCE_ADVANCE_AFTER_TURNS).
+  private missionSteps: { stepOrder: number; targetSentence: string; intent: string }[] = [];
+  private stepIndex = 0;
+  private turnsSinceStepEvent = 0;
+  private reminderSentForCurrentStep = false;
+  private lastFlushAdvancedStep = false;
   // Kid Mode: server cấu hình activityHandling = NO_INTERRUPTION. Khi true, KHÔNG gỡ cờ
   // aiSpeaking dựa trên inputTranscription lúc AI đang nói — tránh tiếng AI vọng vào mic bị
   // hiểu là trẻ nói (echo) làm mở mic giữa chừng. Chỉ drain-timer sau turnComplete mở lại mic.
@@ -206,6 +224,11 @@ export class LiveClient {
     this.noInterruption = opts.mode === 'kid_guided' || opts.mode === 'kid_exploration';
     this.setupReady = false;
     this.pendingImageTurn = null;
+    this.missionSteps = [...(opts.mission?.steps ?? [])].sort((a, b) => a.stepOrder - b.stepOrder);
+    this.stepIndex = 0;
+    this.turnsSinceStepEvent = 0;
+    this.reminderSentForCurrentStep = false;
+    this.lastFlushAdvancedStep = false;
     this.cb.onStateChange('connecting');
 
     // 1. Lấy ephemeral token từ Edge Function
@@ -518,6 +541,7 @@ export class LiveClient {
     if (sc.turnComplete || sc.generationComplete) {
       this._flushCurrentUserTurn();
       this._flushCurrentAiTurn();
+      this._checkStepProgress();
       // Delay re-enabling mic until buffered audio finishes playing.
       // totalAudioMs = byte count / 48000 B/s (24 kHz 16-bit mono).
       // elapsedMs = time since first chunk arrived — already-played portion.
@@ -538,6 +562,54 @@ export class LiveClient {
       }, remainingMs);
       this.cb.onTranscriptUpdate([...this.turns]);
     }
+  }
+
+  // Kid Mode (guided): gọi sau mỗi lượt AI hoàn tất. Nếu lượt này KHÔNG có marker
+  // [STEP_DONE] (lastFlushAdvancedStep=false) trong khi vẫn còn bước chưa xong, đếm dồn —
+  // tới STEP_REMINDER_AFTER_TURNS thì nhắc model 1 lần, tới STEP_FORCE_ADVANCE_AFTER_TURNS
+  // thì coi như model bị kẹt và tự advance ở client để progress bar không treo vĩnh viễn.
+  private _checkStepProgress() {
+    if (this.missionSteps.length === 0 || this.stepIndex >= this.missionSteps.length) return;
+
+    if (this.lastFlushAdvancedStep) {
+      this.turnsSinceStepEvent = 0;
+      return;
+    }
+
+    this.turnsSinceStepEvent++;
+    if (this.turnsSinceStepEvent >= STEP_FORCE_ADVANCE_AFTER_TURNS) {
+      console.warn('[LiveClient] Step marker not seen for too long — forcing advance');
+      this.turnsSinceStepEvent = 0;
+      this.reminderSentForCurrentStep = false;
+      this.offTopicStreak = 0;
+      this.stepIndex = Math.min(this.stepIndex + 1, this.missionSteps.length);
+      this.cb.onStepAdvance?.();
+    } else if (
+      this.turnsSinceStepEvent >= STEP_REMINDER_AFTER_TURNS &&
+      !this.reminderSentForCurrentStep
+    ) {
+      this.reminderSentForCurrentStep = true;
+      this._sendStepReminder();
+    }
+  }
+
+  // Gửi nhắc ẩn về mục tiêu bước hiện tại — dùng clientContent role "user" giống cơ chế
+  // EXPLORATION_OPENING_TEXT (chỉ dẫn nội bộ cho model, model được yêu cầu không nói lại
+  // nguyên văn cho trẻ nghe).
+  private _sendStepReminder() {
+    const step = this.missionSteps[this.stepIndex];
+    if (!step) return;
+    const text =
+      `(Reminder for you, the AI — do not say this out loud or mention it to the child): ` +
+      `You are still on Step ${step.stepOrder} — goal: "${step.targetSentence}" (reached when ${step.intent}). ` +
+      `If the child's last reply already satisfies this goal, praise them now, move on to the next step, ` +
+      `and remember to append the exact text "${STEP_DONE_MARKER}" at the end of your next reply.`;
+    this._send({
+      clientContent: {
+        turns: [{ role: 'user', parts: [{ text }] }],
+        turnComplete: true,
+      },
+    });
   }
 
   private _startTurnTimer() {
@@ -592,11 +664,16 @@ export class LiveClient {
   // Dùng replace-rồi-so-sánh thay vì .test() vì regex global giữ lastIndex giữa các lần gọi.
   private _consumeMarkers(text: string): string {
     let cleaned = text;
+    this.lastFlushAdvancedStep = false;
 
     const afterStep = cleaned.replace(STEP_DONE_RE, '').trim();
     if (afterStep !== cleaned) {
       cleaned = afterStep;
       this.offTopicStreak = 0;
+      this.lastFlushAdvancedStep = true;
+      this.stepIndex = Math.min(this.stepIndex + 1, this.missionSteps.length);
+      this.turnsSinceStepEvent = 0;
+      this.reminderSentForCurrentStep = false;
       this.cb.onStepAdvance?.();
     }
 
