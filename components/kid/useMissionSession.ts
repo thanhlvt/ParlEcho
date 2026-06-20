@@ -463,6 +463,7 @@ export function useMissionSession(missionId: string) {
 
       setSavingMsg('Đang chấm điểm...');
       let avgPronunciation: number | null = null;
+      let reviewResult: SessionReviewApiResponse | null = null;
       try {
         const { data: reviewData, error: reviewErr } = await supabase.functions.invoke(
           'session-review',
@@ -476,14 +477,14 @@ export function useMissionSession(missionId: string) {
           },
         );
         if (reviewErr) console.warn('[MissionSession] session-review error:', reviewErr);
-        avgPronunciation =
-          (reviewData as SessionReviewApiResponse | null)?.avg_pronunciation ?? null;
+        reviewResult = reviewData as SessionReviewApiResponse | null;
+        avgPronunciation = reviewResult?.avg_pronunciation ?? null;
       } catch (reviewErr) {
         console.warn('[MissionSession] session-review call failed:', reviewErr);
       }
 
-      // Lưu avg_pronunciation + các lượt lạc đề vào summary jsonb — Parent Dashboard (Pha 6)
-      // đọc lại để đánh dấu thời điểm lạc đề trong transcript.
+      // Lưu đầy đủ kết quả chấm (feedback, lỗi ngữ pháp, từ vựng, điểm) + các lượt lạc đề vào
+      // summary jsonb — Parent Dashboard đọc lại để hiện chi tiết phiên giống màn Live review.
       await supabase
         .from('conversations')
         .update({
@@ -491,6 +492,10 @@ export function useMissionSession(missionId: string) {
           summary: {
             avg_pronunciation: avgPronunciation,
             offtopic_turns: offTopicTurnsRef.current,
+            overall_feedback: reviewResult?.overall_feedback,
+            fluency_notes: reviewResult?.fluency_notes,
+            corrections: reviewResult?.corrections,
+            words_to_learn: reviewResult?.vocab_to_learn,
           },
         })
         .eq('id', conversationId);

@@ -486,7 +486,23 @@ export function useExplorationSession() {
         );
         if (reviewErr) console.warn('[ExplorationSession] session-review error:', reviewErr);
         const review = reviewData as SessionReviewApiResponse | null;
-        if (review) await saveLearnedItems(review);
+        if (review) {
+          await saveLearnedItems(review);
+          // Lưu feedback/lỗi ngữ pháp/từ vựng/điểm vào summary jsonb — trước đó màn này không
+          // bao giờ set summary nên Parent Dashboard không thấy được gì ngoài ended_at.
+          await supabase
+            .from('conversations')
+            .update({
+              summary: {
+                avg_pronunciation: review.avg_pronunciation,
+                overall_feedback: review.overall_feedback,
+                fluency_notes: review.fluency_notes,
+                corrections: review.corrections,
+                words_to_learn: review.vocab_to_learn,
+              },
+            })
+            .eq('id', conversationId);
+        }
         // Tính sao cuối + biscuit/vòng quay; setScoring(false) ở finally sẽ lộ tất cả 1 lần.
         await awardExplorationResult(review?.avg_pronunciation ?? null, conversationId);
       } catch (reviewErr) {
