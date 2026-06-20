@@ -60,7 +60,15 @@
       ],
       "expo-asset",
       "expo-build-properties",
-      "./plugins/withAndroidCmakeVersion"
+      "./plugins/withAndroidCmakeVersion",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "thanhle"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

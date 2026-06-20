@@ -14,17 +14,20 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../../../providers/ThemeProvider';
 import { supabase } from '../../../../lib/supabase';
-import { Conversation, Correction, Message, SegmentPronunciation } from '../../../../lib/types';
+import { Conversation, Correction, Message, PronunciationAttempt } from '../../../../lib/types';
 import { useAuth } from '../../../../providers/AuthProvider';
 import { clearConversationAudio } from '../../../../lib/audioCache';
-import { clearActiveAudio, registerActiveAudio, stopActiveAudio } from '../../../../lib/audioPlayback';
+import {
+  clearActiveAudio,
+  registerActiveAudio,
+  stopActiveAudio,
+} from '../../../../lib/audioPlayback';
 
 type ConversationWithReview = Conversation & {
   overall_feedback?: string;
   fluency_notes?: string;
   corrections?: Correction[];
   vocab_to_learn?: string[];
-  pronunciation?: SegmentPronunciation[];
   avg_pronunciation?: number | null;
 };
 
@@ -38,6 +41,9 @@ export default function ReviewScreen() {
   const [loading, setLoading] = useState(true);
   const [conv, setConv] = useState<ConversationWithReview | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [attemptByMessageId, setAttemptByMessageId] = useState<Map<string, PronunciationAttempt>>(
+    new Map(),
+  );
   const [playingId, setPlayingId] = useState<string | null>(null);
   const soundRef = useRef<AudioPlayer | null>(null);
   // Mirrors playingId synchronously — React state batching means a rapid second tap
@@ -64,10 +70,21 @@ export default function ReviewScreen() {
         corrections: summary.corrections,
         vocab_to_learn: summary.words_to_learn,
         avg_pronunciation: summary.avg_pronunciation,
-        pronunciation: undefined, // pronunciation loaded from pronunciation_attempts below
       });
     }
-    setMessages(msgRes.data ?? []);
+    const fetchedMessages = msgRes.data ?? [];
+    setMessages(fetchedMessages);
+
+    const userMessageIds = fetchedMessages
+      .filter((m) => m.role === 'user' && m.audio_url)
+      .map((m) => m.id);
+    if (userMessageIds.length > 0) {
+      const { data: attemptsData } = await supabase
+        .from('pronunciation_attempts')
+        .select('*')
+        .in('message_id', userMessageIds);
+      setAttemptByMessageId(new Map((attemptsData ?? []).map((a) => [a.message_id as string, a])));
+    }
     setLoading(false);
   }, [conversationId]);
 
@@ -233,14 +250,7 @@ export default function ReviewScreen() {
   }
 
   const score = conv?.avg_pronunciation;
-  const scoreColor =
-    score == null
-      ? colors.textMuted
-      : score >= 80
-        ? colors.success
-        : score >= 60
-          ? colors.warning
-          : colors.error;
+  const scoreColor = getScoreColor(score ?? null, colors);
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
@@ -331,6 +341,9 @@ export default function ReviewScreen() {
                   ) : null}
                 </View>
                 <Text style={styles.transcriptText}>{m.text}</Text>
+                {m.role === 'user' && m.audio_url ? (
+                  <PronunciationDetail attempt={attemptByMessageId.get(m.id)} />
+                ) : null}
               </View>
             ))}
           </View>
@@ -345,6 +358,52 @@ export default function ReviewScreen() {
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+// Bảng pronunciation_attempts được 2 Edge Function dùng chung nhưng diễn giải
+// word_scores khác nhau: ở session-review (màn này), error_type là TIP cải thiện
+// (không phải mã loại lỗi như ở pronounce/WordHighlight.tsx) và score luôn = 0.
+function PronunciationDetail({ attempt }: { attempt: PronunciationAttempt | undefined }) {
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
+  if (!attempt || (attempt.accuracy_score == null && attempt.fluency_score == null)) return null;
+
+  const clarityColor = getScoreColor(attempt.accuracy_score, colors);
+  const fluencyColor = getScoreColor(attempt.fluency_score, colors);
+  const flaggedWords = (attempt.word_scores ?? []).filter((ws) => ws.word);
+
+  return (
+    <View>
+      <View style={styles.pronScoreRow}>
+        {attempt.accuracy_score != null ? (
+          <View style={[styles.pronBadge, { borderColor: clarityColor }]}>
+            <Text style={[styles.pronBadgeText, { color: clarityColor }]}>
+              Rõ: {Math.round(attempt.accuracy_score)}
+            </Text>
+          </View>
+        ) : null}
+        {attempt.fluency_score != null ? (
+          <View style={[styles.pronBadge, { borderColor: fluencyColor }]}>
+            <Text style={[styles.pronBadgeText, { color: fluencyColor }]}>
+              Trôi chảy: {Math.round(attempt.fluency_score)}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+      {flaggedWords.map((ws, i) => (
+        <Text key={i} style={styles.flaggedWordRow}>
+          • &quot;{ws.word}&quot; - {ws.error_type}
+        </Text>
+      ))}
+    </View>
+  );
+}
+
+function getScoreColor(score: number | null, colors: any): string {
+  if (score == null) return colors.textMuted;
+  if (score >= 80) return colors.success;
+  if (score >= 60) return colors.warning;
+  return colors.error;
 }
 
 function CorrectionRow({ correction }: { correction: Correction }) {
@@ -444,6 +503,16 @@ const getStyles = (colors: any) =>
     transcriptRole: { fontSize: 11, fontWeight: '700', color: colors.textMuted },
     transcriptText: { fontSize: 14, color: colors.textPrimary, lineHeight: 20 },
     playBtn: { padding: 2 },
+
+    pronScoreRow: { flexDirection: 'row', gap: 8, marginTop: 4, flexWrap: 'wrap' },
+    pronBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 8,
+      borderWidth: 1,
+    },
+    pronBadgeText: { fontSize: 11, fontWeight: '700' },
+    flaggedWordRow: { fontSize: 12, color: colors.textMuted, marginTop: 2, lineHeight: 16 },
 
     deleteBtn: {
       flexDirection: 'row',

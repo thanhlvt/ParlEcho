@@ -1,5 +1,6 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from './supabase';
+import { logError } from './sentry';
 
 const LIVE_AUDIO_DIR = `${FileSystem.documentDirectory}live/`;
 
@@ -52,7 +53,7 @@ export async function clearAllAudioCache() {
         .like('audio_url', 'file://%');
     }
   } catch (err) {
-    console.error('clearAllAudioCache error:', err);
+    logError('AudioCache.clearAll', err);
   }
 }
 
@@ -74,6 +75,6 @@ export async function clearConversationAudio(conversationId: string) {
       .eq('conversation_id', conversationId)
       .like('audio_url', 'file://%');
   } catch (err) {
-    console.error('clearConversationAudio error:', err);
+    logError('AudioCache.clearConversation', err);
   }
 }

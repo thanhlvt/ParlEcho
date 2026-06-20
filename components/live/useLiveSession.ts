@@ -18,6 +18,7 @@ import {
   uploadLiveSegment,
 } from '../../lib/liveClient';
 import { supabase } from '../../lib/supabase';
+import { logError } from '../../lib/sentry';
 import { LanguageId, LiveAudioSegment, LiveTurn } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import {
@@ -147,7 +148,7 @@ export function useLiveSession() {
         return;
       }
     } catch (err) {
-      console.error('[Live] Request permission error', err);
+      logError('Live.requestPermission', err);
       Alert.alert(
         'Lỗi quyền micro',
         'Không thể yêu cầu quyền ghi âm. Vui lòng cấp quyền trong Cài đặt thiết bị.',
@@ -281,7 +282,7 @@ export function useLiveSession() {
         .single();
 
       if (convErr || !conv) {
-        console.error('[Live] conversation insert error:', convErr?.message, convErr?.code);
+        logError('Live.conversationInsert', convErr);
         throw new Error('Không thể tạo phiên hội thoại');
       }
       const conversationId = conv.id;
@@ -378,7 +379,7 @@ export function useLiveSession() {
         params: { conversationId },
       });
     } catch (err) {
-      console.error('[Live] endSession error:', err);
+      logError('Live.endSession', err);
       Alert.alert('Lỗi', err instanceof Error ? err.message : 'Lỗi lưu phiên');
       setView('setup');
     }

@@ -2,9 +2,13 @@ import { Href, Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { StatusBar } from 'expo-status-bar';
+import * as Sentry from '@sentry/react-native';
 import { AuthProvider, useAuth } from '../providers/AuthProvider';
 import { ProfileProvider, useProfile } from '../providers/ProfileProvider';
 import { ThemeProvider, useTheme } from '../providers/ThemeProvider';
+import { initSentry } from '../lib/sentry';
+
+initSentry();
 
 function RouteGuard() {
   const { session, loading: authLoading } = useAuth();
@@ -54,7 +58,7 @@ function ThemeStatusBar() {
   return <StatusBar style={isDark ? 'light' : 'dark'} />;
 }
 
-export default function RootLayout() {
+export default Sentry.wrap(function RootLayout() {
   return (
     <KeyboardProvider>
       <AuthProvider>
@@ -67,4 +71,4 @@ export default function RootLayout() {
       </AuthProvider>
     </KeyboardProvider>
   );
-}
+});

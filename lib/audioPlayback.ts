@@ -1,5 +1,6 @@
 import { Alert } from 'react-native';
 import type { AudioPlayer } from 'expo-audio';
+import { logError } from './sentry';
 
 /**
  * Tracks whatever single audio/speech source is currently "active" anywhere in
@@ -74,6 +75,7 @@ function scheduleWatchdog(
       return;
     }
     stopActiveAudio();
+    logError('AudioPlayback.watchdog', new Error('Audio failed to start playing'));
     Alert.alert('Lỗi', 'Không thể phát âm thanh. File có thể bị lỗi hoặc đã bị xoá.');
   }, WATCHDOG_CHECK_MS);
 }

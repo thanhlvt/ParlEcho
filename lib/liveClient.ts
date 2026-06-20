@@ -16,6 +16,7 @@
  */
 
 import { supabase } from './supabase';
+import { logError } from './sentry';
 import { LiveAudioSegment, LiveTokenApiResponse, LiveTurn } from './types';
 
 // WAV header mono 16-bit
@@ -334,7 +335,7 @@ export class LiveClient {
     };
 
     this.ws.onerror = (ev) => {
-      console.error('[LiveClient] WebSocket error', ev);
+      logError('LiveClient.websocket', ev);
       this.cb.onStateChange('error');
       this.cb.onError('WebSocket error');
     };
