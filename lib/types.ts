@@ -77,6 +77,7 @@ export type Mission = {
   level: ScenarioLevel;
   step_count: number;
   sticker_pool: string[];
+  icon: string;
   created_at: string;
 };
 

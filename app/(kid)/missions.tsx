@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Href, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
@@ -15,6 +15,9 @@ const LEVEL_LABEL: Record<string, string> = {
   advanced: 'Giỏi',
 };
 
+const CARD_HEIGHT = 188;
+const CARD_GAP = 12;
+
 export default function MissionsScreen() {
   const { colors } = useTheme();
   const styles = getStyles(colors);
@@ -26,23 +29,13 @@ export default function MissionsScreen() {
   const [priorityMissionIds, setPriorityMissionIds] = useState<Set<string>>(new Set());
   const [bestStarsByMission, setBestStarsByMission] = useState<Record<string, number>>({});
 
+  const flatListRef = useRef<FlatList<Mission>>(null);
+  const hasAutoScrolledRef = useRef(false);
+
   useFocusEffect(
     useCallback(() => {
-      if (user) {
-        supabase
-          .from('mission_results')
-          .select('mission_id, stars')
-          .eq('user_id', user.id)
-          .then(({ data }) => {
-            const best: Record<string, number> = {};
-            for (const r of (data as { mission_id: string; stars: number }[]) ?? []) {
-              best[r.mission_id] = Math.max(best[r.mission_id] ?? 0, r.stars);
-            }
-            setBestStarsByMission(best);
-          });
-      }
-
       const languageId = profile?.active_language_id ?? 'en';
+
       Promise.all([
         supabase.from('missions').select('*').eq('language_id', languageId).order('created_at'),
         user
@@ -52,7 +45,10 @@ export default function MissionsScreen() {
               .eq('user_id', user.id)
               .eq('language_id', languageId)
           : Promise.resolve({ data: [] as { content: string }[] }),
-      ]).then(([missionsRes, vocabRes]) => {
+        user
+          ? supabase.from('mission_results').select('mission_id, stars').eq('user_id', user.id)
+          : Promise.resolve({ data: [] as { mission_id: string; stars: number }[] }),
+      ]).then(([missionsRes, vocabRes, resultsRes]) => {
         if (!missionsRes.data) return;
         const allMissions = missionsRes.data as Mission[];
         const terms = (vocabRes.data ?? []).map((v) => v.content.toLowerCase());
@@ -68,13 +64,32 @@ export default function MissionsScreen() {
             .map((m) => m.id),
         );
         setPriorityMissionIds(matchedIds);
-        setMissions(
-          [...allMissions].sort((a, b) => {
-            const aPriority = matchedIds.has(a.id) ? 1 : 0;
-            const bPriority = matchedIds.has(b.id) ? 1 : 0;
-            return bPriority - aPriority;
-          }),
-        );
+
+        const sortedMissions = [...allMissions].sort((a, b) => {
+          const aPriority = matchedIds.has(a.id) ? 1 : 0;
+          const bPriority = matchedIds.has(b.id) ? 1 : 0;
+          return bPriority - aPriority;
+        });
+        setMissions(sortedMissions);
+
+        const best: Record<string, number> = {};
+        for (const r of (resultsRes.data as { mission_id: string; stars: number }[]) ?? []) {
+          best[r.mission_id] = Math.max(best[r.mission_id] ?? 0, r.stars);
+        }
+        setBestStarsByMission(best);
+
+        if (hasAutoScrolledRef.current) return;
+        hasAutoScrolledRef.current = true;
+        const firstIncompleteIndex = sortedMissions.findIndex((m) => (best[m.id] ?? 0) === 0);
+        if (firstIncompleteIndex > 1) {
+          setTimeout(() => {
+            flatListRef.current?.scrollToIndex({
+              index: firstIncompleteIndex,
+              animated: true,
+              viewPosition: 0.15,
+            });
+          }, 300);
+        }
       });
     }, [profile?.active_language_id, user]),
   );
@@ -93,34 +108,56 @@ export default function MissionsScreen() {
       <Text style={styles.subtitle}>Cùng bạn đồng hành hoàn thành nhiệm vụ nhé!</Text>
 
       <FlatList
+        ref={flatListRef}
         data={missions}
         keyExtractor={(m) => m.id}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
         contentContainerStyle={styles.list}
+        getItemLayout={(_, index) => ({
+          length: CARD_HEIGHT,
+          offset: Math.floor(index / 2) * (CARD_HEIGHT + CARD_GAP),
+          index,
+        })}
+        onScrollToIndexFailed={({ index }) => {
+          flatListRef.current?.scrollToOffset({
+            offset: Math.floor(index / 2) * (CARD_HEIGHT + CARD_GAP),
+            animated: true,
+          });
+        }}
         ListEmptyComponent={
           <Text style={styles.empty}>Chưa có nhiệm vụ nào, quay lại sau nhé!</Text>
         }
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.85}
-            onPress={() => router.push(`/(kid)/mission-live?missionId=${item.id}` as Href)}
-          >
-            <View style={styles.cardTitleRow}>
-              <Text style={styles.cardTitle}>{item.title}</Text>
+        renderItem={({ item }) => {
+          const stars = bestStarsByMission[item.id] ?? 0;
+          return (
+            <TouchableOpacity
+              style={styles.card}
+              activeOpacity={0.85}
+              onPress={() => router.push(`/(kid)/mission-live?missionId=${item.id}` as Href)}
+            >
               {priorityMissionIds.has(item.id) ? (
-                <Text style={styles.priorityBadge}>⭐ Ưu tiên</Text>
+                <View style={styles.priorityBadge}>
+                  <Text style={styles.priorityBadgeText}>⭐ Ưu tiên</Text>
+                </View>
               ) : null}
-            </View>
-            <View style={styles.cardMetaRow}>
-              <Text style={styles.cardMeta}>{LEVEL_LABEL[item.level] ?? item.level}</Text>
-              <Text style={styles.cardMeta}>{item.step_count} bước</Text>
-              <Text style={styles.cardStars}>
-                {'⭐'.repeat(bestStarsByMission[item.id] ?? 0) +
-                  '☆'.repeat(3 - (bestStarsByMission[item.id] ?? 0))}
+
+              <Text style={styles.cardIcon}>{item.icon}</Text>
+              <Text style={styles.cardTitle} numberOfLines={2}>
+                {item.title}
               </Text>
-            </View>
-          </TouchableOpacity>
-        )}
+
+              <View style={styles.cardMetaRow}>
+                <View style={styles.levelChip}>
+                  <Text style={styles.levelChipText}>{LEVEL_LABEL[item.level] ?? item.level}</Text>
+                </View>
+                <Text style={styles.cardMeta}>{item.step_count} bước</Text>
+              </View>
+
+              <Text style={styles.cardStars}>{'⭐'.repeat(stars) + '☆'.repeat(3 - stars)}</Text>
+            </TouchableOpacity>
+          );
+        }}
       />
     </SafeAreaView>
   );
@@ -133,19 +170,46 @@ const getStyles = (colors: any) =>
     backText: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
     title: { fontSize: 26, fontWeight: '800', color: colors.primary, marginTop: 12 },
     subtitle: { fontSize: 15, color: colors.textSecondary, marginTop: 6, marginBottom: 8 },
-    list: { paddingVertical: 8, gap: 12 },
+    list: { paddingVertical: 8, gap: CARD_GAP },
+    columnWrapper: { gap: CARD_GAP },
     empty: { fontSize: 15, color: colors.textMuted, textAlign: 'center', marginTop: 40 },
     card: {
+      flex: 1,
+      height: CARD_HEIGHT,
       backgroundColor: colors.surface,
       borderRadius: 20,
       borderWidth: 2,
       borderColor: colors.border,
-      padding: 18,
+      padding: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
     },
-    cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-    cardTitle: { fontSize: 19, fontWeight: '800', color: colors.textPrimary },
-    priorityBadge: { fontSize: 12, fontWeight: '700', color: colors.warning },
-    cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 8 },
-    cardMeta: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
-    cardStars: { fontSize: 13, marginLeft: 'auto' },
+    priorityBadge: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+      backgroundColor: colors.warning,
+      borderRadius: 10,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    priorityBadgeText: { fontSize: 11, fontWeight: '700', color: '#fff' },
+    cardIcon: { fontSize: 40 },
+    cardTitle: {
+      fontSize: 15,
+      fontWeight: '800',
+      color: colors.textPrimary,
+      textAlign: 'center',
+    },
+    cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    levelChip: {
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 10,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    levelChipText: { fontSize: 11, fontWeight: '700', color: colors.primary },
+    cardMeta: { fontSize: 12, fontWeight: '600', color: colors.textMuted },
+    cardStars: { fontSize: 13 },
   });

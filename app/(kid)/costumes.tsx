@@ -81,7 +81,9 @@ export default function CostumesScreen() {
             const canAfford = (profile?.biscuit_count ?? 0) >= c.price_biscuits;
             return (
               <View key={c.id} style={styles.cell}>
-                <Text style={[styles.cellEmoji, !owned && styles.cellEmojiLocked]}>{c.emoji}</Text>
+                <View style={styles.cellEmojiArea}>
+                  <Text style={[styles.cellEmoji, owned && styles.cellEmojiOwned]}>{c.emoji}</Text>
+                </View>
                 <Text style={styles.cellLabel}>{c.name}</Text>
                 {!owned ? (
                   <TouchableOpacity
@@ -122,16 +124,18 @@ const getStyles = (colors: any) =>
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
     cell: {
       width: 92,
+      height: 140,
       alignItems: 'center',
+      justifyContent: 'space-between',
       backgroundColor: colors.surface,
       borderRadius: 16,
       borderWidth: 2,
       borderColor: colors.border,
       paddingVertical: 14,
-      gap: 6,
     },
-    cellEmoji: { fontSize: 32 },
-    cellEmojiLocked: { opacity: 0.45 },
+    cellEmojiArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    cellEmoji: { fontSize: 32, opacity: 0.45 },
+    cellEmojiOwned: { fontSize: 48, opacity: 1 },
     cellLabel: {
       fontSize: 11,
       fontWeight: '700',

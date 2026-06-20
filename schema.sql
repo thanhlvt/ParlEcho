@@ -90,6 +90,7 @@ create table missions (
   level        scenario_level not null default 'beginner',
   step_count   int not null,
   sticker_pool text[] not null default '{}',       -- id sticker có thể thưởng (Pha 3)
+  icon         text not null default '🎯',         -- emoji hiển thị trên card chọn mission
   created_at   timestamptz not null default now()
 );
 

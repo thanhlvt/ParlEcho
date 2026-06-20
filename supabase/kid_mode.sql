@@ -130,6 +130,41 @@ end $$;
 grant select on table missions to anon, authenticated, service_role;
 grant select on table mission_steps to anon, authenticated, service_role;
 
+-- 11b. icon hiển thị trên card chọn mission (suy ra từ topic, idempotent) --
+alter table missions add column if not exists icon text not null default '🎯';
+
+update missions set icon = case
+  when topic ilike '%ice cream%' or topic ilike '%popsicle%' then '🍦'
+  when topic ilike '%birthday cake%' then '🎂'
+  when topic ilike '%bakery%' then '🥐'
+  when topic ilike '%picture book%' then '📖'
+  when topic ilike '%library%' then '📚'
+  when topic ilike '%doctor%' then '🩺'
+  when topic ilike '%stuffed animal%' then '🧸'
+  when topic ilike '%toy store%' or topic ilike '%playground%' then '🧸'
+  when topic ilike '%taxi%' then '🚕'
+  when topic ilike '%hotel%' then '🏨'
+  when topic ilike '%haircut%' then '💇'
+  when topic ilike '%fruit%' or topic ilike '%supermarket%' then '🍎'
+  when topic ilike '%directions%' then '🗺️'
+  when topic ilike '%pizza%' then '🍕'
+  when topic ilike '%restaurant%' then '🍽️'
+  when topic ilike '%movie%' then '🎬'
+  when topic ilike '%bus%' then '🚌'
+  when topic ilike '%post office%' then '✉️'
+  when topic ilike '%breakfast%' then '🥞'
+  when topic ilike '%school supplies%' then '✏️'
+  when topic ilike '%train%' then '🚆'
+  when topic ilike '%café%' or topic ilike '%drink%' then '🥤'
+  when topic ilike '%zoo%' then '🦁'
+  when topic ilike '%balloon%' then '🎈'
+  when topic ilike '%noodles%' then '🍜'
+  when topic ilike '%shoes%' then '👟'
+  when topic ilike '%hat%' then '🧢'
+  when topic ilike '%crayons%' then '🖍️'
+  else icon
+end;
+
 -- =====================================================================
 -- Pha 3 — Reward System: stickers/costumes + mission_results
 -- =====================================================================
