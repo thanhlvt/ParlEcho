@@ -86,10 +86,14 @@ function concat(arrays: Uint8Array[]): Uint8Array {
 
 export type LiveState = 'idle' | 'connecting' | 'live' | 'ended' | 'error';
 
-// Markers AI chèn vào lời nói (outputTranscription) để báo tiến trình nhiệm vụ Kid Mode.
-// Được strip khỏi text hiển thị/lưu trữ — chỉ dùng nội bộ để client phát hiện sự kiện.
-export const STEP_DONE_MARKER = '[STEP_DONE]';
-export const OFFTOPIC_MARKER = '[OFFTOPIC]';
+// Kid Mode (guided): marker AI chèn cuối lời nói (qua outputTranscription) để báo tiến trình
+// nhiệm vụ — `[STEP_DONE]` (xong bước) và `[OFFTOPIC]` (lạc đề), khớp với live-token/index.ts.
+// Match FUZZY vì output chỉ là AUDIO nên marker phải qua vòng audio→transcription, model có thể
+// đọc trại hoặc transcription bỏ ngoặc/đổi gạch dưới. KHÔNG dùng function-calling: model Live
+// 3.1 chỉ hỗ trợ FC blocking và không nói tiếp sau toolResponse (treo phiên).
+// Fuzzy: không phân biệt hoa/thường, ngoặc tuỳ chọn, gạch dưới/khoảng trắng giữa 2 từ tuỳ ý.
+const STEP_DONE_RE = /\[?\s*step[\s_]*done\s*\]?/gi;
+const OFFTOPIC_RE = /\[?\s*off[\s_]*topic\s*\]?/gi;
 
 // Image Exploration (Pha 5): câu mở đầu cố định gửi kèm ảnh qua clientContent — chỉ là
 // chỉ dẫn nội bộ cho model, không hiển thị cho trẻ (không qua inputAudioTranscription).
@@ -160,6 +164,10 @@ export class LiveClient {
   private turnLimitMs = 0;
   private turnTimer: ReturnType<typeof setTimeout> | null = null;
   private offTopicStreak = 0;
+  // Kid Mode: server cấu hình activityHandling = NO_INTERRUPTION. Khi true, KHÔNG gỡ cờ
+  // aiSpeaking dựa trên inputTranscription lúc AI đang nói — tránh tiếng AI vọng vào mic bị
+  // hiểu là trẻ nói (echo) làm mở mic giữa chừng. Chỉ drain-timer sau turnComplete mở lại mic.
+  private noInterruption = false;
 
   // Kid Mode (Image Exploration): chỉ gửi ảnh sau khi server xác nhận setupComplete thật
   // (KHÔNG nhét vào setup message — xem plan.md Pha 5 / spike-live-image.mjs).
@@ -195,6 +203,7 @@ export class LiveClient {
   }) {
     this.turnLimitMs = (opts.turnLimitSec ?? 0) * 1000;
     this.offTopicStreak = 0;
+    this.noInterruption = opts.mode === 'kid_guided' || opts.mode === 'kid_exploration';
     this.setupReady = false;
     this.pendingImageTurn = null;
     this.cb.onStateChange('connecting');
@@ -235,6 +244,13 @@ export class LiveClient {
         'voice=',
         data.voice,
       );
+      // Kid Mode: phòng AI tự lặp lại câu vừa nói + nói sai lượt. temperature thấp giảm xu
+      // hướng "lan man"; maxOutputTokens là lưới an toàn cuối (chỉ cắt cụt câu, không ngăn lặp).
+      // realtimeInputConfig là lớp chính: trẻ nói chậm/ngắt quãng nên silenceDurationMs cao để
+      // model không kết luận trẻ nói xong rồi chen vào; sensitivity LOW để echo/ồn ít kích hoạt
+      // nhầm VAD; NO_INTERRUPTION để tiếng AI vọng vào mic không "ngắt" model khiến nó nói lại
+      // câu từ đầu. Chỉ áp cho Kid Mode — Live tự do (adult) giữ mặc định để cho phép barge-in.
+      const isKidMode = opts.mode === 'kid_guided' || opts.mode === 'kid_exploration';
       this._send({
         setup: {
           model: data.model,
@@ -245,12 +261,26 @@ export class LiveClient {
                 prebuiltVoiceConfig: { voiceName: data.voice },
               },
             },
+            ...(isKidMode ? { temperature: 0.6, maxOutputTokens: 500 } : {}),
           },
           systemInstruction: {
             parts: [{ text: data.system_instruction }],
           },
           inputAudioTranscription: {},
           outputAudioTranscription: {},
+          ...(isKidMode
+            ? {
+                realtimeInputConfig: {
+                  automaticActivityDetection: {
+                    startOfSpeechSensitivity: 'START_SENSITIVITY_LOW',
+                    endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
+                    silenceDurationMs: 1500,
+                    prefixPaddingMs: 300,
+                  },
+                  activityHandling: 'NO_INTERRUPTION',
+                },
+              }
+            : {}),
         },
       });
       this.cb.onStateChange('live');
@@ -438,7 +468,12 @@ export class LiveClient {
 
     // Input transcription (user speech recognized by Gemini)
     const inputTx = sc.inputTranscription as { text?: string } | undefined;
-    if (inputTx?.text) {
+    // Kid Mode (NO_INTERRUPTION): trong lúc AI còn đang nói, mọi inputTranscription gần như chắc
+    // chắn là echo tiếng AI vọng vào mic — bỏ qua hẳn (không cộng text, không mở mic), để
+    // drain-timer sau turnComplete mới mở lại mic. Tránh vòng lặp echo gây AI lặp lời/sai lượt.
+    if (inputTx?.text && this.noInterruption && this.aiSpeaking) {
+      // bỏ qua như echo
+    } else if (inputTx?.text) {
       this.currentUserText += inputTx.text;
       // Trẻ đã bắt đầu nói ở lượt của mình — không cần nudge nữa
       this._clearTurnTimer();
@@ -553,17 +588,21 @@ export class LiveClient {
   }
 
   // Kid Mode (guided): tách marker tiến trình khỏi text hiển thị/lưu trữ + bắn callback.
+  // Match fuzzy (STEP_DONE_RE/OFFTOPIC_RE) để chịu được transcription bỏ ngoặc/đọc trại.
+  // Dùng replace-rồi-so-sánh thay vì .test() vì regex global giữ lastIndex giữa các lần gọi.
   private _consumeMarkers(text: string): string {
     let cleaned = text;
 
-    if (cleaned.includes(STEP_DONE_MARKER)) {
-      cleaned = cleaned.split(STEP_DONE_MARKER).join('').trim();
+    const afterStep = cleaned.replace(STEP_DONE_RE, '').trim();
+    if (afterStep !== cleaned) {
+      cleaned = afterStep;
       this.offTopicStreak = 0;
       this.cb.onStepAdvance?.();
     }
 
-    if (cleaned.includes(OFFTOPIC_MARKER)) {
-      cleaned = cleaned.split(OFFTOPIC_MARKER).join('').trim();
+    const afterOffTopic = cleaned.replace(OFFTOPIC_RE, '').trim();
+    if (afterOffTopic !== cleaned) {
+      cleaned = afterOffTopic;
       this.offTopicStreak++;
       this.cb.onOffTopic?.(this.offTopicStreak, this.turnOrder);
     } else if (this.turnLimitMs > 0) {

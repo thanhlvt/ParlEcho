@@ -32,7 +32,9 @@ const METHOD_PROMPTS: Record<string, string> = {
     "Act as a tough challenger. Ask challenging follow-up questions, probe the user's arguments, and put moderate conversational pressure on them.",
 };
 
-// Kid Mode (guided): markers AI phải chèn vào lời nói để client phát hiện tiến trình.
+// Kid Mode (guided): markers AI chèn vào cuối lời nói để client phát hiện tiến trình
+// bước/lạc đề. Client (LiveClient) match fuzzy + strip khỏi text hiển thị. KHÔNG dùng
+// function-calling vì model Live 3.1 không nói tiếp sau khi nhận toolResponse (treo phiên).
 // PHẢI khớp STEP_DONE_MARKER / OFFTOPIC_MARKER trong lib/liveClient.ts.
 const STEP_DONE_MARKER = '[STEP_DONE]';
 const OFFTOPIC_MARKER = '[OFFTOPIC]';
@@ -70,12 +72,13 @@ function buildKidGuidedPrompt(opts: {
     `${stepsList}\n` +
     `Rules:\n` +
     `1. Only work on ONE step at a time, starting at step 1. Ask a closed question or give exactly two choices — never ask open-ended questions.\n` +
-    `2. When the child's reply satisfies the CURRENT step's goal, briefly praise them, then append the exact text "${STEP_DONE_MARKER}" at the very end of your reply, then move on to asking about the next step.\n` +
+    `2. When the child's reply satisfies the CURRENT step's goal, briefly praise them, then move on to asking about the next step, and append the exact text "${STEP_DONE_MARKER}" at the very end of your reply.\n` +
     `3. After the child completes the LAST step, congratulate them warmly and say goodbye — still append "${STEP_DONE_MARKER}" at the end.\n` +
     `4. If the child says something unrelated to the current step (off-topic), acknowledge it in at most one short friendly sentence, then gently steer back to the current step's question, and append the exact text "${OFFTOPIC_MARKER}" at the very end of your reply.\n` +
     `5. Never include "${STEP_DONE_MARKER}" and "${OFFTOPIC_MARKER}" in the same reply.\n` +
     `6. Do NOT correct grammar or pronunciation — just keep the mission moving forward warmly.\n` +
-    `7. If the child speaks Vietnamese, gently encourage them to try in ${langLabel}.`
+    `7. If the child speaks Vietnamese, gently encourage them to try in ${langLabel}.\n` +
+    `8. Say each thing only ONCE per turn — never repeat or rephrase the same praise/question/goodbye again in the same reply, even with different wording.`
   );
 }
 
@@ -108,7 +111,8 @@ function buildKidExplorationPrompt(opts: {
     `5. Off-topic / unrelated answer: acknowledge it briefly and warmly, then gently repeat the current question.\n` +
     `6. Do NOT correct grammar or pronunciation — just keep the activity moving forward warmly.\n` +
     `7. After the last question, congratulate the child warmly and say goodbye.\n` +
-    `8. If the child speaks Vietnamese, gently encourage them to try in ${langLabel}.`
+    `8. If the child speaks Vietnamese, gently encourage them to try in ${langLabel}.\n` +
+    `9. Say each thing only ONCE per turn — never repeat or rephrase the same praise/question/goodbye again in the same reply, even with different wording.`
   );
 }
 

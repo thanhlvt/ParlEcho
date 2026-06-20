@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Checklist các gotcha đặc thù của ParlEcho cần soát lại khi review thay đổi (audio singleton, RLS/Storage độc lập, GRANT, marker protocol, screen time mid-sentence, RPC atomic, PIN hashing). Dùng khi review PR/diff trong repo này.
+description: Checklist các gotcha đặc thù của ParlEcho cần soát lại khi review thay đổi (audio singleton, RLS/Storage độc lập, GRANT, marker protocol [STEP_DONE]/[OFFTOPIC] fuzzy, realtimeInputConfig Kid Mode, screen time mid-sentence, RPC atomic, PIN hashing). Dùng khi review PR/diff trong repo này.
 ---
 
 # Code review checklist (đặc thù ParlEcho)
@@ -34,8 +34,14 @@ Dùng checklist này khi review thay đổi liên quan các vùng nhạy cảm d
 - [ ] `pronounce` không gọi LLM để chấm điểm — chỉ Levenshtein cục bộ.
 - [ ] `/chat` corrections chỉ giữ lại nếu cụm từ lỗi xuất hiện thật trong
       message gần nhất của user.
-- [ ] Marker (`STEP_DONE`/`OFFTOPIC`) là nguồn duy nhất báo tiến trình —
-      không thêm heuristic suy đoán phía client.
+- [ ] Marker (`[STEP_DONE]`/`[OFFTOPIC]`) là nguồn duy nhất báo tiến trình
+      — không thêm heuristic suy đoán phía client. Marker trong system
+      prompt (`live-token`) phải khớp regex `_consumeMarkers` (`LiveClient`,
+      match fuzzy). KHÔNG dùng function-calling cho model Live 3.1 (FC
+      blocking → treo phiên sau `toolResponse`).
+- [ ] Kid Mode đặt `realtimeInputConfig` (silenceDurationMs cao +
+      `NO_INTERRUPTION`) ở setup message; đổi giá trị này có thể làm AI
+      chen lời/lặp câu — chỉ áp cho kid mode, không đụng barge-in adult.
 - [ ] `image-moderation` mặc định `is_safe: false` khi không parse được
       JSON (fail-closed, không fail-open).
 

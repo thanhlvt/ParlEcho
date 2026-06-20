@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BiscuitReward } from '../../components/kid/BiscuitReward';
 import { Companion } from '../../components/kid/Companion';
@@ -48,26 +48,35 @@ export default function MissionLiveScreen() {
         <ScrollView contentContainerStyle={styles.finishedScroll}>
           <Companion companionId={session.companion?.id} expression="cheering" size={140} />
           <Text style={styles.finishedTitle}>Tuyệt vời! 🎉</Text>
-          <Text style={styles.statusText}>Con đã hoàn thành một phần nhiệm vụ rồi đó!</Text>
+          <Text style={styles.statusText}>Con đã hoàn thành nhiệm vụ rồi đó!</Text>
 
-          <StarRow stars={session.stars} />
-          <BiscuitReward amount={session.biscuitsAwarded} />
-          {session.showLuckyWheel ? (
-            <LuckyWheel result={session.luckyWheelResult} onSpin={session.spinLuckyWheel} />
-          ) : null}
-
-          {session.unlockedStickers.length > 0 ? (
-            <View style={styles.rewardBox}>
-              <Text style={styles.rewardTitle}>Phần thưởng mới!</Text>
-              <View style={styles.rewardRow}>
-                {session.unlockedStickers.map((s) => (
-                  <Text key={s.id} style={styles.rewardEmoji}>
-                    {s.emoji}
-                  </Text>
-                ))}
-              </View>
+          {session.scoring ? (
+            <View style={styles.scoringBox}>
+              <ActivityIndicator color={colors.primary} />
+              <Text style={styles.scoringText}>Đang chấm điểm...</Text>
             </View>
-          ) : null}
+          ) : (
+            <>
+              <StarRow stars={session.stars} />
+              <BiscuitReward amount={session.biscuitsAwarded} />
+              {session.showLuckyWheel ? (
+                <LuckyWheel result={session.luckyWheelResult} onSpin={session.spinLuckyWheel} />
+              ) : null}
+
+              {session.unlockedStickers.length > 0 ? (
+                <View style={styles.rewardBox}>
+                  <Text style={styles.rewardTitle}>Phần thưởng mới!</Text>
+                  <View style={styles.rewardRow}>
+                    {session.unlockedStickers.map((s) => (
+                      <Text key={s.id} style={styles.rewardEmoji}>
+                        {s.emoji}
+                      </Text>
+                    ))}
+                  </View>
+                </View>
+              ) : null}
+            </>
+          )}
 
           <TouchableOpacity style={styles.homeBtn} onPress={session.goHome} activeOpacity={0.85}>
             <Text style={styles.homeBtnText}>Về nhà</Text>
@@ -88,7 +97,9 @@ export default function MissionLiveScreen() {
           <View
             style={[
               styles.progressFill,
-              { width: `${(session.currentStepIndex / Math.max(totalSteps, 1)) * 100}%` },
+              // Khớp với nhãn "Bước {stepNum}/{totalSteps}": đang ở bước K thì thanh đầy K/N
+              // (không phải (K-1)/N "số bước đã xong" — lệch 1 đoạn so với nhãn).
+              { width: `${(stepNum / Math.max(totalSteps, 1)) * 100}%` },
             ]}
           />
         </View>
@@ -174,6 +185,8 @@ const getStyles = (colors: any) =>
     },
     statusText: { fontSize: 16, color: colors.textSecondary, textAlign: 'center' },
     finishedTitle: { fontSize: 26, fontWeight: '800', color: colors.primary },
+    scoringBox: { alignItems: 'center', gap: 10, paddingVertical: 12 },
+    scoringText: { fontSize: 15, fontWeight: '700', color: colors.textMuted },
 
     header: { paddingHorizontal: 24, paddingTop: 16, gap: 8 },
     missionTitle: { fontSize: 18, fontWeight: '800', color: colors.textPrimary },
@@ -206,6 +219,7 @@ const getStyles = (colors: any) =>
     nudgeText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 
     homeBtn: {
+      marginTop: 16,
       backgroundColor: colors.primary,
       borderRadius: 18,
       paddingHorizontal: 28,
@@ -222,6 +236,7 @@ const getStyles = (colors: any) =>
     hintText: { fontSize: 14, fontWeight: '700', color: colors.primary, textAlign: 'center' },
 
     rewardBox: {
+      marginTop: 16,
       backgroundColor: colors.surfaceAlt,
       borderRadius: 18,
       paddingHorizontal: 20,

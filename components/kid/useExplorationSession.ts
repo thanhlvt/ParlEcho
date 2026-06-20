@@ -80,6 +80,7 @@ export function useExplorationSession() {
   const [vocabLearned, setVocabLearned] = useState<string[]>([]);
   const [timeUp, setTimeUp] = useState(false);
   const [stars, setStars] = useState(0);
+  const [scoring, setScoring] = useState(false);
   const [biscuitsAwarded, setBiscuitsAwarded] = useState(0);
   const [showLuckyWheel, setShowLuckyWheel] = useState(false);
   const [luckyWheelResult, setLuckyWheelResult] = useState<number | null>(null);
@@ -303,6 +304,12 @@ export function useExplorationSession() {
             setView('error');
           }
         }
+        // Gemini tự đóng phiên bình thường (code 1000) — trước đây bỏ sót case này khiến app
+        // đứng yên ở màn live mãi nếu không có gì khác chủ động gọi endSession().
+        if (s === 'ended') {
+          if (timerRef.current) clearInterval(timerRef.current);
+          endSession();
+        }
       },
       onAudioChunk: async (pcm24Base64) => {
         if (isPausedRef.current) return;
@@ -364,14 +371,21 @@ export function useExplorationSession() {
       return;
     }
 
-    setView('saving');
-    setSavingMsg('Đang lưu lại...');
-
-    const { turns: finalTurns, rawUserSegments, rawAiSegments } = client.stop();
+    // Null TRƯỚC khi gọi stop(): stop() tự bắn lại onStateChange('ended') không điều kiện —
+    // nếu endSession() được gọi LẠI từ đó (case 'ended' ở onStateChange phía dưới) mà
+    // clientRef.current chưa null thì sẽ đệ quy vô hạn (stop() → 'ended' → endSession() →
+    // stop() → 'ended' → ...). Null trước để lần gọi lại đó rơi vào early-return ở trên.
     clientRef.current = null;
+    const { turns: finalTurns, rawUserSegments, rawAiSegments } = client.stop();
+
+    // Vào màn kết quả (Companion chúc mừng) NGAY — không bắt trẻ chờ ở màn "đang lưu" trống.
+    // Chỗ sao báo "đang chấm điểm" (cờ scoring) cho tới khi session-review xong, rồi lộ TOÀN BỘ
+    // sao + biscuit/vòng quay một lần kèm animation (không hiện sao lẻ rồi đổi).
+    setView('finished');
+    setScoring(true);
 
     if (finalTurns.length === 0) {
-      setView('finished');
+      setScoring(false);
       return;
     }
 
@@ -472,15 +486,15 @@ export function useExplorationSession() {
         if (reviewErr) console.warn('[ExplorationSession] session-review error:', reviewErr);
         const review = reviewData as SessionReviewApiResponse | null;
         if (review) await saveLearnedItems(review);
+        // Tính sao cuối + biscuit/vòng quay; setScoring(false) ở finally sẽ lộ tất cả 1 lần.
         await awardExplorationResult(review?.avg_pronunciation ?? null, conversationId);
       } catch (reviewErr) {
         console.warn('[ExplorationSession] session-review call failed:', reviewErr);
       }
-
-      setView('finished');
     } catch (err) {
       console.error('[ExplorationSession] endSession error:', err);
-      setView('finished');
+    } finally {
+      setScoring(false);
     }
   }
 
@@ -588,6 +602,7 @@ export function useExplorationSession() {
     timeUp,
     vocabLearned,
     stars,
+    scoring,
     biscuitsAwarded,
     showLuckyWheel,
     luckyWheelResult,

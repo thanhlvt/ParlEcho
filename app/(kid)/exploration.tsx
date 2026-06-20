@@ -105,24 +105,33 @@ export default function ExplorationScreen() {
           <Text style={styles.finishedTitle}>Khám phá xong rồi! 🎉</Text>
           <Text style={styles.statusText}>Con đã quan sát và trả lời rất giỏi đó!</Text>
 
-          <StarRow stars={session.stars} />
-          <BiscuitReward amount={session.biscuitsAwarded} />
-          {session.showLuckyWheel ? (
-            <LuckyWheel result={session.luckyWheelResult} onSpin={session.spinLuckyWheel} />
-          ) : null}
-
-          {session.vocabLearned.length > 0 ? (
-            <View style={styles.rewardBox}>
-              <Text style={styles.rewardTitle}>Từ mới con đã học</Text>
-              <View style={styles.vocabRow}>
-                {session.vocabLearned.map((w) => (
-                  <View key={w} style={styles.vocabChip}>
-                    <Text style={styles.vocabChipText}>{w}</Text>
-                  </View>
-                ))}
-              </View>
+          {session.scoring ? (
+            <View style={styles.scoringBox}>
+              <ActivityIndicator color={colors.primary} />
+              <Text style={styles.scoringText}>Đang chấm điểm...</Text>
             </View>
-          ) : null}
+          ) : (
+            <>
+              <StarRow stars={session.stars} />
+              <BiscuitReward amount={session.biscuitsAwarded} />
+              {session.showLuckyWheel ? (
+                <LuckyWheel result={session.luckyWheelResult} onSpin={session.spinLuckyWheel} />
+              ) : null}
+
+              {session.vocabLearned.length > 0 ? (
+                <View style={styles.rewardBox}>
+                  <Text style={styles.rewardTitle}>Từ mới con đã học</Text>
+                  <View style={styles.vocabRow}>
+                    {session.vocabLearned.map((w) => (
+                      <View key={w} style={styles.vocabChip}>
+                        <Text style={styles.vocabChipText}>{w}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ) : null}
+            </>
+          )}
 
           <TouchableOpacity style={styles.homeBtn} onPress={session.goHome} activeOpacity={0.85}>
             <Text style={styles.homeBtnText}>Về nhà</Text>
@@ -203,6 +212,8 @@ const getStyles = (colors: any) =>
     },
     statusText: { fontSize: 16, color: colors.textSecondary, textAlign: 'center' },
     finishedTitle: { fontSize: 26, fontWeight: '800', color: colors.primary },
+    scoringBox: { alignItems: 'center', gap: 10, paddingVertical: 12 },
+    scoringText: { fontSize: 15, fontWeight: '700', color: colors.textMuted },
 
     header: { paddingHorizontal: 24, paddingTop: 16 },
     title: { fontSize: 18, fontWeight: '800', color: colors.textPrimary },

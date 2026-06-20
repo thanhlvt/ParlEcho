@@ -138,10 +138,13 @@ remainingSeconds, limitReached, showWarning }` — chỉ bọc nhánh `(kid)`.
   rollback nếu `update()` lỗi (xem `toggleKidMode` ở `(app)/profile.tsx`).
 - **Guided Conversation** giới hạn 10 phút/phiên, mỗi lượt trẻ có tối đa 8s
   để nói (`TURN_LIMIT_SEC` trong `useMissionSession.ts`) trước khi
-  companion nhắc lại. Tiến trình bước (`STEP_DONE`) và lạc đề (`OFFTOPIC`)
-  được AI báo qua marker trong text (`live-token` chèn, `LiveClient` parse
-  và strip — xem skill `edge-functions`) — KHÔNG dùng heuristic phía client
-  để suy đoán, tránh sai lệch với system prompt.
+  companion nhắc lại. Tiến trình bước (`[STEP_DONE]`) và lạc đề
+  (`[OFFTOPIC]`) được AI chèn marker vào cuối lời nói (`live-token` yêu cầu
+  trong system prompt, `LiveClient._consumeMarkers` match fuzzy rồi strip —
+  xem skill `edge-functions`) — KHÔNG dùng heuristic phía client để suy
+  đoán, tránh sai lệch với system prompt. Kid Mode đặt `realtimeInputConfig`
+  (silenceDurationMs cao + `NO_INTERRUPTION`) ở setup message để trẻ ngắt
+  quãng không bị AI chen lời và tránh echo làm AI lặp câu.
 - **Hết giờ chơi (Kid Mode, giới hạn theo phiên) không cắt phiên giữa
   câu** — `useMissionSession`/`useExplorationSession` chỉ đặt cờ chờ
   (`timeUpPendingRef`) khi `ScreenTimeProvider` báo `limitReached`, và chỉ

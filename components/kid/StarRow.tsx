@@ -14,16 +14,14 @@ interface StarRowProps {
   size?: number;
 }
 
+// Sao hiển thị NGAY ở kích thước thật (scale 1) để màn hình kết quả không loé qua trạng thái
+// trống ("0 sao") trước khi sao bay vào — chỉ làm hiệu ứng nảy nhẹ để ăn mừng, không bắt đầu
+// từ scale 0 (vô hình).
 function FlyingStar({ filled, delay, size }: { filled: boolean; delay: number; size: number }) {
-  const scale = useSharedValue(0);
-  const translateY = useSharedValue(-30);
+  const scale = useSharedValue(1);
 
   useEffect(() => {
-    if (!filled) {
-      scale.value = withDelay(delay, withSpring(1));
-      return;
-    }
-    translateY.value = withDelay(delay, withSequence(withSpring(0)));
+    if (!filled) return;
     scale.value = withDelay(
       delay,
       withSequence(withSpring(1.4, { damping: 6 }), withSpring(1, { damping: 8 })),
@@ -32,7 +30,7 @@ function FlyingStar({ filled, delay, size }: { filled: boolean; delay: number; s
   }, [filled, delay]);
 
   const style = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { translateY: translateY.value }],
+    transform: [{ scale: scale.value }],
   }));
 
   return <Animated.Text style={[{ fontSize: size }, style]}>{filled ? '⭐' : '☆'}</Animated.Text>;

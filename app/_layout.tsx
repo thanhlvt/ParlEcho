@@ -40,7 +40,10 @@ function RouteGuard() {
     // Không tự động đẩy người dùng vào (kid) chỉ vì is_kid_mode=true — phụ huynh
     // tự điều hướng vào Kid Mode khi sẵn sàng giao máy (xem nút ở profile.tsx),
     // tránh bị "nhốt" ngoài Profile sau khi vừa bật Kid Mode/đặt PIN.
-    if (!isKidMode && inKidGroup) router.replace('/(app)');
+    if (!isKidMode && inKidGroup) {
+      console.log('[RouteGuard] bounce (kid)→(app), isKidMode=', isKidMode, 'segments=', segments);
+      router.replace('/(app)');
+    }
   }, [session, authLoading, profileLoading, isKidMode, segments, router]);
 
   return <Slot />;

@@ -21,9 +21,13 @@ convention RN của app).
   system prompt (kể cả `buildKidExplorationPrompt` cho Image Exploration —
   Gemini tự sinh câu hỏi 5W1H+Why từ ảnh, không dùng `scenario_lines`).
   Với Guided Conversation, system prompt yêu cầu AI chèn marker
-  `[STEP_DONE]`/`[OFFTOPIC]` vào lời nói khi đạt bước/lạc đề — client
-  (`LiveClient`) parse và strip các marker này, KHÔNG hiển thị cho người
-  dùng (xem skill `app-code`).
+  `[STEP_DONE]`/`[OFFTOPIC]` vào cuối lời nói khi đạt bước/lạc đề — client
+  (`LiveClient`) match FUZZY (regex không phân biệt hoa/thường, ngoặc tuỳ
+  chọn) rồi strip khỏi text hiển thị. KHÔNG dùng function-calling: model
+  Live 3.1 chỉ hỗ trợ FC blocking và KHÔNG nói tiếp sau khi nhận
+  `toolResponse` (treo phiên — đã test). Vì response chỉ là AUDIO, marker
+  phải qua vòng audio→transcription nên match fuzzy để chịu được model đọc
+  trại/transcription bỏ ngoặc (xem skill `app-code`).
 - **`session-review`**: tóm tắt sau buổi Live — `avg_pronunciation`,
   `fluency`, `vocab_to_learn`, `corrections`. Dùng cho cả Live tự do
   (adult) và Kid Mode (Guided Conversation + Image Exploration đều gọi lại
@@ -49,10 +53,18 @@ convention RN của app).
   tái dùng thẳng `GOOGLE_GENAI_API_KEY`, không cần secret/API riêng. Nếu
   JSON trả về không parse được, mặc định `is_safe: false` (an toàn là
   chặn duyệt, không tự ý approve khi không chắc).
-- **Marker protocol (`live-token` ↔ `LiveClient`)**: `STEP_DONE`/`OFFTOPIC`
-  là cách DUY NHẤT để báo tiến trình bước/lạc đề — không thêm heuristic
-  phía client để suy đoán, vì sẽ lệch với system prompt khi đổi prompt mà
-  quên đổi client (hoặc ngược lại).
+- **Marker protocol (`live-token` ↔ `LiveClient`)**: `[STEP_DONE]`/
+  `[OFFTOPIC]` là cách DUY NHẤT để báo tiến trình bước/lạc đề — không thêm
+  heuristic phía client để suy đoán, vì sẽ lệch với system prompt khi đổi
+  prompt mà quên đổi client (hoặc ngược lại). Marker trong system prompt
+  (`live-token/index.ts`) PHẢI khớp regex match ở `_consumeMarkers`
+  (`lib/liveClient.ts`). KHÔNG quay lại function-calling cho model 3.1 (FC
+  blocking → treo phiên sau `toolResponse`).
+- **`realtimeInputConfig` cho Kid Mode** (setup message ở `LiveClient`):
+  `silenceDurationMs` cao (1500ms) + sensitivity `LOW` + `activityHandling:
+  NO_INTERRUPTION` để trẻ nói chậm/ngắt quãng không bị AI chen lời và tiếng
+  AI vọng vào mic không "ngắt" model gây lặp câu. Chỉ áp cho kid mode; Live
+  adult giữ mặc định (cho phép barge-in).
 - **Live session** giới hạn 15 phút (giới hạn cứng của Gemini Live), token
   ephemeral hiệu lực 30 phút. Guided Conversation giới hạn 10 phút/phiên
   (giới hạn riêng của app, ngắn hơn vì trẻ nhỏ khó tập trung lâu).

@@ -66,6 +66,7 @@ export function useMissionSession(missionId: string) {
   const [errorMsg, setErrorMsg] = useState('');
   const [showHint, setShowHint] = useState(false);
   const [stars, setStars] = useState(0);
+  const [scoring, setScoring] = useState(false);
   const [unlockedStickers, setUnlockedStickers] = useState<Sticker[]>([]);
   const [timeUp, setTimeUp] = useState(false);
   const [biscuitsAwarded, setBiscuitsAwarded] = useState(0);
@@ -258,6 +259,14 @@ export function useMissionSession(missionId: string) {
             setView('error');
           }
         }
+        // Gemini tự đóng phiên bình thường (code 1000) — ví dụ AI vừa nói lời tạm biệt rồi kết
+        // thúc phiên phía server. Phải tự kết thúc ở đây vì không có gì khác gọi endSession() khi
+        // điều này xảy ra (trước đây bỏ sót case này khiến app đứng yên ở màn live mãi nếu marker
+        // [STEP_DONE] không gắn được vào đúng câu cuối — onAiAudioDone không có cơ hội chạy).
+        if (s === 'ended') {
+          if (timerRef.current) clearInterval(timerRef.current);
+          endSession();
+        }
       },
       onAudioChunk: async (pcm24Base64) => {
         if (isPausedRef.current) return;
@@ -356,14 +365,21 @@ export function useMissionSession(missionId: string) {
       return;
     }
 
-    setView('saving');
-    setSavingMsg('Đang lưu lại...');
-
-    const { turns: finalTurns, rawUserSegments, rawAiSegments } = client.stop();
+    // Null TRƯỚC khi gọi stop(): stop() tự bắn lại onStateChange('ended') không điều kiện —
+    // nếu endSession() được gọi LẠI từ đó (case 'ended' ở onStateChange phía dưới) mà
+    // clientRef.current chưa null thì sẽ đệ quy vô hạn (stop() → 'ended' → endSession() →
+    // stop() → 'ended' → ...). Null trước để lần gọi lại đó rơi vào early-return ở trên.
     clientRef.current = null;
+    const { turns: finalTurns, rawUserSegments, rawAiSegments } = client.stop();
+
+    // Vào màn kết quả (Companion chúc mừng) NGAY — không bắt trẻ chờ ở màn "đang lưu" trống.
+    // Chỗ sao báo "đang chấm điểm" (cờ scoring) cho tới khi session-review xong, rồi lộ TOÀN BỘ
+    // sao + biscuit/sticker/vòng quay một lần kèm animation (không hiện sao lẻ rồi đổi).
+    setView('finished');
+    setScoring(true);
 
     if (finalTurns.length === 0) {
-      setView('finished');
+      setScoring(false);
       return;
     }
 
@@ -478,12 +494,12 @@ export function useMissionSession(missionId: string) {
         })
         .eq('id', conversationId);
 
+      // Tính sao cuối + biscuit/sticker/vòng quay; setScoring(false) ở finally sẽ lộ tất cả 1 lần.
       await awardMissionResult(conversationId, avgPronunciation);
-
-      setView('finished');
     } catch (err) {
       console.error('[MissionSession] endSession error:', err);
-      setView('finished');
+    } finally {
+      setScoring(false);
     }
   }
 
@@ -550,6 +566,7 @@ export function useMissionSession(missionId: string) {
   }
 
   function goHome() {
+    console.log('[MissionSession] goHome pressed, view=', view);
     router.replace('/(kid)/home' as Href);
   }
 
@@ -569,6 +586,7 @@ export function useMissionSession(missionId: string) {
     togglePause,
     timeUp,
     stars,
+    scoring,
     unlockedStickers,
     biscuitsAwarded,
     showLuckyWheel,

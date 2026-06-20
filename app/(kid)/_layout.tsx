@@ -25,6 +25,7 @@ function ScreenTimeGate() {
       screen === 'parent'
     )
       return;
+    console.log('[ScreenTimeGate] bounce → day-summary, segments=', segments);
     router.replace('/(kid)/day-summary' as Href);
   }, [limitReached, segments, router]);
 
