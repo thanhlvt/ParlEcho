@@ -39,8 +39,11 @@ Dùng checklist này khi review thay đổi liên quan các vùng nhạy cảm d
       trong system prompt (`live-token`) phải khớp `functionDeclarations` ở
       setup message (`lib/liveClient.ts`). BLOCKING (mặc định): handler
       `toolCall` phải gửi `toolResponse` NGAY, đồng bộ, `id` khớp chính xác —
-      nếu không model treo. Giữ lưới an toàn reminder/force-advance
-      (`_checkStepProgress`) khi model quên gọi tool. `lib/markerProtocol.ts`
+      nếu không model treo. `_checkStepProgress` chỉ gửi reminder ẩn 1 lần/bước
+      khi model quên gọi tool — KHÔNG tự force-advance (vượt bước khi trẻ trả
+      lời sai). Guard `childSpokeSinceAdvance` từ chối `mark_step_complete` nếu
+      trẻ chưa nói gì kể từ lần sang bước trước (chống goodbye sớm bước cuối).
+      `lib/markerProtocol.ts`
       nay chỉ là defensive display cleanup (không còn lái tiến trình); sửa
       regex vẫn cập nhật `lib/markerProtocol.test.ts`.
 - [ ] Kid Mode đặt `realtimeInputConfig` (silenceDurationMs cao +

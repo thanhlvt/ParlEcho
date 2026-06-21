@@ -158,7 +158,10 @@ remainingSeconds, limitReached, showWarning }` — chỉ bọc nhánh `(kid)`.
   `_handleStepComplete`/`_handleOffTopic` gửi `toolResponse` đồng bộ với `id`
   khớp rồi model nói tiếp) — KHÔNG đọc marker thành tiếng, KHÔNG dùng
   heuristic phía client để suy đoán. Lưới an toàn `_checkStepProgress`
-  (reminder + force-advance) phòng khi model quên gọi tool;
+  (reminder ẩn 1 lần/bước — KHÔNG tự force-advance để tránh vượt bước khi trẻ trả
+  lời sai) phòng khi model quên gọi tool; guard `childSpokeSinceAdvance` từ chối
+  `mark_step_complete` nếu trẻ chưa nói gì kể từ lần sang bước trước (chống
+  goodbye sớm ở bước cuối);
   `lib/markerProtocol.ts` nay chỉ strip phòng hờ marker cũ lọt vào audio (xem
   skill `edge-functions`/`unit-test`). Kid Mode đặt `realtimeInputConfig`
   (silenceDurationMs cao + `NO_INTERRUPTION`) ở setup message để trẻ ngắt

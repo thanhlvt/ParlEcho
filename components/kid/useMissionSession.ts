@@ -76,6 +76,9 @@ export function useMissionSession(missionId: string) {
   const [isPaused, setIsPaused] = useState(false);
 
   const clientRef = useRef<LiveClient | null>(null);
+  // Chống mở 2 phiên Live (2 WebSocket cùng chào → AI nói câu đầu 2 lần). Effect 'connecting'
+  // có thể chạy 2 lần (React strict mode dev, hoặc re-render) — chỉ cho startSession chạy 1 lần.
+  const sessionStartedRef = useRef(false);
   const isPausedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -147,6 +150,8 @@ export function useMissionSession(missionId: string) {
   // ── Mở kết nối Live khi đã có đủ dữ liệu ──────────────────────────────
   useEffect(() => {
     if (view !== 'connecting' || !mission || steps.length === 0) return;
+    if (sessionStartedRef.current) return;
+    sessionStartedRef.current = true;
     startSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, mission, steps]);

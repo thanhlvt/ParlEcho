@@ -4,8 +4,9 @@ import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
-import { Sticker } from '../../lib/types';
+import { Mission, Sticker } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
+import { useProfile } from '../../providers/ProfileProvider';
 import { useTheme } from '../../providers/ThemeProvider';
 
 export default function StickersScreen() {
@@ -13,29 +14,91 @@ export default function StickersScreen() {
   const styles = getStyles(colors);
   const router = useRouter();
   const { user } = useAuth();
+  const { profile } = useProfile();
 
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [ownedStickerIds, setOwnedStickerIds] = useState<Set<string>>(new Set());
 
   useFocusEffect(
     useCallback(() => {
-      if (!user) return;
-      supabase
-        .from('stickers')
-        .select('*')
-        .order('sort_order')
-        .then(({ data }) => setStickers((data as Sticker[]) ?? []));
+      const languageId = profile?.active_language_id ?? 'en';
 
-      supabase
-        .from('user_stickers')
-        .select('sticker_id')
-        .eq('user_id', user.id)
-        .then(({ data }) =>
-          setOwnedStickerIds(
-            new Set((data ?? []).map((r: { sticker_id: string }) => r.sticker_id)),
-          ),
+      Promise.all([
+        supabase.from('missions').select('*').eq('language_id', languageId).order('created_at'),
+        user
+          ? supabase
+              .from('priority_vocab')
+              .select('content')
+              .eq('user_id', user.id)
+              .eq('language_id', languageId)
+          : Promise.resolve({ data: [] as { content: string }[] }),
+        supabase.from('stickers').select('*'),
+        user
+          ? supabase.from('user_stickers').select('sticker_id').eq('user_id', user.id)
+          : Promise.resolve({ data: [] as { sticker_id: string }[] }),
+      ]).then(([missionsRes, vocabRes, stickersRes, userStickersRes]) => {
+        // Handle owned stickers
+        const ownedIds = new Set(
+          (userStickersRes.data ?? []).map((r: { sticker_id: string }) => r.sticker_id)
         );
-    }, [user]),
+        setOwnedStickerIds(ownedIds);
+
+        // Sort missions just like in missions.tsx
+        const allMissions = (missionsRes.data as Mission[]) ?? [];
+        const terms = (vocabRes.data ?? []).map((v) => v.content.toLowerCase());
+
+        const matchedIds = new Set(
+          allMissions
+            .filter((m) =>
+              terms.some(
+                (t) => m.title.toLowerCase().includes(t) || m.topic.toLowerCase().includes(t),
+              ),
+            )
+            .map((m) => m.id),
+        );
+
+        const sortedMissions = [...allMissions].sort((a, b) => {
+          const aPriority = matchedIds.has(a.id) ? 1 : 0;
+          const bPriority = matchedIds.has(b.id) ? 1 : 0;
+          return bPriority - aPriority;
+        });
+
+        // Collect sticker IDs in order of sorted missions
+        const orderedStickerIds: string[] = [];
+        const seen = new Set<string>();
+        for (const m of sortedMissions) {
+          const pool = m.sticker_pool ?? [];
+          for (const id of pool) {
+            if (!seen.has(id)) {
+              seen.add(id);
+              orderedStickerIds.push(id);
+            }
+          }
+        }
+
+        // Map stickers to their sorted order
+        const stickersMap = new Map<string, Sticker>();
+        const allStickers = (stickersRes.data as Sticker[]) ?? [];
+        allStickers.forEach((s) => stickersMap.set(s.id, s));
+
+        const orderedStickers: Sticker[] = [];
+        // First add stickers that belong to the missions
+        orderedStickerIds.forEach((id) => {
+          const sticker = stickersMap.get(id);
+          if (sticker) {
+            orderedStickers.push(sticker);
+          }
+        });
+        // Then add any remaining stickers not in the mission pool (preserving sort_order)
+        const remainingStickers = allStickers
+          .filter((s) => !seen.has(s.id))
+          .sort((a, b) => a.sort_order - b.sort_order);
+        
+        orderedStickers.push(...remainingStickers);
+
+        setStickers(orderedStickers);
+      });
+    }, [profile?.active_language_id, user]),
   );
 
   return (

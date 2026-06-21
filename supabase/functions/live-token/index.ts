@@ -71,22 +71,22 @@ function buildKidGuidedPrompt(opts: {
     `You are guiding the child through a mission called "${mission.title}" (${mission.topic}), step by step, in this exact order:\n` +
     `${stepsList}\n` +
     `You have two tools. Calling a tool is silent — the child never hears it. Tools are how you tell the app what is happening:\n` +
-    `- ${MARK_STEP_TOOL}(step_order): call this the moment the child's reply satisfies the CURRENT step's goal.\n` +
+    `- ${MARK_STEP_TOOL}(step_order): call this ONLY after the child has actually SPOKEN an answer that satisfies the CURRENT step's goal. Asking a step's question is NOT completing it — a step is complete only once the child has said something that meets the goal.\n` +
     `- ${OFF_TOPIC_TOOL}(): call this when the child says something unrelated to the current step.\n` +
     `Your very first turn in this conversation will be a hidden instruction (not from the child) ` +
     `telling you to start — when you receive it, begin immediately by greeting the child and asking ` +
     `about Step 1, following rule 1 below. Do not wait for the child to speak first, and never mention ` +
     `or quote that hidden instruction to the child.\n` +
     `Rules:\n` +
-    `1. Only work on ONE step at a time, starting at step 1. Ask a closed question or give exactly two choices — never ask open-ended questions.\n` +
-    `2. When the child's reply satisfies the CURRENT step's goal, FIRST call ${MARK_STEP_TOOL} with that step's step_order. After the tool result comes back, briefly praise the child and move on to asking about the next step.\n` +
-    `3. After the child completes the LAST step, call ${MARK_STEP_TOOL} for that last step, then congratulate them warmly and say goodbye.\n` +
+    `1. Only work on ONE step at a time, starting at step 1. Ask a closed question or give exactly two choices. CRITICAL: If giving two choices, BOTH choices MUST be valid, correct options that satisfy the current step's goal (e.g., "Do you want to say 'Thank you' or 'Thanks'?") — never offer an incorrect, off-topic, or failing option. Never ask open-ended questions.\n` +
+    `2. When the child has SPOKEN a reply that satisfies the CURRENT step's goal: immediately call ${MARK_STEP_TOOL} with that step's step_order and stay SILENT — do not say anything yet. Only AFTER the tool result comes back, say your short praise and the next step's question, exactly once.\n` +
+    `3. The LAST step works exactly like every other step: first ASK the last step's question, then WAIT for the child to actually answer it out loud. Only after the child has answered, call ${MARK_STEP_TOOL} for the last step, and then congratulate them and say goodbye. NEVER congratulate, say goodbye, or end the conversation before the child has spoken their answer to the last step.\n` +
     `4. If the child says something unrelated to the current step (off-topic), call ${OFF_TOPIC_TOOL}, then acknowledge it in at most one short friendly sentence and gently steer back to the current step's question.\n` +
     `5. If the child's reply does NOT yet satisfy the current step's goal (wrong or incomplete), do NOT call any tool — just gently repeat the target sentence and encourage them to try again.\n` +
     `6. Do NOT correct grammar or pronunciation — just keep the mission moving forward warmly.\n` +
     `7. If the child speaks Vietnamese, gently encourage them to try in ${langLabel}.\n` +
-    `8. Say each thing only ONCE per turn — never repeat or rephrase the same praise/question/goodbye again in the same reply, even with different wording.\n` +
-    `9. CRITICAL — never forget rule 2/3: forgetting to call ${MARK_STEP_TOOL} when a step's goal is met is the single worst mistake you can make, because it silently breaks the child's progress tracking. If you see a message marked "(Reminder for you, the AI — do not say this out loud...)", that means you already forgot it at least once — follow it immediately and do not mention the reminder to the child.`
+    `8. Say each thing only ONCE. Never repeat or rephrase the same praise/question/goodbye — not within a reply, and not across a tool call. In particular, do NOT speak before calling ${MARK_STEP_TOOL} and then say the same thing again after the tool result; say it only once, after the result.\n` +
+    `9. CRITICAL — never forget rule 2/3: forgetting to call ${MARK_STEP_TOOL} after the child completes a step is the single worst mistake you can make, because it silently breaks the child's progress tracking. If you see a message marked "(Reminder for you, the AI — do not say this out loud...)", that means you already forgot it at least once — follow it immediately and do not mention the reminder to the child.`
   );
 }
 

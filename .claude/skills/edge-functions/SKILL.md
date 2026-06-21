@@ -62,8 +62,11 @@ convention RN của app).
   (`lib/liveClient.ts`). BLOCKING (mặc định, không set `behavior`): handler
   `toolCall` phải gửi `toolResponse` NGAY, đồng bộ, `id` khớp chính xác — nếu
   không model treo (đây mới là nguyên nhân "treo phiên" trước kia, không phải
-  model không hỗ trợ FC). Lưới an toàn client: reminder + force-advance khi
-  model quên gọi tool (xem `_checkStepProgress`).
+  model không hỗ trợ FC). Lưới an toàn client (`_checkStepProgress`): reminder
+  ẩn 1 lần/bước khi model quên gọi tool — KHÔNG tự force-advance (sẽ vượt bước
+  khi trẻ trả lời sai), one-shot để không nhắc lặp liên tục. Guard `childSpokeSinceAdvance`: từ chối `mark_step_complete`
+  (trả `too_early`) nếu trẻ chưa nói gì kể từ lần sang bước trước, chống model
+  "hoàn thành" bước nó vừa hỏi → goodbye sớm ở bước cuối.
 - **`realtimeInputConfig` cho Kid Mode** (setup message ở `LiveClient`):
   `silenceDurationMs` cao (1500ms) + sensitivity `LOW` + `activityHandling:
   NO_INTERRUPTION` để trẻ nói chậm/ngắt quãng không bị AI chen lời và tiếng
