@@ -73,6 +73,10 @@ function buildKidGuidedPrompt(opts: {
     `You have two tools. Calling a tool is silent — the child never hears it. Tools are how you tell the app what is happening:\n` +
     `- ${MARK_STEP_TOOL}(step_order): call this the moment the child's reply satisfies the CURRENT step's goal.\n` +
     `- ${OFF_TOPIC_TOOL}(): call this when the child says something unrelated to the current step.\n` +
+    `Your very first turn in this conversation will be a hidden instruction (not from the child) ` +
+    `telling you to start — when you receive it, begin immediately by greeting the child and asking ` +
+    `about Step 1, following rule 1 below. Do not wait for the child to speak first, and never mention ` +
+    `or quote that hidden instruction to the child.\n` +
     `Rules:\n` +
     `1. Only work on ONE step at a time, starting at step 1. Ask a closed question or give exactly two choices — never ask open-ended questions.\n` +
     `2. When the child's reply satisfies the CURRENT step's goal, FIRST call ${MARK_STEP_TOOL} with that step's step_order. After the tool result comes back, briefly praise the child and move on to asking about the next step.\n` +

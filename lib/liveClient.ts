@@ -58,6 +58,14 @@ const STEP_FORCE_ADVANCE_AFTER_TURNS = 4;
 export const EXPLORATION_OPENING_TEXT =
   'Here is a picture for the child to look at. Start the activity now by asking your first question about it.';
 
+// Guided Conversation: trẻ thường không biết phải nói gì nếu AI ngồi im chờ — gửi 1 turn ẩn
+// ngay khi setupComplete để buộc AI lên tiếng trước (chào + hỏi bước 1), giống cơ chế
+// EXPLORATION_OPENING_TEXT ở trên. Không hiển thị cho trẻ (không qua inputAudioTranscription).
+const GUIDED_OPENING_TEXT =
+  'Start the mission now. Greet the child warmly in one short sentence, then ask about Step 1 ' +
+  'using a closed question or exactly two choices, following the rules above. Do not wait for ' +
+  'the child to speak first.';
+
 export interface LiveClientCallbacks {
   onStateChange: (state: LiveState) => void;
   /** PCM24 chunk từ Gemini → UI play */
@@ -138,6 +146,10 @@ export class LiveClient {
   // hiểu là trẻ nói (echo) làm mở mic giữa chừng. Chỉ drain-timer sau turnComplete mở lại mic.
   private noInterruption = false;
 
+  // Kid Mode (guided): gửi GUIDED_OPENING_TEXT một lần duy nhất ngay khi setupComplete, để AI
+  // chào + hỏi bước 1 trước thay vì ngồi im chờ trẻ nói (trẻ thường không biết phải nói gì).
+  private isGuided = false;
+
   // Kid Mode (Image Exploration): chỉ gửi ảnh sau khi server xác nhận setupComplete thật
   // (KHÔNG nhét vào setup message — xem plan.md Pha 5 / spike-live-image.mjs).
   private setupReady = false;
@@ -173,6 +185,7 @@ export class LiveClient {
     this.turnLimitMs = (opts.turnLimitSec ?? 0) * 1000;
     this.offTopicStreak = 0;
     this.noInterruption = opts.mode === 'kid_guided' || opts.mode === 'kid_exploration';
+    this.isGuided = opts.mode === 'kid_guided';
     this.setupReady = false;
     this.pendingImageTurn = null;
     this.missionSteps = [...(opts.mission?.steps ?? [])].sort((a, b) => a.stepOrder - b.stepOrder);
@@ -438,6 +451,14 @@ export class LiveClient {
         const { base64, mimeType, text } = this.pendingImageTurn;
         this.pendingImageTurn = null;
         this._sendImageTurnNow(base64, mimeType, text);
+      }
+      if (this.isGuided) {
+        this._send({
+          clientContent: {
+            turns: [{ role: 'user', parts: [{ text: GUIDED_OPENING_TEXT }] }],
+            turnComplete: true,
+          },
+        });
       }
       return;
     }

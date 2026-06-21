@@ -143,6 +143,13 @@ remainingSeconds, limitReached, showWarning }` — chỉ bọc nhánh `(kid)`.
   hiện prop `value` đổi và tự chạy animate lại từ vị trí cũ sang vị trí
   mới, gây hiệu ứng nháy 1 cái rồi animate lại. Set state đồng bộ trước,
   rollback nếu `update()` lỗi (xem `toggleKidMode` ở `(app)/profile.tsx`).
+- **Guided Conversation: AI luôn lên tiếng trước** — ngay khi `setupComplete`,
+  `LiveClient` tự gửi 1 turn ẩn (`GUIDED_OPENING_TEXT`, role "user", không
+  hiển thị cho trẻ) yêu cầu AI chào + hỏi bước 1 ngay, vì trẻ thường không
+  biết phải nói gì nếu AI ngồi im chờ. Cơ chế giống `EXPLORATION_OPENING_TEXT`
+  của Image Exploration. System prompt ở `live-token` cũng phải nói rõ AI
+  turn đầu là instruction ẩn để model không hiểu lầm là lời trẻ nói — sửa 1
+  bên thì phải sửa cả bên kia.
 - **Guided Conversation** giới hạn 10 phút/phiên, mỗi lượt trẻ có tối đa 8s
   để nói (`TURN_LIMIT_SEC` trong `useMissionSession.ts`) trước khi
   companion nhắc lại. Tiến trình bước và lạc đề do AI báo qua FUNCTION CALL

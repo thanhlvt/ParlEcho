@@ -845,3 +845,66 @@ begin
     i := i + 1;
   end loop;
 end $$;
+
+-- Kid Mode: bù sticker bị bỏ sót — vanilla/strawberry (mission mẫu không gắn) và
+-- sticker-93..100 (95 sticker đánh số dư ra do 29 mission × 3 chỉ dùng hết 87/95).
+-- Thêm 2 sticker mới (gem + bánh sinh nhật) để đủ 12 sticker = 4 mission × 3.
+insert into stickers (id, name, theme, emoji, sort_order) values
+  ('sticker-gem',           'Viên đá quý',    'fantasy', '💎', 101),
+  ('sticker-birthday-cake', 'Bánh sinh nhật', 'food',    '🎂', 102)
+on conflict (id) do nothing;
+
+do $$
+declare
+  m record;
+  v_mission_id uuid;
+begin
+  for m in (
+    select * from (values
+      ('Mua kem ở hội chợ', 'buying ice cream at a fair',
+        array['sticker-scoop-vanilla', 'sticker-scoop-strawberry', 'sticker-100'],
+        'Hello!', 'Trẻ chào người bán kem ở hội chợ.',
+        'Can I have a scoop of vanilla ice cream, please?',
+          'Trẻ gọi vị kem muốn ăn (vanilla / strawberry).',
+        'In a cone, please.', 'Trẻ chọn cách đựng (cone / cup).',
+        'Can I have a balloon too, please?', 'Trẻ xin thêm một quả bóng bay.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Tham quan triển lãm vũ trụ', 'visiting a space exhibition',
+        array['sticker-93', 'sticker-94', 'sticker-95'],
+        'Hello!', 'Trẻ chào hướng dẫn viên triển lãm.',
+        'What is this, please?',
+          'Trẻ hỏi về một vật thể trong vũ trụ (a shooting star / a planet / Earth).',
+        'Wow, that is amazing!', 'Trẻ thể hiện sự thích thú.',
+        'Can I take a photo, please?', 'Trẻ xin phép chụp ảnh.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn hướng dẫn viên và chào tạm biệt.'),
+      ('Mua đồ chơi ma thuật', 'buying magic toys at a shop',
+        array['sticker-96', 'sticker-97', 'sticker-gem'],
+        'Hello!', 'Trẻ chào nhân viên cửa hàng đồ chơi ma thuật.',
+        'Can I have this magic ring, please?', 'Trẻ chọn một món đồ chơi ma thuật muốn mua.',
+        'The shiny one, please.', 'Trẻ chọn mẫu mình thích (shiny / sparkly).',
+        'Can you wrap it, please?', 'Trẻ xin gói món đồ lại.',
+        'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
+      ('Tham dự sinh nhật bạn', 'attending a friend''s birthday party',
+        array['sticker-98', 'sticker-99', 'sticker-birthday-cake'],
+        'Hello! Happy birthday!', 'Trẻ chào và chúc mừng sinh nhật bạn.',
+        'Here is your gift.', 'Trẻ tặng quà sinh nhật.',
+        'Can I have a piece of cake, please?', 'Trẻ xin một miếng bánh sinh nhật.',
+        'It is delicious, thank you.', 'Trẻ khen bánh ngon.',
+        'Goodbye, see you again!', 'Trẻ chào tạm biệt bạn.')
+    ) as t(title, topic, pool, s1, i1, s2, i2, s3, i3, s4, i4, s5, i5)
+  )
+  loop
+    if not exists (select 1 from missions where title = m.title) then
+      insert into missions (id, language_id, title, topic, level, step_count, sticker_pool)
+      values (gen_random_uuid(), 'en', m.title, m.topic, 'beginner', 5, m.pool)
+      returning id into v_mission_id;
+
+      insert into mission_steps (mission_id, step_order, target_sentence, intent) values
+        (v_mission_id, 1, m.s1, m.i1),
+        (v_mission_id, 2, m.s2, m.i2),
+        (v_mission_id, 3, m.s3, m.i3),
+        (v_mission_id, 4, m.s4, m.i4),
+        (v_mission_id, 5, m.s5, m.i5);
+    end if;
+  end loop;
+end $$;
