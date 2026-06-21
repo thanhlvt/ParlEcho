@@ -42,7 +42,11 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
 
 ## Components (`components/`)
 
-- `practice/`: `LineCard`, `ScorePanel`, `WordHighlight`.
+- `practice/`: `LineCard`, `ScorePanel` (chấm điểm holistic giống session-review:
+  clarity/fluency/completeness + flagged_words kèm tip + transcript, chỉ
+  hiển thị, không có nút lưu), `WordHighlight` (tô màu câu mẫu theo
+  `lib/wordDiff.ts#compareWords` — so transcript với câu mẫu để biết từ nào
+  bị nói thiếu/sai).
 - `chat/`: `ChatBubble`, `CorrectionRow`.
 - `live/`: `SetupView`, `LiveConversationView`, `StatusView`,
   `useLiveSession` (state machine cho Live tự do, adult).
@@ -115,9 +119,10 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
   `EXPO_PUBLIC_SENTRY_DSN`, no-op nếu rỗng), `logError(context, err)` —
   dùng thay `console.error` ở các điểm lỗi runtime quan trọng (WebSocket
   Live, audio playback/cache) để Sentry bắt được trên máy người dùng thật.
-- `audioFormat.ts`, `markerProtocol.ts`, `streak.ts`, `scoring.ts`: logic
-  thuần tách ra để unit-test được (xem skill `unit-test`) — sửa công thức
-  ở đây thay vì viết lại inline trong component/hook.
+- `audioFormat.ts`, `markerProtocol.ts`, `streak.ts`, `scoring.ts`,
+  `wordDiff.ts`: logic thuần tách ra để unit-test được (xem skill
+  `unit-test`) — sửa công thức ở đây thay vì viết lại inline trong
+  component/hook.
 
 ## Providers (`providers/`)
 

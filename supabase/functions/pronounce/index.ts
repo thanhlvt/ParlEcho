@@ -11,7 +11,67 @@ interface PronounceRequest {
   message_id?: string;
 }
 
-// ── Levenshtein scoring ───────────────────────────────────────────────
+// ── Gemini: chấm phát âm holistic (giống session-review) + transcribe ────
+// Để Gemini tự đánh giá "completeness" (đã thử) không đáng tin — nó vẫn cho
+// 100 điểm khi học viên cố ý nói thiếu câu. Nên completeness được tính lại
+// cục bộ bằng Levenshtein (xem computeCompletenessScore) dựa trên transcript
+// Gemini trả về so với reference_text, không lấy thẳng từ LLM.
+async function scorePronunciation(
+  audioBase64: string,
+  mimeType: string,
+  referenceText: string,
+  languageId: string,
+  geminiKey: string,
+): Promise<{
+  clarity: number;
+  fluency: number;
+  transcript: string;
+  flagged_words: Array<{ word: string; tip: string }>;
+}> {
+  const lang = languageId === 'ja' ? 'Japanese' : 'English';
+
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { inlineData: { mimeType, data: audioBase64 } },
+              {
+                text:
+                  `This is a ${lang} learner recording. Reference sentence: "${referenceText}"\n` +
+                  `Score this recording and respond with ONLY valid JSON:\n` +
+                  `{"clarity":85,"fluency":80,"transcript":"exact words spoken","flagged_words":[{"word":"example","tip":"how to improve"}]}\n` +
+                  `clarity: overall pronunciation clarity AND correct word stress 0-100.` +
+                  `fluency: speaking flow AND natural intonation 0-100. ` +
+                  `transcript: transcribe EXACTLY what was spoken, including mistakes/incomplete words. Do NOT correct or complete the sentence. If nothing audible, return "". ` +
+                  `flagged_words: max 3 specific words that need improvement. The 'tip' in Vietnamese must provide actionable advice on pronunciation, wrong word stress, or unnatural intonation. ` +
+                  `If pronunciation is good, flagged_words can be [].`,
+              },
+            ],
+          },
+        ],
+      }),
+    },
+  );
+
+  if (!resp.ok) throw new Error(`Gemini pronunciation error: ${await resp.text()}`);
+  const data = await resp.json();
+  const raw: string = (data.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim();
+
+  try {
+    // Strip possible markdown fences
+    const json = raw.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '');
+    return JSON.parse(json);
+  } catch {
+    return { clarity: 0, fluency: 0, transcript: '', flagged_words: [] };
+  }
+}
+
+// ── Levenshtein: chấm completeness cục bộ (đáng tin hơn để LLM tự đánh giá) ──
 function levenshtein(a: string, b: string): number {
   const m = a.length,
     n = b.length;
@@ -35,76 +95,74 @@ function charSimilarity(a: string, b: string): number {
   return maxLen === 0 ? 100 : Math.round((1 - levenshtein(a, b) / maxLen) * 100);
 }
 
-function scoreWords(recognized: string, reference: string) {
-  const normalize = (s: string) =>
-    s
-      .toLowerCase()
-      .replace(/[^\p{L}\p{N}\s]/gu, '')
-      .split(/\s+/)
-      .filter(Boolean);
-
-  const refWords = normalize(reference);
-  const recWords = normalize(recognized);
-
-  return refWords.map((refWord, i) => {
-    const recWord = recWords[i] ?? '';
-    const score = charSimilarity(recWord, refWord);
-    const error_type =
-      recWord === ''
-        ? 'Omission'
-        : score < 60
-          ? 'Mispronunciation'
-          : score < 85
-            ? 'UnexpectedBreak'
-            : null;
-    return { word: refWord, score, error_type };
-  });
+function normalizeWords(s: string): string[] {
+  return s
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, '')
+    .split(/\s+/)
+    .filter(Boolean);
 }
 
-function computeScores(recognized: string, reference: string) {
-  const wordScores = scoreWords(recognized, reference);
+// Word-level alignment (Levenshtein ở mức từ, có backtrack) — so khớp theo vị trí cố
+// định sẽ lệch toàn bộ phần còn lại của câu chỉ vì 1 từ bị tách/gộp khác số từ (ví dụ
+// "the intercom" nghe thành "zincall"). Alignment tự "đồng bộ lại" sau lỗi cục bộ bằng
+// cách cho phép xoá (từ ref bị thiếu trong recognized) / chèn (từ thừa) với chi phí cố
+// định, và chỉ thay thế khi rẻ hơn xoá+chèn. Trả về, với mỗi từ ref, từ recognized
+// được khớp (hoặc null nếu bị coi là thiếu).
+function alignWords(refWords: string[], recWords: string[]): (string | null)[] {
+  const m = refWords.length,
+    n = recWords.length;
+  const cost: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) cost[i][0] = i;
+  for (let j = 0; j <= n; j++) cost[0][j] = j;
 
-  const normalize = (s: string) =>
-    s
-      .toLowerCase()
-      .replace(/[^\p{L}\p{N}\s]/gu, '')
-      .split(/\s+/)
-      .filter(Boolean);
+  const subCost = (i: number, j: number) =>
+    refWords[i - 1] === recWords[j - 1]
+      ? 0
+      : 1 - charSimilarity(refWords[i - 1], recWords[j - 1]) / 100;
 
-  const refWords = normalize(reference);
-  const recWords = normalize(recognized);
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      cost[i][j] = Math.min(
+        cost[i - 1][j - 1] + subCost(i, j), // khớp/thay thế
+        cost[i - 1][j] + 1, // ref[i-1] bị thiếu trong recognized
+        cost[i][j - 1] + 1, // recognized[j-1] là từ thừa
+      );
+    }
+  }
 
-  const accuracy_score =
-    wordScores.length > 0
-      ? Math.round(wordScores.reduce((s, w) => s + w.score, 0) / wordScores.length)
-      : 0;
+  const aligned: (string | null)[] = new Array(m).fill(null);
+  let i = m,
+    j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && cost[i][j] === cost[i - 1][j - 1] + subCost(i, j)) {
+      aligned[i - 1] = recWords[j - 1];
+      i--;
+      j--;
+    } else if (i > 0 && cost[i][j] === cost[i - 1][j] + 1) {
+      aligned[i - 1] = null;
+      i--;
+    } else {
+      j--;
+    }
+  }
+  return aligned;
+}
 
-  const completeness_score =
-    refWords.length > 0
-      ? Math.round(
-          (wordScores.filter((w) => w.error_type !== 'Omission').length / refWords.length) * 100,
-        )
-      : 0;
+// Tính completeness bằng word alignment: từ ref nào không khớp được với từ recognized
+// nào đủ giống (do nói thiếu/dừng giữa câu) bị tính là "Omission".
+function computeCompletenessScore(recognized: string, reference: string): number {
+  const refWords = normalizeWords(reference);
+  const recWords = normalizeWords(recognized);
+  if (refWords.length === 0) return 0;
 
-  // fluency: phạt nếu số từ lệch nhiều so với câu mẫu
-  const fluency_score =
-    recWords.length > 0 && refWords.length > 0
-      ? Math.round(
-          (Math.min(recWords.length, refWords.length) /
-            Math.max(recWords.length, refWords.length)) *
-            100,
-        )
-      : 0;
+  const aligned = alignWords(refWords, recWords);
+  const omittedCount = refWords.filter((refWord, i) => {
+    const recWord = aligned[i];
+    return recWord === null || charSimilarity(recWord, refWord) < 40;
+  }).length;
 
-  const overall_score = Math.round((accuracy_score + fluency_score + completeness_score) / 3);
-
-  return {
-    overall_score,
-    accuracy_score,
-    fluency_score,
-    completeness_score,
-    word_scores: wordScores,
-  };
+  return Math.round(((refWords.length - omittedCount) / refWords.length) * 100);
 }
 
 // ── Main handler ──────────────────────────────────────────────────────
@@ -153,70 +211,41 @@ Deno.serve(async (req: Request) => {
     for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
     const audioBase64 = btoa(binary);
 
-    const langHint = language_id === 'ja' ? 'Japanese' : 'English';
-
-    // Gọi Gemini để transcribe — không dùng files.upload() để tránh overhead
-    const geminiResp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  inlineData: {
-                    mimeType: audio_mime_type,
-                    data: audioBase64,
-                  },
-                },
-                {
-                  text:
-                    `This is a ${langHint} language learning audio recording. ` +
-                    `Transcribe exactly what is spoken, including any mistakes or incomplete words. ` +
-                    `Do NOT correct errors. Return only the raw transcription text, nothing else. ` +
-                    `If the recording contains no audible speech (silence, noise, or background sound only), ` +
-                    `return an empty string and nothing else — do not describe the audio or repeat these instructions.`,
-                },
-              ],
-            },
-          ],
-        }),
-      },
+    // Chấm clarity/fluency holistic bằng Gemini (giống session-review)
+    const scores = await scorePronunciation(
+      audioBase64,
+      audio_mime_type,
+      reference_text,
+      language_id,
+      geminiKey,
     );
+    // completeness tính cục bộ bằng Levenshtein từ transcript Gemini trả về —
+    // không tin LLM tự chấm điểm này (LLM vẫn cho 100 khi học viên nói thiếu câu)
+    const completeness = computeCompletenessScore(scores.transcript, reference_text);
+    const overall_score = Math.round((scores.clarity + scores.fluency + completeness) / 3);
 
-    if (!geminiResp.ok) {
-      throw new Error(`Gemini STT error: ${await geminiResp.text()}`);
-    }
-
-    const geminiData = await geminiResp.json();
-    let recognized_text: string = (
-      geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-    ).trim();
-
-    // Safety net: on silent/empty audio, Gemini sometimes echoes the instruction
-    // prompt itself instead of returning an empty string. Detect and discard that.
-    if (/language learning audio recording/i.test(recognized_text)) {
-      recognized_text = '';
-    }
-
-    // Tính điểm bằng Levenshtein
-    const scores = computeScores(recognized_text, reference_text);
-
-    // Lưu attempt
+    // Lưu attempt — accuracy_score = clarity (giống session-review), completeness_score
+    // riêng cho pronounce vì có câu mẫu cố định để so sánh, word_scores chứa tip cải thiện
     await supabase.from('pronunciation_attempts').insert({
       user_id: user.id,
       language_id,
       scenario_line_id: scenario_line_id ?? null,
       message_id: message_id ?? null,
       audio_url: audio_storage_path,
-      recognized_text,
-      ...scores,
+      recognized_text: reference_text,
+      overall_score,
+      accuracy_score: scores.clarity,
+      fluency_score: scores.fluency,
+      completeness_score: completeness,
+      word_scores: scores.flagged_words.map((fw) => ({
+        word: fw.word,
+        score: 0,
+        error_type: fw.tip,
+      })),
     });
 
     // Cập nhật user_progress nếu là kịch bản soạn sẵn
-    if (scenario_line_id && scores.overall_score !== null) {
+    if (scenario_line_id) {
       const { data: line } = await supabase
         .from('scenario_lines')
         .select('scenario_id')
@@ -237,7 +266,7 @@ Deno.serve(async (req: Request) => {
             .update({
               best_pronunciation_score: Math.max(
                 existing.best_pronunciation_score ?? 0,
-                scores.overall_score,
+                overall_score,
               ),
               attempts_count: existing.attempts_count + 1,
               last_studied_at: new Date().toISOString(),
@@ -248,7 +277,7 @@ Deno.serve(async (req: Request) => {
             user_id: user.id,
             scenario_id: line.scenario_id,
             language_id,
-            best_pronunciation_score: scores.overall_score,
+            best_pronunciation_score: overall_score,
             attempts_count: 1,
             last_studied_at: new Date().toISOString(),
           });
@@ -270,8 +299,8 @@ Deno.serve(async (req: Request) => {
       const prevLines = todayAct.lines_practiced;
       const newAvg =
         prevLines === 0
-          ? scores.overall_score
-          : Math.round((prevAvg * prevLines + (scores.overall_score ?? 0)) / (prevLines + 1));
+          ? overall_score
+          : Math.round((prevAvg * prevLines + overall_score) / (prevLines + 1));
       await supabase
         .from('daily_activity')
         .update({ lines_practiced: prevLines + 1, avg_pronunciation_score: newAvg })
@@ -281,14 +310,24 @@ Deno.serve(async (req: Request) => {
         user_id: user.id,
         activity_date: today,
         lines_practiced: 1,
-        avg_pronunciation_score: scores.overall_score,
+        avg_pronunciation_score: overall_score,
       });
     }
 
     // Audio has been scored and result persisted — delete the file to free storage
     await supabase.storage.from('recordings').remove([audio_storage_path]);
 
-    return Response.json({ recognized_text, ...scores }, { headers: corsHeaders });
+    return Response.json(
+      {
+        overall_score,
+        clarity: scores.clarity,
+        fluency: scores.fluency,
+        completeness,
+        transcript: scores.transcript,
+        flagged_words: scores.flagged_words,
+      },
+      { headers: corsHeaders },
+    );
   } catch (err) {
     console.error(err);
     return Response.json(

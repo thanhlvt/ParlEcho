@@ -13,9 +13,22 @@ convention RN của app).
 
 - **`chat`**: gọi Claude API (`claude-sonnet-4-6`) — trả reply + translation
   + corrections + hints cho chat tự do (adult).
-- **`pronounce`**: Gemini STT transcribe rồi tính điểm bằng Levenshtein
-  distance cục bộ (accuracy/fluency/completeness) — KHÔNG gọi LLM để chấm
-  điểm (tránh chi phí + độ trễ).
+- **`pronounce`**: gửi audio + reference text cho Gemini để chấm clarity/
+  fluency holistic + flagged_words kèm tip (cùng cơ chế `scorePronunciation`
+  với `session-review`), Gemini cũng trả `transcript` (STT thô). Riêng
+  `completeness` (không có ở session-review, vì luyện theo câu mẫu cố định ở
+  `scenario_lines`) KHÔNG lấy điểm tự chấm của LLM — đã thử và LLM vẫn cho
+  100 khi học viên cố ý nói thiếu câu — mà tính cục bộ bằng word alignment
+  (Levenshtein ở mức từ, có backtrack — `alignWords`/`computeCompletenessScore`)
+  giữa `transcript` và `reference_text`. KHÔNG so khớp theo vị trí cố định
+  (index): khi 1 từ ref bị tách/gộp khác số từ so với transcript (ví dụ "the
+  intercom" nghe thành "zincall"), so theo vị trí sẽ làm lệch chỉ số và đánh
+  sai toàn bộ phần còn lại của câu — alignment cho phép xoá/chèn để tự đồng
+  bộ lại sau lỗi cục bộ. `overall_score` = trung bình clarity/fluency/
+  completeness. `transcript` cũng được trả về trong response để client tô
+  màu câu mẫu theo từng từ (xem `lib/wordDiff.ts#compareWords` — bản JS
+  song song với Levenshtein cục bộ ở đây, vì Edge Function (Deno) không
+  import được `lib/` của app RN).
 - **`tts`**: sinh audio mẫu cho `scenario_lines`.
 - **`live-token`**: tạo ephemeral token cho Gemini Live WebSocket + dựng
   system prompt (kể cả `buildKidExplorationPrompt` cho Image Exploration —
@@ -44,8 +57,15 @@ convention RN của app).
 
 ## Quy tắc nghiệp vụ
 
-- **`pronounce` không dùng LLM để chấm điểm** — Gemini chỉ dùng để
-  transcribe (STT); điểm số tính bằng Levenshtein distance cục bộ.
+- **`pronounce` và `session-review` dùng cùng cơ chế chấm phát âm**: gửi
+  audio + câu mẫu cho Gemini chấm holistic (clarity, fluency, flagged_words),
+  không tự transcribe/so khớp text cục bộ. Cả hai cùng ghi vào
+  `pronunciation_attempts` với format giống nhau (`accuracy_score`=clarity,
+  `completeness_score`=null, `word_scores[].error_type` là tip cải thiện chứ
+  không phải mã loại lỗi) — đổi format ở 1 function thì phải đổi cả 2 và
+  UI đọc bảng này (`components/practice/ScorePanel.tsx`,
+  `app/(app)/live/review/[conversationId].tsx`,
+  `app/(kid)/parent/session/[conversationId].tsx`).
 - **`/chat` lọc corrections**: chỉ giữ correction nếu cụm từ lỗi thực sự
   xuất hiện trong message gần nhất của user (tránh Claude tự bịa lỗi
   không có thật).

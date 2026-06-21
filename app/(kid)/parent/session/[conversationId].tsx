@@ -318,9 +318,9 @@ export default function ParentSessionReviewScreen() {
   );
 }
 
-// Bảng pronunciation_attempts được 2 Edge Function dùng chung nhưng diễn giải
-// word_scores khác nhau: ở session-review (màn này), error_type là TIP cải thiện
-// (không phải mã loại lỗi như ở pronounce/WordHighlight.tsx) và score luôn = 0.
+// Bảng pronunciation_attempts dùng chung cho /pronounce và /session-review —
+// cả hai chấm điểm holistic bằng Gemini, error_type trong word_scores là TIP
+// cải thiện (không phải mã loại lỗi) và score luôn = 0.
 function PronunciationDetail({ attempt }: { attempt: PronunciationAttempt | undefined }) {
   const { colors } = useTheme();
   const styles = getStyles(colors);

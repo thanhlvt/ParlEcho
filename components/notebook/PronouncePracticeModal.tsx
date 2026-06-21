@@ -22,8 +22,9 @@ import { supabase } from '../../lib/supabase';
 import { useTheme } from '../../providers/ThemeProvider';
 import { SavedItem, PronounceApiResponse } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
-import { WordHighlight } from '../practice/WordHighlight';
+import { compareWords } from '../../lib/wordDiff';
 import { ScorePanel } from '../practice/ScorePanel';
+import { WordHighlight } from '../practice/WordHighlight';
 import { clearActiveAudio, registerActiveAudio, stopActiveAudio } from '../../lib/audioPlayback';
 
 interface PronouncePracticeModalProps {
@@ -267,7 +268,7 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
               {pronounceResult ? (
                 <WordHighlight
                   text={item?.content || ''}
-                  wordScores={pronounceResult.word_scores}
+                  wordScores={compareWords(item?.content || '', pronounceResult.transcript)}
                 />
               ) : (
                 <Text style={styles.practiceText}>{item?.content}</Text>

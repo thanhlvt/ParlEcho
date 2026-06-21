@@ -113,55 +113,6 @@ export default function ShadowingScreen() {
     }
   }
 
-  async function handleSaveWord(word: string, isMispronounced: boolean) {
-    if (!user || !scenario) return;
-    const cleanWord = word.trim();
-    if (!cleanWord) return;
-
-    const existing = savedItems.find(
-      (item) =>
-        item.content.toLowerCase().trim() === cleanWord.toLowerCase() && item.type === 'word',
-    );
-    if (existing) {
-      Alert.alert('Thông tin', `Từ "${cleanWord}" đã có trong Sổ tay.`);
-      return;
-    }
-
-    Alert.alert(
-      isMispronounced ? 'Từ phát âm chưa chuẩn' : 'Lưu từ vựng',
-      `Bạn có muốn lưu từ "${cleanWord}" vào Sổ tay ôn tập không?`,
-      [
-        { text: 'Hủy', style: 'cancel' },
-        {
-          text: 'Lưu',
-          onPress: async () => {
-            try {
-              const { data, error } = await supabase
-                .from('saved_items')
-                .insert({
-                  user_id: user.id,
-                  language_id: scenario.language_id,
-                  type: 'word',
-                  content: cleanWord,
-                  note: isMispronounced ? 'Luyện phát âm lại (từ bị phát âm sai)' : undefined,
-                })
-                .select('id, content, type')
-                .single();
-              if (error) throw error;
-              if (data) {
-                setSavedItems((prev) => [...prev, data]);
-                Alert.alert('Thành công', `Đã lưu từ "${cleanWord}" vào Sổ tay.`);
-              }
-            } catch (err) {
-              console.error(err);
-              Alert.alert('Lỗi', 'Không thể lưu từ vựng.');
-            }
-          },
-        },
-      ],
-    );
-  }
-
   // ── TTS playback ────────────────────────────────────────────────────
   async function handlePlay(line: ScenarioLine) {
     if (soundRef.current) {
@@ -402,7 +353,6 @@ export default function ShadowingScreen() {
               (item) => item.content === line.text && item.type === 'phrase',
             )}
             onSave={() => handleToggleSaveLine(line)}
-            onWordPress={handleSaveWord}
           />
         ))}
         <View style={{ height: 24 }} />

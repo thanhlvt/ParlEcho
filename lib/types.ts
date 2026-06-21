@@ -299,14 +299,18 @@ export type ChatApiResponse = {
   hints: string[];
 };
 
-// Response shape từ Edge Function /pronounce
+// Response shape từ Edge Function /pronounce — chấm điểm holistic bằng Gemini
+// (cùng cơ chế với /session-review, xem SegmentPronunciation), riêng có thêm
+// completeness vì pronounce luyện theo câu mẫu cố định (scenario_lines) nên
+// cần kiểm tra user nói đủ câu hay bị cắt/bỏ từ.
 export type PronounceApiResponse = {
-  recognized_text: string;
-  overall_score: number | null;
-  accuracy_score: number | null;
-  fluency_score: number | null;
-  completeness_score: number | null;
-  word_scores: WordScore[];
+  overall_score: number;
+  clarity: number;
+  fluency: number;
+  completeness: number;
+  /** Gemini STT thô — dùng để so sánh với câu mẫu (xem lib/wordDiff.ts) */
+  transcript: string;
+  flagged_words: FlaggedWord[];
 };
 
 // ── Live conversation (Gemini Live API) ───────────────────────────────

@@ -97,8 +97,9 @@ async function scorePronunciation(
                   `This is a ${lang} learner recording. Reference sentence: "${referenceText}"\n` +
                   `Score this recording and respond with ONLY valid JSON:\n` +
                   `{"clarity":85,"fluency":80,"flagged_words":[{"word":"example","tip":"how to improve"}]}\n` +
-                  `clarity: overall pronunciation clarity 0-100. fluency: speaking flow 0-100. ` +
-                  `flagged_words: max 3 specific words that need improvement with short actionable tips in Vietnamese. ` +
+                  `clarity: overall pronunciation clarity AND correct word stress 0-100.` +
+                  `fluency: speaking flow AND natural intonation 0-100. ` +
+                  `flagged_words: max 3 specific words that need improvement. The 'tip' in Vietnamese must provide actionable advice on pronunciation, wrong word stress, or unnatural intonation. ` +
                   `If pronunciation is good, flagged_words can be [].`,
               },
             ],

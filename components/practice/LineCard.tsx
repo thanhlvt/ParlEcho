@@ -3,6 +3,7 @@ import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
 import { PronounceApiResponse, ScenarioLine } from '../../lib/types';
+import { compareWords } from '../../lib/wordDiff';
 import { ScorePanel } from './ScorePanel';
 import { WordHighlight } from './WordHighlight';
 
@@ -21,7 +22,6 @@ interface LineCardProps {
   onPlayUser: () => void;
   isSaved?: boolean;
   onSave?: () => void;
-  onWordPress?: (word: string, isMispronounced: boolean) => void;
 }
 
 export function LineCard({
@@ -39,7 +39,6 @@ export function LineCard({
   onPlayUser,
   isSaved = false,
   onSave,
-  onWordPress,
 }: LineCardProps) {
   const { colors } = useTheme();
   const styles = getStyles(colors);
@@ -67,9 +66,9 @@ export function LineCard({
         </View>
       </View>
 
-      {/* Text — highlighted after scoring */}
+      {/* Text — highlighted theo transcript sau khi chấm điểm */}
       {result ? (
-        <WordHighlight text={line.text} wordScores={result.word_scores} onWordPress={onWordPress} />
+        <WordHighlight text={line.text} wordScores={compareWords(line.text, result.transcript)} />
       ) : (
         <Text style={styles.lineText}>{line.text}</Text>
       )}

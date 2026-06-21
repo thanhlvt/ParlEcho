@@ -24,9 +24,9 @@ export function ScorePanel({ result }: ScorePanelProps) {
 
       <View style={styles.scoreRow}>
         {[
-          { label: 'Chính xác', value: result.accuracy_score },
-          { label: 'Trôi chảy', value: result.fluency_score },
-          { label: 'Đầy đủ', value: result.completeness_score },
+          { label: 'Rõ ràng', value: result.clarity },
+          { label: 'Trôi chảy', value: result.fluency },
+          { label: 'Đầy đủ', value: result.completeness },
         ].map(({ label, value }) => (
           <View key={label} style={styles.scorePill}>
             <Text style={styles.pillLabel}>{label}</Text>
@@ -35,8 +35,18 @@ export function ScorePanel({ result }: ScorePanelProps) {
         ))}
       </View>
 
-      {result.recognized_text ? (
-        <Text style={styles.recognized}>Nhận ra: &quot;{result.recognized_text}&quot;</Text>
+      {result.flagged_words?.length ? (
+        <View style={styles.flaggedList}>
+          {result.flagged_words.map((fw, i) => (
+            <Text key={i} style={styles.flaggedText}>
+              • &quot;{fw.word}&quot; - {fw.tip}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+
+      {result.transcript ? (
+        <Text style={styles.recognized}>Nhận ra: &quot;{result.transcript}&quot;</Text>
       ) : null}
     </View>
   );
@@ -66,6 +76,12 @@ const getStyles = (colors: any) =>
     },
     pillLabel: { fontSize: 10, color: colors.textMuted, marginBottom: 2 },
     pillValue: { fontSize: 16, fontWeight: '800', color: colors.textPrimary },
+    flaggedList: { gap: 4 },
+    flaggedText: {
+      fontSize: 12,
+      color: colors.textMuted,
+      lineHeight: 16,
+    },
     recognized: {
       fontSize: 12,
       color: colors.textMuted,
