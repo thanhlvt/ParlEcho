@@ -31,6 +31,8 @@ export default function MissionsScreen() {
 
   const flatListRef = useRef<FlatList<Mission>>(null);
   const hasAutoScrolledRef = useRef(false);
+  const missionsCountRef = useRef(0);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -71,6 +73,7 @@ export default function MissionsScreen() {
           return bPriority - aPriority;
         });
         setMissions(sortedMissions);
+        missionsCountRef.current = sortedMissions.length;
 
         const best: Record<string, number> = {};
         for (const r of (resultsRes.data as { mission_id: string; stars: number }[]) ?? []) {
@@ -82,7 +85,8 @@ export default function MissionsScreen() {
         hasAutoScrolledRef.current = true;
         const firstIncompleteIndex = sortedMissions.findIndex((m) => (best[m.id] ?? 0) === 0);
         if (firstIncompleteIndex > 1) {
-          setTimeout(() => {
+          scrollTimeoutRef.current = setTimeout(() => {
+            if (firstIncompleteIndex >= missionsCountRef.current) return;
             flatListRef.current?.scrollToIndex({
               index: firstIncompleteIndex,
               animated: true,
@@ -91,6 +95,13 @@ export default function MissionsScreen() {
           }, 300);
         }
       });
+
+      return () => {
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+          scrollTimeoutRef.current = null;
+        }
+      };
     }, [profile?.active_language_id, user]),
   );
 
