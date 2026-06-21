@@ -861,7 +861,7 @@ declare
 begin
   for m in (
     select * from (values
-      ('Mua kem ở hội chợ', 'buying ice cream at a fair',
+      ('Mua kem ở hội chợ', 'buying ice cream at a fair', '🍦',
         array['sticker-scoop-vanilla', 'sticker-scoop-strawberry', 'sticker-100'],
         'Hello!', 'Trẻ chào người bán kem ở hội chợ.',
         'Can I have a scoop of vanilla ice cream, please?',
@@ -869,7 +869,7 @@ begin
         'In a cone, please.', 'Trẻ chọn cách đựng (cone / cup).',
         'Can I have a balloon too, please?', 'Trẻ xin thêm một quả bóng bay.',
         'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
-      ('Tham quan triển lãm vũ trụ', 'visiting a space exhibition',
+      ('Tham quan triển lãm vũ trụ', 'visiting a space exhibition', '🪐',
         array['sticker-93', 'sticker-94', 'sticker-95'],
         'Hello!', 'Trẻ chào hướng dẫn viên triển lãm.',
         'What is this, please?',
@@ -877,26 +877,26 @@ begin
         'Wow, that is amazing!', 'Trẻ thể hiện sự thích thú.',
         'Can I take a photo, please?', 'Trẻ xin phép chụp ảnh.',
         'Thank you! Goodbye!', 'Trẻ cảm ơn hướng dẫn viên và chào tạm biệt.'),
-      ('Mua đồ chơi ma thuật', 'buying magic toys at a shop',
+      ('Mua đồ chơi ma thuật', 'buying magic toys at a shop', '🪄',
         array['sticker-96', 'sticker-97', 'sticker-gem'],
         'Hello!', 'Trẻ chào nhân viên cửa hàng đồ chơi ma thuật.',
         'Can I have this magic ring, please?', 'Trẻ chọn một món đồ chơi ma thuật muốn mua.',
         'The shiny one, please.', 'Trẻ chọn mẫu mình thích (shiny / sparkly).',
         'Can you wrap it, please?', 'Trẻ xin gói món đồ lại.',
         'Thank you! Goodbye!', 'Trẻ cảm ơn và chào tạm biệt.'),
-      ('Tham dự sinh nhật bạn', 'attending a friend''s birthday party',
+      ('Tham dự sinh nhật bạn', 'attending a friend''s birthday party', '🎂',
         array['sticker-98', 'sticker-99', 'sticker-birthday-cake'],
         'Hello! Happy birthday!', 'Trẻ chào và chúc mừng sinh nhật bạn.',
         'Here is your gift.', 'Trẻ tặng quà sinh nhật.',
         'Can I have a piece of cake, please?', 'Trẻ xin một miếng bánh sinh nhật.',
         'It is delicious, thank you.', 'Trẻ khen bánh ngon.',
         'Goodbye, see you again!', 'Trẻ chào tạm biệt bạn.')
-    ) as t(title, topic, pool, s1, i1, s2, i2, s3, i3, s4, i4, s5, i5)
+    ) as t(title, topic, icon, pool, s1, i1, s2, i2, s3, i3, s4, i4, s5, i5)
   )
   loop
     if not exists (select 1 from missions where title = m.title) then
-      insert into missions (id, language_id, title, topic, level, step_count, sticker_pool)
-      values (gen_random_uuid(), 'en', m.title, m.topic, 'beginner', 5, m.pool)
+      insert into missions (id, language_id, title, topic, level, step_count, sticker_pool, icon)
+      values (gen_random_uuid(), 'en', m.title, m.topic, 'beginner', 5, m.pool, m.icon)
       returning id into v_mission_id;
 
       insert into mission_steps (mission_id, step_order, target_sentence, intent) values
