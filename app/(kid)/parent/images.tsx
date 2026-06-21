@@ -88,6 +88,34 @@ export default function ParentImagesScreen() {
     ]);
   }
 
+  async function uploadAsset(asset: ImagePicker.ImagePickerAsset) {
+    if (!user) return;
+    const base64 =
+      asset.base64 ??
+      (await FileSystem.readAsStringAsync(asset.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      }));
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const storagePath = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+
+    const { error: uploadErr } = await supabase.storage
+      .from('exploration-images')
+      .upload(storagePath, bytes.buffer as ArrayBuffer, { contentType: 'image/jpeg' });
+    if (uploadErr) throw uploadErr;
+
+    const { data: inserted, error: insertErr } = await supabase
+      .from('exploration_images')
+      .insert({ uploader: user.id, storage_path: storagePath, is_approved: false })
+      .select('id')
+      .single();
+    if (insertErr || !inserted) throw insertErr ?? new Error('Insert failed');
+
+    const { error: modErr } = await supabase.functions.invoke('image-moderation', {
+      body: { exploration_image_id: inserted.id },
+    });
+    if (modErr) console.warn('[ParentImages] moderation error:', modErr);
+  }
+
   async function pickAndUpload(source: 'camera' | 'library') {
     if (!user) return;
 
@@ -104,43 +132,37 @@ export default function ParentImagesScreen() {
         mediaTypes: ['images'],
         quality: 0.8,
         base64: true,
+        allowsMultipleSelection: true,
       });
     }
-    if (result.canceled || !result.assets[0]) return;
+    if (result.canceled || result.assets.length === 0) return;
 
     setUploading(true);
     try {
-      const asset = result.assets[0];
-      const base64 =
-        asset.base64 ??
-        (await FileSystem.readAsStringAsync(asset.uri, {
-          encoding: FileSystem.EncodingType.Base64,
-        }));
-      const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-      const storagePath = `${user.id}/${Date.now()}.jpg`;
-
-      const { error: uploadErr } = await supabase.storage
-        .from('exploration-images')
-        .upload(storagePath, bytes.buffer as ArrayBuffer, { contentType: 'image/jpeg' });
-      if (uploadErr) throw uploadErr;
-
-      const { data: inserted, error: insertErr } = await supabase
-        .from('exploration_images')
-        .insert({ uploader: user.id, storage_path: storagePath, is_approved: false })
-        .select('id')
-        .single();
-      if (insertErr || !inserted) throw insertErr ?? new Error('Insert failed');
-
-      const { error: modErr } = await supabase.functions.invoke('image-moderation', {
-        body: { exploration_image_id: inserted.id },
-      });
-      if (modErr) console.warn('[ParentImages] moderation error:', modErr);
+      let failCount = 0;
+      for (const asset of result.assets) {
+        try {
+          await uploadAsset(asset);
+        } catch (err) {
+          console.error('[ParentImages] upload error:', err);
+          failCount++;
+        }
+      }
 
       await loadImages();
-      Alert.alert('Đã tải lên', 'Ảnh đang được kiểm duyệt, sẽ dùng được sau khi duyệt xong.');
-    } catch (err: any) {
-      console.error('[ParentImages] upload error:', err);
-      Alert.alert('Lỗi', 'Không thể tải ảnh lên: ' + (err?.message ?? String(err)));
+      if (failCount === 0) {
+        Alert.alert(
+          'Đã tải lên',
+          result.assets.length > 1
+            ? `Đã tải lên ${result.assets.length} ảnh, đang được kiểm duyệt.`
+            : 'Ảnh đang được kiểm duyệt, sẽ dùng được sau khi duyệt xong.',
+        );
+      } else {
+        Alert.alert(
+          'Hoàn tất với lỗi',
+          `Tải lên thành công ${result.assets.length - failCount}/${result.assets.length} ảnh.`,
+        );
+      }
     } finally {
       setUploading(false);
     }
