@@ -195,6 +195,8 @@ const getStyles = (colors: any) =>
       borderRadius: 7,
       backgroundColor: colors.surfaceAlt,
       overflow: 'hidden',
+      // Chừa khoảng trống bên phải để không bị đè bởi BiscuitBadge (góc phải màn hình).
+      marginRight: 64,
     },
     progressFill: { height: '100%', borderRadius: 7, backgroundColor: colors.primary },
     progressLabel: { fontSize: 13, fontWeight: '700', color: colors.textMuted },
