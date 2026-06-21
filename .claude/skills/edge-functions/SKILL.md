@@ -28,7 +28,11 @@ convention RN của app).
   model gửi `toolCall` rồi tạm dừng audio cho tới khi client gửi
   `toolResponse` có `id` khớp + `response.result`, sau đó nói tiếp khen + hỏi
   bước kế. (Trước đây tưởng FC "treo phiên" — thực ra do chưa gửi/sai `id`
-  trong `toolResponse`; gửi đúng thì model nói tiếp bình thường.)
+  trong `toolResponse`; gửi đúng thì model nói tiếp bình thường.) Image
+  Exploration cũng dùng 1 tool `end_activity()`: AI gọi sau khi chào tạm biệt
+  để client tự kết thúc phiên (thay vì chỉ chờ Gemini đóng socket — không đáng
+  tin). Tên các tool ở prompt PHẢI khớp `functionDeclarations` trong
+  `lib/liveClient.ts` (guided → mark/off-topic; exploration → end_activity).
 - **`session-review`**: tóm tắt sau buổi Live — `avg_pronunciation`,
   `fluency`, `vocab_to_learn`, `corrections`. Dùng cho cả Live tự do
   (adult) và Kid Mode (Guided Conversation + Image Exploration đều gọi lại
@@ -62,11 +66,14 @@ convention RN của app).
   (`lib/liveClient.ts`). BLOCKING (mặc định, không set `behavior`): handler
   `toolCall` phải gửi `toolResponse` NGAY, đồng bộ, `id` khớp chính xác — nếu
   không model treo (đây mới là nguyên nhân "treo phiên" trước kia, không phải
-  model không hỗ trợ FC). Lưới an toàn client (`_checkStepProgress`): reminder
-  ẩn 1 lần/bước khi model quên gọi tool — KHÔNG tự force-advance (sẽ vượt bước
-  khi trẻ trả lời sai), one-shot để không nhắc lặp liên tục. Guard `childSpokeSinceAdvance`: từ chối `mark_step_complete`
-  (trả `too_early`) nếu trẻ chưa nói gì kể từ lần sang bước trước, chống model
-  "hoàn thành" bước nó vừa hỏi → goodbye sớm ở bước cuối.
+  model không hỗ trợ FC). KHÔNG có reminder ẩn hay force-advance phía client:
+  đã bỏ vì (a) reminder bị model đọc to ra transcript, và (b) ở màn mở đầu nó
+  khiến model hỏi lại Step 1 (model phát 1 lượt chào + 1 lượt rỗng) → trẻ nghe
+  câu đầu 2 lần. Chỉ giữ guard `childSpokeSinceAdvance`: từ chối
+  `mark_step_complete` (trả `too_early`) nếu trẻ chưa nói gì kể từ lần sang bước
+  trước, chống model "hoàn thành" bước nó vừa hỏi → goodbye sớm ở bước cuối.
+  Prompt cấm model đọc to tên tool/cú pháp `()`; `lib/markerProtocol.ts`
+  (`stripToolCallArtifacts`) strip nốt nếu vẫn lọt vào transcript hiển thị.
 - **`realtimeInputConfig` cho Kid Mode** (setup message ở `LiveClient`):
   `silenceDurationMs` cao (1500ms) + sensitivity `LOW` + `activityHandling:
   NO_INTERRUPTION` để trẻ nói chậm/ngắt quãng không bị AI chen lời và tiếng

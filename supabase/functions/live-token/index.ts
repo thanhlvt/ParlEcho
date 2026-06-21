@@ -38,6 +38,9 @@ const METHOD_PROMPTS: Record<string, string> = {
 // functionDeclarations trong lib/liveClient.ts (setup message).
 const MARK_STEP_TOOL = 'mark_step_complete';
 const OFF_TOPIC_TOOL = 'report_off_topic';
+// Kid Mode (exploration): AI gọi sau khi chào tạm biệt xong để client tự kết thúc phiên.
+// PHẢI khớp functionDeclarations trong lib/liveClient.ts.
+const END_ACTIVITY_TOOL = 'end_activity';
 
 interface MissionStepPayload {
   stepOrder: number;
@@ -70,7 +73,7 @@ function buildKidGuidedPrompt(opts: {
     `Speak in an enthusiastic, warm, encouraging, and highly simplified tone suitable for children. Use very short, simple sentences. ` +
     `You are guiding the child through a mission called "${mission.title}" (${mission.topic}), step by step, in this exact order:\n` +
     `${stepsList}\n` +
-    `You have two tools. Calling a tool is silent — the child never hears it. Tools are how you tell the app what is happening:\n` +
+    `You have two tools. Calling a tool is silent and automatic — the child never hears it. You must NEVER say, spell, or read aloud the tool names ("${MARK_STEP_TOOL}", "${OFF_TOPIC_TOOL}") or any function-call syntax like "()" — just call the tool in the background and speak only natural, child-friendly words. Tools are how you tell the app what is happening:\n` +
     `- ${MARK_STEP_TOOL}(step_order): call this ONLY after the child has actually SPOKEN an answer that satisfies the CURRENT step's goal. Asking a step's question is NOT completing it — a step is complete only once the child has said something that meets the goal.\n` +
     `- ${OFF_TOPIC_TOOL}(): call this when the child says something unrelated to the current step.\n` +
     `Your very first turn in this conversation will be a hidden instruction (not from the child) ` +
@@ -86,7 +89,7 @@ function buildKidGuidedPrompt(opts: {
     `6. Do NOT correct grammar or pronunciation — just keep the mission moving forward warmly.\n` +
     `7. If the child speaks Vietnamese, gently encourage them to try in ${langLabel}.\n` +
     `8. Say each thing only ONCE. Never repeat or rephrase the same praise/question/goodbye — not within a reply, and not across a tool call. In particular, do NOT speak before calling ${MARK_STEP_TOOL} and then say the same thing again after the tool result; say it only once, after the result.\n` +
-    `9. CRITICAL — never forget rule 2/3: forgetting to call ${MARK_STEP_TOOL} after the child completes a step is the single worst mistake you can make, because it silently breaks the child's progress tracking. If you see a message marked "(Reminder for you, the AI — do not say this out loud...)", that means you already forgot it at least once — follow it immediately and do not mention the reminder to the child.`
+    `9. CRITICAL — never forget rule 2/3: forgetting to call ${MARK_STEP_TOOL} after the child completes a step is the single worst mistake you can make, because it silently breaks the child's progress tracking.`
   );
 }
 
@@ -118,7 +121,7 @@ function buildKidExplorationPrompt(opts: {
     `4. Silence (no answer): repeat the same question once, more simply, with an example.\n` +
     `5. Off-topic / unrelated answer: acknowledge it briefly and warmly, then gently repeat the current question.\n` +
     `6. Do NOT correct grammar or pronunciation — just keep the activity moving forward warmly.\n` +
-    `7. After the last question, congratulate the child warmly and say goodbye.\n` +
+    `7. After the last question, congratulate the child warmly and say goodbye, and then call the ${END_ACTIVITY_TOOL} tool to end the activity. Calling a tool is silent — the child never hears it, and you must NEVER say, spell, or read aloud the tool name or any function-call syntax. Always finish saying goodbye BEFORE calling the tool.\n` +
     `8. If the child speaks Vietnamese, gently encourage them to try in ${langLabel}.\n` +
     `9. Say each thing only ONCE per turn — never repeat or rephrase the same praise/question/goodbye again in the same reply, even with different wording.`
   );

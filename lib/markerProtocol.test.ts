@@ -1,4 +1,8 @@
-import { stripStepDoneMarker, stripOffTopicMarker } from './markerProtocol';
+import {
+  stripStepDoneMarker,
+  stripOffTopicMarker,
+  stripToolCallArtifacts,
+} from './markerProtocol';
 
 describe('stripStepDoneMarker', () => {
   it('matches exact bracketed marker', () => {
@@ -88,6 +92,50 @@ describe('stripOffTopicMarker', () => {
     expect(stripOffTopicMarker('[STEP_DONE]')).toEqual({
       matched: false,
       cleaned: '[STEP_DONE]',
+    });
+  });
+});
+
+describe('stripToolCallArtifacts', () => {
+  it('strips full tool call with parens', () => {
+    expect(stripToolCallArtifacts('Okay! report_off_topic()')).toEqual({
+      matched: true,
+      cleaned: 'Okay!',
+    });
+  });
+
+  it('strips truncated tool call "report_("', () => {
+    expect(stripToolCallArtifacts('Hmm report_(')).toEqual({
+      matched: true,
+      cleaned: 'Hmm',
+    });
+  });
+
+  it('strips mark_step_complete with arguments', () => {
+    expect(stripToolCallArtifacts('Great job! mark_step_complete(step_order=1)')).toEqual({
+      matched: true,
+      cleaned: 'Great job!',
+    });
+  });
+
+  it('strips bare tool name without parens', () => {
+    expect(stripToolCallArtifacts('mark_step_complete now')).toEqual({
+      matched: true,
+      cleaned: 'now',
+    });
+  });
+
+  it('collapses double spaces left behind mid-sentence', () => {
+    expect(stripToolCallArtifacts('Before report_off_topic() after')).toEqual({
+      matched: true,
+      cleaned: 'Before after',
+    });
+  });
+
+  it('does not touch normal speech', () => {
+    expect(stripToolCallArtifacts('Can you say hello to the shopkeeper?')).toEqual({
+      matched: false,
+      cleaned: 'Can you say hello to the shopkeeper?',
     });
   });
 });

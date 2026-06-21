@@ -45,6 +45,12 @@ const PRONUNCIATION_STAR_THRESHOLD = 70;
 // Hết giờ chơi phiên (Pha 4) mà AI không nói thêm gì nữa — vẫn kết thúc sau tối đa khoảng này
 // để tránh phiên treo vô hạn chờ "lượt nói hiện tại" không bao giờ tới.
 const TIME_UP_FALLBACK_MS = 20000;
+// Sau khi hoàn thành bước cuối, AI thường nói lời tạm biệt rồi `onAiAudioDone` kết thúc phiên.
+// Nhưng với tool-call, đôi khi model gọi `mark_step_complete` cuối mà KHÔNG phát thêm lượt audio
+// goodbye nào (đã quan sát qua spike), khác thời marker (marker + goodbye luôn cùng 1 turn) →
+// `onAiAudioDone` không chạy, phiên treo. Fallback: nếu mission đã hoàn thành mà AI im lặng quá
+// lâu thì tự kết thúc. Reset mỗi khi còn audio để không cắt ngang lời tạm biệt.
+const MISSION_END_SILENCE_MS = 5000;
 
 export type MissionView = 'loading' | 'connecting' | 'live' | 'saving' | 'finished' | 'error';
 
@@ -84,6 +90,7 @@ export function useMissionSession(missionId: string) {
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const timeUpFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const missionEndFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const turnsRef = useRef<LiveTurn[]>([]);
   const missionCompletedRef = useRef(false);
   const hintUsedRef = useRef(false);
@@ -174,6 +181,7 @@ export function useMissionSession(missionId: string) {
       if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
       if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current);
       if (timeUpFallbackRef.current) clearTimeout(timeUpFallbackRef.current);
+      if (missionEndFallbackRef.current) clearTimeout(missionEndFallbackRef.current);
     };
   }, []);
 
@@ -276,6 +284,12 @@ export function useMissionSession(missionId: string) {
       },
       onAudioChunk: async (pcm24Base64) => {
         if (isPausedRef.current) return;
+        // AI vẫn đang nói (lời tạm biệt sau bước cuối) → đẩy lùi fallback để không cắt ngang;
+        // onAiAudioDone sẽ kết thúc ngay khi nói xong.
+        if (missionCompletedRef.current && missionEndFallbackRef.current) {
+          clearTimeout(missionEndFallbackRef.current);
+          missionEndFallbackRef.current = setTimeout(() => endSession(), MISSION_END_SILENCE_MS);
+        }
         if (!audioCtxRef.current) {
           const ctx = new AudioContext({ sampleRate: 24000 });
           audioCtxRef.current = ctx;
@@ -329,6 +343,10 @@ export function useMissionSession(missionId: string) {
             // Bước cuối — đợi AI nói xong lời chúc mừng (onAiAudioDone) rồi mới kết thúc
             // phiên, tránh cắt audio giữa câu. Xem onAiAudioDone bên dưới.
             missionCompletedRef.current = true;
+            // Fallback: phòng khi model gọi mark cuối mà không phát lượt goodbye nào →
+            // onAiAudioDone không chạy. Hết im lặng quá lâu thì tự kết thúc (reset ở onAudioChunk).
+            if (missionEndFallbackRef.current) clearTimeout(missionEndFallbackRef.current);
+            missionEndFallbackRef.current = setTimeout(() => endSession(), MISSION_END_SILENCE_MS);
           }
           return next;
         });
@@ -336,7 +354,10 @@ export function useMissionSession(missionId: string) {
       // AI vừa phát hết audio buffer của lượt cuối (lời chúc mừng) — nếu mission đã hoàn
       // thành thì giờ mới an toàn để kết thúc phiên.
       onAiAudioDone: () => {
-        if (missionCompletedRef.current) endSession();
+        if (missionCompletedRef.current) {
+          if (missionEndFallbackRef.current) clearTimeout(missionEndFallbackRef.current);
+          endSession();
+        }
       },
       onOffTopic: (_streak, sortOrder) => {
         offTopicTurnsRef.current = [...offTopicTurnsRef.current, sortOrder];
@@ -365,6 +386,7 @@ export function useMissionSession(missionId: string) {
 
   async function endSession() {
     if (timerRef.current) clearInterval(timerRef.current);
+    if (missionEndFallbackRef.current) clearTimeout(missionEndFallbackRef.current);
     const client = clientRef.current;
     if (!client || !mission || !user) {
       setView('finished');

@@ -39,6 +39,10 @@ import { CompanionExpression } from './companionAssets';
 const SESSION_LIMIT_MINUTES = 8;
 const REACTION_DISPLAY_MS = 1600;
 const TIME_UP_FALLBACK_MS = 20000;
+// AI gọi tool `end_activity` (onActivityComplete) sau khi chào tạm biệt → tự kết thúc phiên
+// thay vì chỉ chờ Gemini đóng socket (không đáng tin). `onAiAudioDone` kết thúc ngay khi nói
+// xong; fallback này phòng khi model gọi tool mà không phát thêm audio (reset ở onAudioChunk).
+const ACTIVITY_END_SILENCE_MS = 5000;
 const IMAGE_POOL_SIZE = 50;
 const IMAGE_MAX_DIMENSION = 1024;
 // Không có bước/hint như Guided Conversation — tính sao theo điểm phát âm trung bình
@@ -88,10 +92,15 @@ export function useExplorationSession() {
   const [isPaused, setIsPaused] = useState(false);
 
   const clientRef = useRef<LiveClient | null>(null);
+  // Chống mở 2 phiên Live (2 WebSocket cùng hỏi → AI nói song song). Effect 'connecting' có thể
+  // chạy 2 lần (React strict mode dev, hoặc re-render) — chỉ cho startSession chạy 1 lần.
+  const sessionStartedRef = useRef(false);
   const isPausedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const timeUpFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activityEndFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activityCompletedRef = useRef(false);
   const turnsRef = useRef<LiveTurn[]>([]);
   const timeUpPendingRef = useRef(false);
   const imageBase64Ref = useRef<string | null>(null);
@@ -195,6 +204,8 @@ export function useExplorationSession() {
   // ── Mở kết nối Live khi đã có ảnh sẵn sàng ────────────────────────────
   useEffect(() => {
     if (view !== 'connecting' || !imageBase64Ref.current) return;
+    if (sessionStartedRef.current) return;
+    sessionStartedRef.current = true;
     startSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
@@ -215,6 +226,7 @@ export function useExplorationSession() {
       if (timerRef.current) clearInterval(timerRef.current);
       if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
       if (timeUpFallbackRef.current) clearTimeout(timeUpFallbackRef.current);
+      if (activityEndFallbackRef.current) clearTimeout(activityEndFallbackRef.current);
     };
   }, []);
 
@@ -272,6 +284,7 @@ export function useExplorationSession() {
 
     turnsRef.current = [];
     timeUpPendingRef.current = false;
+    activityCompletedRef.current = false;
     setElapsedSec(0);
     setTimeUp(false);
     setIsPaused(false);
@@ -314,6 +327,12 @@ export function useExplorationSession() {
       },
       onAudioChunk: async (pcm24Base64) => {
         if (isPausedRef.current) return;
+        // AI vẫn đang nói lời tạm biệt sau end_activity → đẩy lùi fallback để không cắt ngang;
+        // onAiAudioDone sẽ kết thúc ngay khi nói xong.
+        if (activityCompletedRef.current && activityEndFallbackRef.current) {
+          clearTimeout(activityEndFallbackRef.current);
+          activityEndFallbackRef.current = setTimeout(() => endSession(), ACTIVITY_END_SILENCE_MS);
+        }
         if (!audioCtxRef.current) {
           const ctx = new AudioContext({ sampleRate: 24000 });
           audioCtxRef.current = ctx;
@@ -331,6 +350,18 @@ export function useExplorationSession() {
       },
       onInterrupted: () => {
         audioQueueRef.current?.clearBuffers();
+      },
+      // AI báo đã chào tạm biệt xong (tool end_activity) → đợi nói hết audio rồi tự kết thúc.
+      onActivityComplete: () => {
+        activityCompletedRef.current = true;
+        if (activityEndFallbackRef.current) clearTimeout(activityEndFallbackRef.current);
+        activityEndFallbackRef.current = setTimeout(() => endSession(), ACTIVITY_END_SILENCE_MS);
+      },
+      onAiAudioDone: () => {
+        if (activityCompletedRef.current) {
+          if (activityEndFallbackRef.current) clearTimeout(activityEndFallbackRef.current);
+          endSession();
+        }
       },
       onTranscriptUpdate: (t) => {
         const prevLen = turnsRef.current.length;
@@ -366,6 +397,7 @@ export function useExplorationSession() {
 
   async function endSession() {
     if (timerRef.current) clearInterval(timerRef.current);
+    if (activityEndFallbackRef.current) clearTimeout(activityEndFallbackRef.current);
     const client = clientRef.current;
     if (!client || !user) {
       setView('finished');

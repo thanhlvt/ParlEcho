@@ -18,7 +18,7 @@
 import { supabase } from './supabase';
 import { logError } from './sentry';
 import { buildWavHeader, pcmToWav, bytesToBase64 } from './audioFormat';
-import { stripStepDoneMarker, stripOffTopicMarker } from './markerProtocol';
+import { stripStepDoneMarker, stripOffTopicMarker, stripToolCallArtifacts } from './markerProtocol';
 import { LiveAudioSegment, LiveTokenApiResponse, LiveTurn } from './types';
 
 export { buildWavHeader, pcmToWav, bytesToBase64 };
@@ -44,13 +44,9 @@ export type LiveState = 'idle' | 'connecting' | 'live' | 'ended' | 'error';
 // toolResponse NGAY, đồng bộ (không await ở giữa) nếu không model sẽ treo.
 const MARK_STEP_TOOL = 'mark_step_complete';
 const OFF_TOPIC_TOOL = 'report_off_topic';
-
-// Model có thể quên gọi mark_step_complete khi hội thoại kéo dài (instruction drift của Live
-// API). Cứ mỗi N lượt AI liên tiếp không gọi tool dù vẫn ở cùng bước, gửi reminder ẩn nhắc lại
-// mục tiêu bước hiện tại. KHÔNG tự force-advance ở client: client không phân biệt được "model
-// quên đánh dấu" với "trẻ đang trả lời sai", nên advance cưỡng bức sẽ vượt bước khi trẻ chưa
-// đạt — với app trẻ em, vượt nhầm tệ hơn là kẹt (reminder + giới hạn thời gian phiên đủ thoát).
-const STEP_REMINDER_AFTER_TURNS = 2;
+// Kid Mode (exploration): AI gọi khi đã chào tạm biệt xong ở cuối hoạt động, để client tự kết
+// thúc phiên (thay vì chỉ chờ Gemini đóng socket — không đáng tin). PHẢI khớp prompt live-token.
+const END_ACTIVITY_TOOL = 'end_activity';
 
 // Image Exploration (Pha 5): câu mở đầu cố định gửi kèm ảnh qua clientContent — chỉ là
 // chỉ dẫn nội bộ cho model, không hiển thị cho trẻ (không qua inputAudioTranscription).
@@ -88,6 +84,8 @@ export interface LiveClientCallbacks {
    * sortOrder = sort_order của lượt AI này (dùng để Parent Dashboard đánh dấu, Pha 6)
    */
   onOffTopic?: (streak: number, sortOrder: number) => void;
+  /** Kid Mode (exploration): AI báo đã chào tạm biệt xong → client tự kết thúc phiên. */
+  onActivityComplete?: () => void;
 }
 
 export interface LiveSessionResult {
@@ -130,21 +128,18 @@ export class LiveClient {
   private turnTimer: ReturnType<typeof setTimeout> | null = null;
   private offTopicStreak = 0;
 
-  // Kid Mode (guided): theo dõi bước hiện tại để soạn reminder khi model quên gọi
-  // mark_step_complete (xem STEP_REMINDER_AFTER_TURNS).
+  // Kid Mode (guided): theo dõi bước hiện tại.
   private missionSteps: { stepOrder: number; targetSentence: string; intent: string }[] = [];
   private stepIndex = 0;
-  private turnsSinceStepEvent = 0;
-  // Reminder gửi TỐI ĐA 1 lần/bước — tránh AI nhắc đi nhắc lại liên tục khi trẻ trả lời sai.
-  private reminderSentForCurrentStep = false;
-  // Cờ "đã có sự kiện trong lượt này" — set khi nhận toolCall, đọc + reset ở _checkStepProgress
-  // (chạy lúc turnComplete) để biết model có gọi tool hay không trong lượt vừa rồi.
-  private stepAdvancedThisTurn = false;
   private offTopicThisTurn = false;
   // Guard chống "kết thúc sớm": trẻ đã nói gì đó kể từ lần sang bước trước chưa? Set khi nhận
   // inputTranscription thật (không phải echo), reset khi advance. Dùng để từ chối mark_step_complete
   // mà model gọi cho bước nó VỪA hỏi trước khi trẻ kịp trả lời (đặc biệt bước cuối → goodbye sớm).
   private childSpokeSinceAdvance = false;
+  // Kid Mode (guided + exploration): true từ lúc mở phiên tới khi AI nói xong câu mở đầu (chào /
+  // câu hỏi đầu về ảnh). Chặn mic trong khoảng này để tiếng trẻ không thành user turn thứ 2 song
+  // song với opening → tránh "2 phiên nói song song". Live adult = false (user nói trước).
+  private waitForFirstAiTurn = false;
   // Kid Mode: server cấu hình activityHandling = NO_INTERRUPTION. Khi true, KHÔNG gỡ cờ
   // aiSpeaking dựa trên inputTranscription lúc AI đang nói — tránh tiếng AI vọng vào mic bị
   // hiểu là trẻ nói (echo) làm mở mic giữa chừng. Chỉ drain-timer sau turnComplete mở lại mic.
@@ -192,13 +187,12 @@ export class LiveClient {
     this.offTopicStreak = 0;
     this.noInterruption = opts.mode === 'kid_guided' || opts.mode === 'kid_exploration';
     this.isGuided = opts.mode === 'kid_guided';
+    // Kid mode mở đầu bằng lượt AI (chào / hỏi ảnh) → chặn mic tới khi AI nói xong lượt đó.
+    this.waitForFirstAiTurn = opts.mode === 'kid_guided' || opts.mode === 'kid_exploration';
     this.setupReady = false;
     this.pendingImageTurn = null;
     this.missionSteps = [...(opts.mission?.steps ?? [])].sort((a, b) => a.stepOrder - b.stepOrder);
     this.stepIndex = 0;
-    this.turnsSinceStepEvent = 0;
-    this.reminderSentForCurrentStep = false;
-    this.stepAdvancedThisTurn = false;
     this.offTopicThisTurn = false;
     this.childSpokeSinceAdvance = false;
     this.openingSent = false;
@@ -247,10 +241,44 @@ export class LiveClient {
       // nhầm VAD; NO_INTERRUPTION để tiếng AI vọng vào mic không "ngắt" model khiến nó nói lại
       // câu từ đầu. Chỉ áp cho Kid Mode — Live tự do (adult) giữ mặc định để cho phép barge-in.
       const isKidMode = opts.mode === 'kid_guided' || opts.mode === 'kid_exploration';
-      // Guided: khai báo 2 tool BLOCKING để AI báo tiến trình bước/lạc đề (xem MARK_STEP_TOOL).
-      // KHÔNG đặt `behavior` → mặc định BLOCKING: model dừng audio sau toolCall, nói tiếp khi
-      // nhận toolResponse. Exploration/adult không cần tool.
+      // Tool BLOCKING (không đặt `behavior` → mặc định): model dừng audio sau toolCall, nói tiếp
+      // khi nhận toolResponse. Guided: mark_step_complete/report_off_topic báo tiến trình bước/lạc
+      // đề. Exploration: end_activity báo đã chào tạm biệt xong để tự kết thúc. Adult: không tool.
       const isGuided = opts.mode === 'kid_guided';
+      const isExploration = opts.mode === 'kid_exploration';
+      const functionDeclarations: unknown[] = [];
+      if (isGuided) {
+        functionDeclarations.push(
+          {
+            name: MARK_STEP_TOOL,
+            description:
+              'Call the moment the child has correctly said the current mission step’s target sentence.',
+            parameters: {
+              type: 'object',
+              properties: {
+                step_order: {
+                  type: 'integer',
+                  description: 'step_order of the step the child just completed',
+                },
+              },
+              required: ['step_order'],
+            },
+          },
+          {
+            name: OFF_TOPIC_TOOL,
+            description: 'Call when the child says something unrelated to the current step.',
+            parameters: { type: 'object', properties: {} },
+          },
+        );
+      }
+      if (isExploration) {
+        functionDeclarations.push({
+          name: END_ACTIVITY_TOOL,
+          description:
+            'Call right after you have congratulated the child and said goodbye at the very end of the activity.',
+          parameters: { type: 'object', properties: {} },
+        });
+      }
       this._send({
         setup: {
           model: data.model,
@@ -268,37 +296,7 @@ export class LiveClient {
           },
           inputAudioTranscription: {},
           outputAudioTranscription: {},
-          ...(isGuided
-            ? {
-                tools: [
-                  {
-                    functionDeclarations: [
-                      {
-                        name: MARK_STEP_TOOL,
-                        description:
-                          'Call the moment the child has correctly said the current mission step’s target sentence.',
-                        parameters: {
-                          type: 'object',
-                          properties: {
-                            step_order: {
-                              type: 'integer',
-                              description: 'step_order of the step the child just completed',
-                            },
-                          },
-                          required: ['step_order'],
-                        },
-                      },
-                      {
-                        name: OFF_TOPIC_TOOL,
-                        description:
-                          'Call when the child says something unrelated to the current step.',
-                        parameters: { type: 'object', properties: {} },
-                      },
-                    ],
-                  },
-                ],
-              }
-            : {}),
+          ...(functionDeclarations.length > 0 ? { tools: [{ functionDeclarations }] } : {}),
           ...(isKidMode
             ? {
                 realtimeInputConfig: {
@@ -369,6 +367,11 @@ export class LiveClient {
    */
   sendAudioChunk(pcm16Base64: string) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    // Kid Mode opening: chặn mic cho tới khi AI nói xong câu chào mở đầu. Nếu trẻ nói trong lúc
+    // AI chưa kịp phát tiếng (aiSpeaking còn false), chunk mic sẽ đến Gemini như một user turn
+    // THỨ HAI song song với GUIDED_OPENING_TEXT/ảnh → model sinh 2 response chồng nhau ("2 phiên
+    // nói song song"). Cleared khi AI bắt đầu phát audio chào (xem modelTurn) hoặc turnComplete đầu.
+    if (this.waitForFirstAiTurn) return;
     // Gate mic while AI audio is still playing to prevent speaker echo being fed back to
     // Gemini (hardware AEC alone is not reliable on all devices / Android).
     // The gate is cleared by: drain timer, inputTranscription arrival, or empty serverContent.
@@ -491,6 +494,8 @@ export class LiveClient {
           }
         } else if (fc.name === OFF_TOPIC_TOOL) {
           this._handleOffTopic();
+        } else if (fc.name === END_ACTIVITY_TOOL) {
+          this.cb.onActivityComplete?.();
         }
         return { id: fc.id, name: fc.name, response };
       });
@@ -522,6 +527,8 @@ export class LiveClient {
             this.aiSpeaking = true;
             this.aiAudioStartTime = Date.now();
             this.aiAudioByteCount = 0;
+            // AI đã bắt đầu câu mở đầu → từ đây aiSpeaking đảm nhiệm việc gate mic.
+            this.waitForFirstAiTurn = false;
           }
           // base64 → PCM byte count (Gemini outputs 24 kHz 16-bit mono = 48000 B/s)
           const bytes = Uint8Array.from(atob(inlineData.data), (c) => c.charCodeAt(0));
@@ -586,7 +593,8 @@ export class LiveClient {
     if (sc.turnComplete || sc.generationComplete) {
       this._flushCurrentUserTurn();
       this._flushCurrentAiTurn();
-      this._checkStepProgress();
+      // Fallback: nếu lượt mở đầu hoàn tất mà không có audio (hiếm), vẫn mở mic để không kẹt.
+      this.waitForFirstAiTurn = false;
       // Lượt này AI không gọi report_off_topic ⇒ đã quay lại đúng nhiệm vụ → reset streak.
       // Chỉ trong Kid Mode guided (turnLimitMs > 0). offTopicThisTurn được set ở _handleOffTopic.
       if (this.turnLimitMs > 0 && !this.offTopicThisTurn) this.offTopicStreak = 0;
@@ -611,57 +619,6 @@ export class LiveClient {
       }, remainingMs);
       this.cb.onTranscriptUpdate([...this.turns]);
     }
-  }
-
-  // Kid Mode (guided): gọi sau mỗi lượt AI hoàn tất. Nếu lượt này KHÔNG gọi mark_step_complete
-  // (stepAdvancedThisTurn=false) trong khi vẫn còn bước chưa xong, đếm dồn; tới
-  // STEP_REMINDER_AFTER_TURNS lượt thì gửi reminder ẩn ĐÚNG 1 LẦN/bước (chỉ nhắc model gọi tool
-  // NẾU trẻ đã đạt goal — không tự advance, tránh vượt bước khi trẻ đang trả lời sai; one-shot
-  // để không nhắc đi nhắc lại liên tục khi trẻ làm sai nhiều lượt).
-  private _checkStepProgress() {
-    if (this.missionSteps.length === 0 || this.stepIndex >= this.missionSteps.length) {
-      this.stepAdvancedThisTurn = false;
-      return;
-    }
-
-    if (this.stepAdvancedThisTurn) {
-      this.stepAdvancedThisTurn = false;
-      this.turnsSinceStepEvent = 0;
-      return;
-    }
-
-    this.turnsSinceStepEvent++;
-    // CHỈ nhắc khi trẻ ĐÃ nói gì đó kể từ lần sang bước trước. Reminder mang nghĩa "nếu câu trả
-    // lời vừa rồi của trẻ đã đạt goal mà bạn quên gọi tool thì gọi đi" — vô nghĩa (và gây hại)
-    // khi trẻ chưa lên tiếng: ở màn mở đầu, model phát 1 lượt chào + 1 lượt RỖNG, nếu nhắc lúc
-    // này model sẽ hỏi lại câu Step 1 lần nữa → trẻ nghe câu đầu 2 lần.
-    if (
-      this.childSpokeSinceAdvance &&
-      this.turnsSinceStepEvent >= STEP_REMINDER_AFTER_TURNS &&
-      !this.reminderSentForCurrentStep
-    ) {
-      this.reminderSentForCurrentStep = true;
-      this._sendStepReminder();
-    }
-  }
-
-  // Gửi nhắc ẩn về mục tiêu bước hiện tại — dùng clientContent role "user" giống cơ chế
-  // EXPLORATION_OPENING_TEXT (chỉ dẫn nội bộ cho model, model được yêu cầu không nói lại
-  // nguyên văn cho trẻ nghe).
-  private _sendStepReminder() {
-    const step = this.missionSteps[this.stepIndex];
-    if (!step) return;
-    const text =
-      `(Reminder for you, the AI — do not say this out loud or mention it to the child): ` +
-      `You are still on Step ${step.stepOrder} — goal: "${step.targetSentence}" (reached when ${step.intent}). ` +
-      `If the child's last reply already satisfies this goal, call the ${MARK_STEP_TOOL} function now ` +
-      `with step_order ${step.stepOrder}, then praise them and move on to the next step.`;
-    this._send({
-      clientContent: {
-        turns: [{ role: 'user', parts: [{ text }] }],
-        turnComplete: true,
-      },
-    });
   }
 
   private _startTurnTimer() {
@@ -712,18 +669,14 @@ export class LiveClient {
   }
 
   // Kid Mode (guided): AI gọi mark_step_complete (qua toolCall) → sang bước kế. Client tự tăng
-  // stepIndex 1 đơn vị mỗi lần (không tin tham số step_order để tránh desync). stepAdvancedThisTurn
-  // báo cho _checkStepProgress biết lượt này đã có sự kiện (khỏi đếm dồn reminder/force-advance).
+  // stepIndex 1 đơn vị mỗi lần (không tin tham số step_order để tránh desync).
   private _handleStepComplete(): boolean {
     // Guard chống "kết thúc sớm": chỉ chấp nhận nếu trẻ đã nói gì đó kể từ lần advance trước.
     // Nếu chưa, model đang gọi tool cho bước nó vừa hỏi (trước khi trẻ trả lời) → từ chối.
     if (!this.childSpokeSinceAdvance) return false;
     this.childSpokeSinceAdvance = false;
     this.offTopicStreak = 0;
-    this.stepAdvancedThisTurn = true;
     this.stepIndex = Math.min(this.stepIndex + 1, this.missionSteps.length);
-    this.turnsSinceStepEvent = 0;
-    this.reminderSentForCurrentStep = false;
     this.cb.onStepAdvance?.();
     return true;
   }
@@ -736,11 +689,13 @@ export class LiveClient {
     this.cb.onOffTopic?.(this.offTopicStreak, this.turnOrder);
   }
 
-  // Defensive: tiến trình nay do tool-call điều khiển, nhưng phòng model thi thoảng vẫn đọc trại
-  // marker cũ ("step done"/"off topic") vào audio → strip khỏi text hiển thị/lưu trữ. Không bắn
-  // callback. Fuzzy-match nằm ở lib/markerProtocol.ts (pure, có unit test riêng).
+  // Defensive: tiến trình nay do tool-call điều khiển, nhưng phòng model thi thoảng đọc thành
+  // tiếng vào audio → strip khỏi text hiển thị/lưu trữ. Gồm: marker cũ ("step done"/"off topic")
+  // và cú pháp gọi hàm rò rỉ ("report_off_topic()", "report_(", "mark_step_complete(...)"). Không
+  // bắn callback. Regex nằm ở lib/markerProtocol.ts (pure, có unit test riêng).
   private _stripLeftoverMarkers(text: string): string {
-    return stripOffTopicMarker(stripStepDoneMarker(text).cleaned).cleaned;
+    const noMarkers = stripOffTopicMarker(stripStepDoneMarker(text).cleaned).cleaned;
+    return stripToolCallArtifacts(noMarkers).cleaned;
   }
 
   private _send(payload: unknown) {

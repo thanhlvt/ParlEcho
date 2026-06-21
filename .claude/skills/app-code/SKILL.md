@@ -78,7 +78,11 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
     tap-to-save), lưu `conversations.mode='kid_exploration'`; chấm sao theo
     `avg_pronunciation` (không có bước/hint), lưu `exploration_results`
     (theo `exploration_image_id` đã chọn — dùng để hiện sao ở lưới chọn
-    ảnh) + thưởng biscuit + Lucky Wheel giống `useMissionSession`.
+    ảnh) + thưởng biscuit + Lucky Wheel giống `useMissionSession`. Tự kết thúc
+    sau lời tạm biệt qua tool `end_activity` (`onActivityComplete` → đợi AI nói
+    xong rồi `endSession`; fallback `activityEndFallbackRef` reset ở
+    `onAudioChunk`) — giống cơ chế kết thúc bước cuối của Guided, không chỉ dựa
+    vào Gemini đóng socket.
 - `SwipeableRow.tsx`: dùng cho list có hành động xoá (vd. lịch sử phiên).
 
 ## Lib (`lib/`)
@@ -149,7 +153,10 @@ remainingSeconds, limitReached, showWarning }` — chỉ bọc nhánh `(kid)`.
   biết phải nói gì nếu AI ngồi im chờ. Cơ chế giống `EXPLORATION_OPENING_TEXT`
   của Image Exploration. System prompt ở `live-token` cũng phải nói rõ AI
   turn đầu là instruction ẩn để model không hiểu lầm là lời trẻ nói — sửa 1
-  bên thì phải sửa cả bên kia.
+  bên thì phải sửa cả bên kia. `LiveClient.waitForFirstAiTurn` chặn mic từ lúc
+  mở phiên tới khi AI nói xong câu mở đầu (chào / hỏi ảnh) — nếu không, trẻ nói
+  trước khi AI kịp phát tiếng sẽ thành user turn thứ 2 song song với opening →
+  Gemini sinh 2 response chồng nhau ("2 phiên nói song song").
 - **Guided Conversation** giới hạn 10 phút/phiên, mỗi lượt trẻ có tối đa 8s
   để nói (`TURN_LIMIT_SEC` trong `useMissionSession.ts`) trước khi
   companion nhắc lại. Tiến trình bước và lạc đề do AI báo qua FUNCTION CALL
@@ -157,13 +164,20 @@ remainingSeconds, limitReached, showWarning }` — chỉ bọc nhánh `(kid)`.
   trong system prompt, tool declaration ở `LiveClient` setup; handler
   `_handleStepComplete`/`_handleOffTopic` gửi `toolResponse` đồng bộ với `id`
   khớp rồi model nói tiếp) — KHÔNG đọc marker thành tiếng, KHÔNG dùng
-  heuristic phía client để suy đoán. Lưới an toàn `_checkStepProgress`
-  (reminder ẩn 1 lần/bước — KHÔNG tự force-advance để tránh vượt bước khi trẻ trả
-  lời sai) phòng khi model quên gọi tool; guard `childSpokeSinceAdvance` từ chối
-  `mark_step_complete` nếu trẻ chưa nói gì kể từ lần sang bước trước (chống
-  goodbye sớm ở bước cuối);
-  `lib/markerProtocol.ts` nay chỉ strip phòng hờ marker cũ lọt vào audio (xem
-  skill `edge-functions`/`unit-test`). Kid Mode đặt `realtimeInputConfig`
+  heuristic phía client để suy đoán. KHÔNG có reminder ẩn / force-advance phía
+  client (đã bỏ: reminder bị model đọc to ra transcript + gây re-greet câu đầu).
+  Chỉ guard `childSpokeSinceAdvance` từ chối `mark_step_complete` nếu trẻ chưa
+  nói gì kể từ lần sang bước trước (chống goodbye sớm ở bước cuối).
+  `lib/markerProtocol.ts` strip phòng hờ marker cũ + cú pháp gọi hàm rò rỉ
+  (`stripToolCallArtifacts`) khỏi transcript (xem skill
+  `edge-functions`/`unit-test`). **Tự kết thúc sau bước cuối:** khi
+  `mark_step_complete` bước cuối được chấp nhận → `missionCompletedRef=true`;
+  bình thường AI nói lời tạm biệt rồi `onAiAudioDone` gọi `endSession`. Nhưng
+  với tool-call, model đôi khi gọi mark cuối mà KHÔNG phát lượt goodbye nào
+  (khác thời marker — marker + goodbye luôn cùng 1 turn) → `onAiAudioDone`
+  không chạy. Có fallback `missionEndFallbackRef` (`MISSION_END_SILENCE_MS`,
+  reset ở `onAudioChunk` để không cắt lời tạm biệt) bảo đảm phiên vẫn tự kết
+  thúc. Kid Mode đặt `realtimeInputConfig`
   (silenceDurationMs cao + `NO_INTERRUPTION`) ở setup message để trẻ ngắt
   quãng không bị AI chen lời và tránh echo làm AI lặp câu.
 - **Hết giờ chơi (Kid Mode, giới hạn theo phiên) không cắt phiên giữa

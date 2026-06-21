@@ -149,17 +149,17 @@ async function main() {
     turns.forEach((t, i) =>
       console.log(`  turn ${i + 1}: audioChunks=${t.audioChunks} text=${JSON.stringify(t.text)}`),
     );
-    const texts = turns.map((t) => t.text.trim()).filter(Boolean);
-    const dup =
-      texts.length >= 2 && texts[0] && texts.some((t, i) => i > 0 && t === texts[0]);
+    // Only turns WITH audio are heard by the child; empty turns are silent.
+    const spokenTurns = turns.filter((t) => t.audioChunks > 0);
     console.log('\nVerdict:');
-    if (turns.length >= 2) {
+    if (spokenTurns.length >= 2) {
       console.log(
-        `  ⚠️ Model produced ${turns.length} turns for the single opening` +
-          (dup ? ' and at least two are IDENTICAL → model double-speaks the greeting.' : '.'),
+        `  ⚠️ Child hears ${spokenTurns.length} spoken turns at the opening → double-greeting reproduced.`,
       );
     } else {
-      console.log('  ✅ Model produced ONE opening turn (no double-greeting at the model level).');
+      console.log(
+        `  ✅ Child hears ${spokenTurns.length} spoken turn at the opening (no double-greeting).`,
+      );
     }
     console.log('==================================');
     try {
