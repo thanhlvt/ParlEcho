@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Checklist các gotcha đặc thù của ParlEcho cần soát lại khi review thay đổi (audio singleton, RLS/Storage độc lập, GRANT, marker protocol [STEP_DONE]/[OFFTOPIC] fuzzy, realtimeInputConfig Kid Mode, screen time mid-sentence, RPC atomic, PIN hashing). Dùng khi review PR/diff trong repo này.
+description: Checklist các gotcha đặc thù của ParlEcho cần soát lại khi review thay đổi (audio singleton, RLS/Storage độc lập, GRANT, tool-call protocol mark_step_complete/report_off_topic BLOCKING, realtimeInputConfig Kid Mode, screen time mid-sentence, RPC atomic, PIN hashing). Dùng khi review PR/diff trong repo này.
 ---
 
 # Code review checklist (đặc thù ParlEcho)
@@ -34,13 +34,15 @@ Dùng checklist này khi review thay đổi liên quan các vùng nhạy cảm d
 - [ ] `pronounce` không gọi LLM để chấm điểm — chỉ Levenshtein cục bộ.
 - [ ] `/chat` corrections chỉ giữ lại nếu cụm từ lỗi xuất hiện thật trong
       message gần nhất của user.
-- [ ] Marker (`[STEP_DONE]`/`[OFFTOPIC]`) là nguồn duy nhất báo tiến trình
-      — không thêm heuristic suy đoán phía client. Marker trong system
-      prompt (`live-token`) phải khớp regex fuzzy-match ở
-      `lib/markerProtocol.ts` (dùng trong `LiveClient._consumeMarkers`) —
-      sửa regex phải cập nhật cả `lib/markerProtocol.test.ts`. KHÔNG dùng
-      function-calling cho model Live 3.1 (FC blocking → treo phiên sau
-      `toolResponse`).
+- [ ] Tool-call (`mark_step_complete`/`report_off_topic`) là nguồn duy nhất
+      báo tiến trình — không thêm heuristic suy đoán phía client. Tên tool
+      trong system prompt (`live-token`) phải khớp `functionDeclarations` ở
+      setup message (`lib/liveClient.ts`). BLOCKING (mặc định): handler
+      `toolCall` phải gửi `toolResponse` NGAY, đồng bộ, `id` khớp chính xác —
+      nếu không model treo. Giữ lưới an toàn reminder/force-advance
+      (`_checkStepProgress`) khi model quên gọi tool. `lib/markerProtocol.ts`
+      nay chỉ là defensive display cleanup (không còn lái tiến trình); sửa
+      regex vẫn cập nhật `lib/markerProtocol.test.ts`.
 - [ ] Kid Mode đặt `realtimeInputConfig` (silenceDurationMs cao +
       `NO_INTERRUPTION`) ở setup message; đổi giá trị này có thể làm AI
       chen lời/lặp câu — chỉ áp cho kid mode, không đụng barge-in adult.

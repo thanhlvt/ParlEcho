@@ -32,12 +32,12 @@ const METHOD_PROMPTS: Record<string, string> = {
     "Act as a tough challenger. Ask challenging follow-up questions, probe the user's arguments, and put moderate conversational pressure on them.",
 };
 
-// Kid Mode (guided): markers AI chèn vào cuối lời nói để client phát hiện tiến trình
-// bước/lạc đề. Client (LiveClient) match fuzzy + strip khỏi text hiển thị. KHÔNG dùng
-// function-calling vì model Live 3.1 không nói tiếp sau khi nhận toolResponse (treo phiên).
-// PHẢI khớp STEP_DONE_MARKER / OFFTOPIC_MARKER trong lib/liveClient.ts.
-const STEP_DONE_MARKER = '[STEP_DONE]';
-const OFFTOPIC_MARKER = '[OFFTOPIC]';
+// Kid Mode (guided): AI báo tiến trình bước/lạc đề bằng FUNCTION CALL (đồng bộ/BLOCKING),
+// KHÔNG đọc marker thành tiếng. Model gửi toolCall rồi tạm dừng audio cho tới khi client
+// gửi toolResponse (id khớp) — sau đó nói tiếp khen + hỏi bước kế. Tên tool ở đây PHẢI khớp
+// functionDeclarations trong lib/liveClient.ts (setup message).
+const MARK_STEP_TOOL = 'mark_step_complete';
+const OFF_TOPIC_TOOL = 'report_off_topic';
 
 interface MissionStepPayload {
   stepOrder: number;
@@ -70,16 +70,19 @@ function buildKidGuidedPrompt(opts: {
     `Speak in an enthusiastic, warm, encouraging, and highly simplified tone suitable for children. Use very short, simple sentences. ` +
     `You are guiding the child through a mission called "${mission.title}" (${mission.topic}), step by step, in this exact order:\n` +
     `${stepsList}\n` +
+    `You have two tools. Calling a tool is silent — the child never hears it. Tools are how you tell the app what is happening:\n` +
+    `- ${MARK_STEP_TOOL}(step_order): call this the moment the child's reply satisfies the CURRENT step's goal.\n` +
+    `- ${OFF_TOPIC_TOOL}(): call this when the child says something unrelated to the current step.\n` +
     `Rules:\n` +
     `1. Only work on ONE step at a time, starting at step 1. Ask a closed question or give exactly two choices — never ask open-ended questions.\n` +
-    `2. When the child's reply satisfies the CURRENT step's goal, briefly praise them, then move on to asking about the next step, and append the exact text "${STEP_DONE_MARKER}" at the very end of your reply.\n` +
-    `3. After the child completes the LAST step, congratulate them warmly and say goodbye — still append "${STEP_DONE_MARKER}" at the end.\n` +
-    `4. If the child says something unrelated to the current step (off-topic), acknowledge it in at most one short friendly sentence, then gently steer back to the current step's question, and append the exact text "${OFFTOPIC_MARKER}" at the very end of your reply.\n` +
-    `5. Never include "${STEP_DONE_MARKER}" and "${OFFTOPIC_MARKER}" in the same reply.\n` +
+    `2. When the child's reply satisfies the CURRENT step's goal, FIRST call ${MARK_STEP_TOOL} with that step's step_order. After the tool result comes back, briefly praise the child and move on to asking about the next step.\n` +
+    `3. After the child completes the LAST step, call ${MARK_STEP_TOOL} for that last step, then congratulate them warmly and say goodbye.\n` +
+    `4. If the child says something unrelated to the current step (off-topic), call ${OFF_TOPIC_TOOL}, then acknowledge it in at most one short friendly sentence and gently steer back to the current step's question.\n` +
+    `5. If the child's reply does NOT yet satisfy the current step's goal (wrong or incomplete), do NOT call any tool — just gently repeat the target sentence and encourage them to try again.\n` +
     `6. Do NOT correct grammar or pronunciation — just keep the mission moving forward warmly.\n` +
     `7. If the child speaks Vietnamese, gently encourage them to try in ${langLabel}.\n` +
     `8. Say each thing only ONCE per turn — never repeat or rephrase the same praise/question/goodbye again in the same reply, even with different wording.\n` +
-    `9. CRITICAL — never forget rule 2/3: forgetting to append "${STEP_DONE_MARKER}" when a step's goal is met is the single worst mistake you can make, because it silently breaks the child's progress tracking. If you see a message marked "(Reminder for you, the AI — do not say this out loud...)", that means you already forgot it at least once — follow it immediately and do not mention the reminder to the child.`
+    `9. CRITICAL — never forget rule 2/3: forgetting to call ${MARK_STEP_TOOL} when a step's goal is met is the single worst mistake you can make, because it silently breaks the child's progress tracking. If you see a message marked "(Reminder for you, the AI — do not say this out loud...)", that means you already forgot it at least once — follow it immediately and do not mention the reminder to the child.`
   );
 }
 

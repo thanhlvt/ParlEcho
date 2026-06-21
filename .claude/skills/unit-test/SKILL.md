@@ -42,9 +42,10 @@ LẪN trong file có side-effect nặng (class WebSocket, component màn hình,
 hook gọi Supabase), tách phần thuần ra 1 file `lib/` riêng, export, rồi
 file gốc import lại — KHÔNG đổi hành vi, chỉ di chuyển code. Ví dụ đã làm:
 
-- `lib/markerProtocol.ts` — tách regex fuzzy-match `[STEP_DONE]`/
-  `[OFFTOPIC]` ra khỏi `LiveClient._consumeMarkers()` (giữ phần
-  side-effect/state — `offTopicStreak`, callback — lại trong class).
+- `lib/markerProtocol.ts` — regex fuzzy-match `[STEP_DONE]`/`[OFFTOPIC]` tách
+  khỏi `LiveClient` (nay chỉ defensive display cleanup —
+  `_stripLeftoverMarkers` — vì tiến trình do tool-call điều khiển; phần
+  side-effect/state vẫn trong class).
 - `lib/audioFormat.ts` — `buildWavHeader`/`pcmToWav`/`bytesToBase64`, tách
   khỏi `lib/liveClient.ts` (vốn import `supabase`/`sentry`).
 - `lib/streak.ts` — `computeStreak`/`buildWeekData`/`toLocalDateKey`, tách

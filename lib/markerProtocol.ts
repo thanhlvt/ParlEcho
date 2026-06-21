@@ -1,5 +1,8 @@
-// Kid Mode (guided): marker AI chèn cuối lời nói (qua outputTranscription) để báo tiến trình.
-// Match fuzzy để chịu được transcription bỏ ngoặc/đọc trại (xem liveClient.ts _consumeMarkers).
+// Kid Mode (guided): DEFENSIVE display cleanup. Tiến trình bước/lạc đề nay do FUNCTION CALL
+// điều khiển (xem liveClient.ts _handleStepComplete / _handleOffTopic), KHÔNG còn dùng marker.
+// Hai hàm này chỉ strip nốt marker cũ nếu model lỡ đọc trại "step done"/"off topic" vào audio,
+// để không lọt vào transcript hiển thị/lưu trữ (liveClient.ts _stripLeftoverMarkers). Match fuzzy
+// để chịu được transcription bỏ ngoặc/đọc trại.
 const STEP_DONE_RE = /\[?\s*step[\s_]*done\s*\]?/gi;
 const OFFTOPIC_RE = /\[?\s*off[\s_]*topic\s*\]?/gi;
 

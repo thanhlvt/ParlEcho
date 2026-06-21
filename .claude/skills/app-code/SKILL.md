@@ -145,12 +145,15 @@ remainingSeconds, limitReached, showWarning }` — chỉ bọc nhánh `(kid)`.
   rollback nếu `update()` lỗi (xem `toggleKidMode` ở `(app)/profile.tsx`).
 - **Guided Conversation** giới hạn 10 phút/phiên, mỗi lượt trẻ có tối đa 8s
   để nói (`TURN_LIMIT_SEC` trong `useMissionSession.ts`) trước khi
-  companion nhắc lại. Tiến trình bước (`[STEP_DONE]`) và lạc đề
-  (`[OFFTOPIC]`) được AI chèn marker vào cuối lời nói (`live-token` yêu cầu
-  trong system prompt, `LiveClient._consumeMarkers` gọi
-  `lib/markerProtocol.ts` để match fuzzy rồi strip, có unit test riêng —
-  xem skill `edge-functions`/`unit-test`) — KHÔNG dùng heuristic phía client để suy
-  đoán, tránh sai lệch với system prompt. Kid Mode đặt `realtimeInputConfig`
+  companion nhắc lại. Tiến trình bước và lạc đề do AI báo qua FUNCTION CALL
+  `mark_step_complete`/`report_off_topic` (BLOCKING — `live-token` yêu cầu
+  trong system prompt, tool declaration ở `LiveClient` setup; handler
+  `_handleStepComplete`/`_handleOffTopic` gửi `toolResponse` đồng bộ với `id`
+  khớp rồi model nói tiếp) — KHÔNG đọc marker thành tiếng, KHÔNG dùng
+  heuristic phía client để suy đoán. Lưới an toàn `_checkStepProgress`
+  (reminder + force-advance) phòng khi model quên gọi tool;
+  `lib/markerProtocol.ts` nay chỉ strip phòng hờ marker cũ lọt vào audio (xem
+  skill `edge-functions`/`unit-test`). Kid Mode đặt `realtimeInputConfig`
   (silenceDurationMs cao + `NO_INTERRUPTION`) ở setup message để trẻ ngắt
   quãng không bị AI chen lời và tránh echo làm AI lặp câu.
 - **Hết giờ chơi (Kid Mode, giới hạn theo phiên) không cắt phiên giữa

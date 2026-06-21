@@ -219,14 +219,14 @@ màn tổng kết mission.
    - Endpoint constrained/ephemeral **không chặn** image input.
    - Model `models/gemini-3.1-flash-live-preview` (giống live-token hiện tại).
    - Audio output đã được chứng minh bởi Live adult hiện hành (cùng model+endpoint).
-2. ~~**Phát hiện "đã sang bước"** (Guided)~~ **✅ ĐÃ GIẢI QUYẾT (triển khai
-   thực tế ở Pha 2, không cần prototype riêng).** Chọn marker token trong
-   outputTranscription (`[STEP_DONE]`, `[OFFTOPIC]`) thay vì function calling —
-   đơn giản hơn, không cần khai báo tool schema cho Live API, và parse ở thời
-   điểm `turnComplete` (text đã đầy đủ, không bị cắt giữa stream) nên không lo
-   marker bị chia làm nhiều chunk. System prompt (`live-token`) ép AI luôn
-   append đúng marker ở cuối câu trả lời khi đạt điều kiện; `LiveClient` strip
-   marker trước khi hiển thị/lưu transcript.
+2. ~~**Phát hiện "đã sang bước"** (Guided)~~ **✅ ĐÃ GIẢI QUYẾT.** Nay dùng
+   FUNCTION CALL `mark_step_complete`/`report_off_topic` (BLOCKING) thay cho
+   marker token. Lý do đổi: marker `[STEP_DONE]`/`[OFFTOPIC]` (bản đầu) bị model
+   đọc thành tiếng vì output chỉ là AUDIO → khó hiểu cho trẻ. Tool call đi qua
+   kênh riêng nên không bị đọc. System prompt (`live-token`) yêu cầu AI gọi tool;
+   `LiveClient` khai báo `functionDeclarations` ở setup, nhận `toolCall` rồi gửi
+   `toolResponse` đồng bộ (`id` khớp) để model nói tiếp. Giữ lưới an toàn
+   reminder/force-advance phòng model quên gọi tool.
 3. **Per-turn 8s + AEC gating:** `LiveClient` đã có cơ chế `aiSpeaking` mute mic
    phức tạp; turn-timer mới không được xung đột.
 4. **Tách route `(kid)`:** RouteGuard + AuthProvider xử lý chuyển mode mượt (không

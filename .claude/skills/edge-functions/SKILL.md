@@ -20,14 +20,15 @@ convention RN của app).
 - **`live-token`**: tạo ephemeral token cho Gemini Live WebSocket + dựng
   system prompt (kể cả `buildKidExplorationPrompt` cho Image Exploration —
   Gemini tự sinh câu hỏi 5W1H+Why từ ảnh, không dùng `scenario_lines`).
-  Với Guided Conversation, system prompt yêu cầu AI chèn marker
-  `[STEP_DONE]`/`[OFFTOPIC]` vào cuối lời nói khi đạt bước/lạc đề — client
-  (`LiveClient`) match FUZZY (regex không phân biệt hoa/thường, ngoặc tuỳ
-  chọn) rồi strip khỏi text hiển thị. KHÔNG dùng function-calling: model
-  Live 3.1 chỉ hỗ trợ FC blocking và KHÔNG nói tiếp sau khi nhận
-  `toolResponse` (treo phiên — đã test). Vì response chỉ là AUDIO, marker
-  phải qua vòng audio→transcription nên match fuzzy để chịu được model đọc
-  trại/transcription bỏ ngoặc (xem skill `app-code`).
+  Với Guided Conversation, system prompt yêu cầu AI gọi FUNCTION CALL
+  `mark_step_complete(step_order)` (xong bước) / `report_off_topic()` (lạc
+  đề) — KHÔNG đọc marker thành tiếng. Tool declaration khai báo ở client
+  (`LiveClient` setup, mode `kid_guided`), tên tool PHẢI khớp prompt
+  `live-token`. Là function-calling ĐỒNG BỘ (BLOCKING, không set `behavior`):
+  model gửi `toolCall` rồi tạm dừng audio cho tới khi client gửi
+  `toolResponse` có `id` khớp + `response.result`, sau đó nói tiếp khen + hỏi
+  bước kế. (Trước đây tưởng FC "treo phiên" — thực ra do chưa gửi/sai `id`
+  trong `toolResponse`; gửi đúng thì model nói tiếp bình thường.)
 - **`session-review`**: tóm tắt sau buổi Live — `avg_pronunciation`,
   `fluency`, `vocab_to_learn`, `corrections`. Dùng cho cả Live tự do
   (adult) và Kid Mode (Guided Conversation + Image Exploration đều gọi lại
@@ -53,13 +54,16 @@ convention RN của app).
   tái dùng thẳng `GOOGLE_GENAI_API_KEY`, không cần secret/API riêng. Nếu
   JSON trả về không parse được, mặc định `is_safe: false` (an toàn là
   chặn duyệt, không tự ý approve khi không chắc).
-- **Marker protocol (`live-token` ↔ `LiveClient`)**: `[STEP_DONE]`/
-  `[OFFTOPIC]` là cách DUY NHẤT để báo tiến trình bước/lạc đề — không thêm
-  heuristic phía client để suy đoán, vì sẽ lệch với system prompt khi đổi
-  prompt mà quên đổi client (hoặc ngược lại). Marker trong system prompt
-  (`live-token/index.ts`) PHẢI khớp regex match ở `_consumeMarkers`
-  (`lib/liveClient.ts`). KHÔNG quay lại function-calling cho model 3.1 (FC
-  blocking → treo phiên sau `toolResponse`).
+- **Tool-call protocol (`live-token` ↔ `LiveClient`)**: tiến trình bước/lạc
+  đề báo qua FUNCTION CALL `mark_step_complete`/`report_off_topic` — không
+  thêm heuristic phía client để suy đoán, vì sẽ lệch với system prompt khi
+  đổi prompt mà quên đổi client (hoặc ngược lại). Tên tool trong system prompt
+  (`live-token/index.ts`) PHẢI khớp `functionDeclarations` ở setup message
+  (`lib/liveClient.ts`). BLOCKING (mặc định, không set `behavior`): handler
+  `toolCall` phải gửi `toolResponse` NGAY, đồng bộ, `id` khớp chính xác — nếu
+  không model treo (đây mới là nguyên nhân "treo phiên" trước kia, không phải
+  model không hỗ trợ FC). Lưới an toàn client: reminder + force-advance khi
+  model quên gọi tool (xem `_checkStepProgress`).
 - **`realtimeInputConfig` cho Kid Mode** (setup message ở `LiveClient`):
   `silenceDurationMs` cao (1500ms) + sensitivity `LOW` + `activityHandling:
   NO_INTERRUPTION` để trẻ nói chậm/ngắt quãng không bị AI chen lời và tiếng

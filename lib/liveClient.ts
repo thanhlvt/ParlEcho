@@ -37,20 +37,19 @@ function concat(arrays: Uint8Array[]): Uint8Array {
 
 export type LiveState = 'idle' | 'connecting' | 'live' | 'ended' | 'error';
 
-// Kid Mode (guided): marker AI chèn cuối lời nói (qua outputTranscription) để báo tiến trình
-// nhiệm vụ — `[STEP_DONE]` (xong bước) và `[OFFTOPIC]` (lạc đề), khớp với live-token/index.ts.
-// Match FUZZY (xem lib/markerProtocol.ts) vì output chỉ là AUDIO nên marker phải qua vòng
-// audio→transcription, model có thể đọc trại hoặc transcription bỏ ngoặc/đổi gạch dưới.
-// KHÔNG dùng function-calling: model Live 3.1 chỉ hỗ trợ FC blocking và không nói tiếp sau
-// toolResponse (treo phiên).
-// PHẢI khớp STEP_DONE_MARKER trong supabase/functions/live-token/index.ts — dùng khi soạn
-// reminder gửi lại cho model (xem _sendStepReminder).
-const STEP_DONE_MARKER = '[STEP_DONE]';
+// Kid Mode (guided): AI báo tiến trình bước/lạc đề bằng FUNCTION CALL đồng bộ (BLOCKING),
+// không đọc marker thành tiếng. Model gửi toolCall rồi TẠM DỪNG audio cho tới khi client gửi
+// toolResponse có `id` khớp — sau đó nói tiếp khen + hỏi bước kế. Tên tool PHẢI khớp prompt ở
+// supabase/functions/live-token/index.ts. Vì là BLOCKING, handler toolCall phải gửi
+// toolResponse NGAY, đồng bộ (không await ở giữa) nếu không model sẽ treo.
+const MARK_STEP_TOOL = 'mark_step_complete';
+const OFF_TOPIC_TOOL = 'report_off_topic';
 
-// Model có thể quên gắn [STEP_DONE] khi hội thoại kéo dài (instruction drift của Live API).
-// Sau N lượt AI liên tiếp không thấy marker dù vẫn ở cùng bước, gửi 1 lần reminder ẩn nhắc
-// lại mục tiêu bước hiện tại; sau M lượt vẫn không có marker thì coi như model bị kẹt và tự
-// force-advance ở client để progress bar không treo vĩnh viễn.
+// Model có thể quên gọi mark_step_complete khi hội thoại kéo dài (instruction drift của Live
+// API), hoặc tool-calling Live đôi khi không ổn định. Sau N lượt AI liên tiếp không gọi tool
+// dù vẫn ở cùng bước, gửi 1 lần reminder ẩn nhắc lại mục tiêu bước hiện tại; sau M lượt vẫn
+// không có tool thì coi như model bị kẹt và tự force-advance ở client để progress bar không
+// treo vĩnh viễn.
 const STEP_REMINDER_AFTER_TURNS = 2;
 const STEP_FORCE_ADVANCE_AFTER_TURNS = 4;
 
@@ -130,7 +129,10 @@ export class LiveClient {
   private stepIndex = 0;
   private turnsSinceStepEvent = 0;
   private reminderSentForCurrentStep = false;
-  private lastFlushAdvancedStep = false;
+  // Cờ "đã có sự kiện trong lượt này" — set khi nhận toolCall, đọc + reset ở _checkStepProgress
+  // (chạy lúc turnComplete) để biết model có gọi tool hay không trong lượt vừa rồi.
+  private stepAdvancedThisTurn = false;
+  private offTopicThisTurn = false;
   // Kid Mode: server cấu hình activityHandling = NO_INTERRUPTION. Khi true, KHÔNG gỡ cờ
   // aiSpeaking dựa trên inputTranscription lúc AI đang nói — tránh tiếng AI vọng vào mic bị
   // hiểu là trẻ nói (echo) làm mở mic giữa chừng. Chỉ drain-timer sau turnComplete mở lại mic.
@@ -177,7 +179,8 @@ export class LiveClient {
     this.stepIndex = 0;
     this.turnsSinceStepEvent = 0;
     this.reminderSentForCurrentStep = false;
-    this.lastFlushAdvancedStep = false;
+    this.stepAdvancedThisTurn = false;
+    this.offTopicThisTurn = false;
     this.cb.onStateChange('connecting');
 
     // 1. Lấy ephemeral token từ Edge Function
@@ -223,6 +226,10 @@ export class LiveClient {
       // nhầm VAD; NO_INTERRUPTION để tiếng AI vọng vào mic không "ngắt" model khiến nó nói lại
       // câu từ đầu. Chỉ áp cho Kid Mode — Live tự do (adult) giữ mặc định để cho phép barge-in.
       const isKidMode = opts.mode === 'kid_guided' || opts.mode === 'kid_exploration';
+      // Guided: khai báo 2 tool BLOCKING để AI báo tiến trình bước/lạc đề (xem MARK_STEP_TOOL).
+      // KHÔNG đặt `behavior` → mặc định BLOCKING: model dừng audio sau toolCall, nói tiếp khi
+      // nhận toolResponse. Exploration/adult không cần tool.
+      const isGuided = opts.mode === 'kid_guided';
       this._send({
         setup: {
           model: data.model,
@@ -240,6 +247,37 @@ export class LiveClient {
           },
           inputAudioTranscription: {},
           outputAudioTranscription: {},
+          ...(isGuided
+            ? {
+                tools: [
+                  {
+                    functionDeclarations: [
+                      {
+                        name: MARK_STEP_TOOL,
+                        description:
+                          'Call the moment the child has correctly said the current mission step’s target sentence.',
+                        parameters: {
+                          type: 'object',
+                          properties: {
+                            step_order: {
+                              type: 'integer',
+                              description: 'step_order of the step the child just completed',
+                            },
+                          },
+                          required: ['step_order'],
+                        },
+                      },
+                      {
+                        name: OFF_TOPIC_TOOL,
+                        description:
+                          'Call when the child says something unrelated to the current step.',
+                        parameters: { type: 'object', properties: {} },
+                      },
+                    ],
+                  },
+                ],
+              }
+            : {}),
           ...(isKidMode
             ? {
                 realtimeInputConfig: {
@@ -404,6 +442,28 @@ export class LiveClient {
       return;
     }
 
+    // Kid Mode (guided): AI gọi tool báo tiến trình. Model đang TẠM DỪNG audio chờ phản hồi
+    // (BLOCKING) — phải gửi toolResponse NGAY, đồng bộ, echo đúng `id`, để model nói tiếp.
+    const toolCall = msg.toolCall as
+      | { functionCalls?: Array<{ id?: string; name?: string; args?: Record<string, unknown> }> }
+      | undefined;
+    if (toolCall?.functionCalls) {
+      for (const fc of toolCall.functionCalls) {
+        if (fc.name === MARK_STEP_TOOL) this._handleStepComplete();
+        else if (fc.name === OFF_TOPIC_TOOL) this._handleOffTopic();
+      }
+      this._send({
+        toolResponse: {
+          functionResponses: toolCall.functionCalls.map((fc) => ({
+            id: fc.id,
+            name: fc.name,
+            response: { result: 'success' },
+          })),
+        },
+      });
+      return;
+    }
+
     const sc = msg.serverContent as Record<string, unknown> | undefined;
     if (!sc) {
       console.log('[LiveClient] Non-serverContent message keys:', Object.keys(msg).join(','));
@@ -491,6 +551,10 @@ export class LiveClient {
       this._flushCurrentUserTurn();
       this._flushCurrentAiTurn();
       this._checkStepProgress();
+      // Lượt này AI không gọi report_off_topic ⇒ đã quay lại đúng nhiệm vụ → reset streak.
+      // Chỉ trong Kid Mode guided (turnLimitMs > 0). offTopicThisTurn được set ở _handleOffTopic.
+      if (this.turnLimitMs > 0 && !this.offTopicThisTurn) this.offTopicStreak = 0;
+      this.offTopicThisTurn = false;
       // Delay re-enabling mic until buffered audio finishes playing.
       // totalAudioMs = byte count / 48000 B/s (24 kHz 16-bit mono).
       // elapsedMs = time since first chunk arrived — already-played portion.
@@ -513,21 +577,25 @@ export class LiveClient {
     }
   }
 
-  // Kid Mode (guided): gọi sau mỗi lượt AI hoàn tất. Nếu lượt này KHÔNG có marker
-  // [STEP_DONE] (lastFlushAdvancedStep=false) trong khi vẫn còn bước chưa xong, đếm dồn —
-  // tới STEP_REMINDER_AFTER_TURNS thì nhắc model 1 lần, tới STEP_FORCE_ADVANCE_AFTER_TURNS
-  // thì coi như model bị kẹt và tự advance ở client để progress bar không treo vĩnh viễn.
+  // Kid Mode (guided): gọi sau mỗi lượt AI hoàn tất. Nếu lượt này KHÔNG gọi mark_step_complete
+  // (stepAdvancedThisTurn=false) trong khi vẫn còn bước chưa xong, đếm dồn — tới
+  // STEP_REMINDER_AFTER_TURNS thì nhắc model 1 lần, tới STEP_FORCE_ADVANCE_AFTER_TURNS thì coi
+  // như model bị kẹt và tự advance ở client để progress bar không treo vĩnh viễn.
   private _checkStepProgress() {
-    if (this.missionSteps.length === 0 || this.stepIndex >= this.missionSteps.length) return;
+    if (this.missionSteps.length === 0 || this.stepIndex >= this.missionSteps.length) {
+      this.stepAdvancedThisTurn = false;
+      return;
+    }
 
-    if (this.lastFlushAdvancedStep) {
+    if (this.stepAdvancedThisTurn) {
+      this.stepAdvancedThisTurn = false;
       this.turnsSinceStepEvent = 0;
       return;
     }
 
     this.turnsSinceStepEvent++;
     if (this.turnsSinceStepEvent >= STEP_FORCE_ADVANCE_AFTER_TURNS) {
-      console.warn('[LiveClient] Step marker not seen for too long — forcing advance');
+      console.warn('[LiveClient] Step tool not called for too long — forcing advance');
       this.turnsSinceStepEvent = 0;
       this.reminderSentForCurrentStep = false;
       this.offTopicStreak = 0;
@@ -551,8 +619,8 @@ export class LiveClient {
     const text =
       `(Reminder for you, the AI — do not say this out loud or mention it to the child): ` +
       `You are still on Step ${step.stepOrder} — goal: "${step.targetSentence}" (reached when ${step.intent}). ` +
-      `If the child's last reply already satisfies this goal, praise them now, move on to the next step, ` +
-      `and remember to append the exact text "${STEP_DONE_MARKER}" at the end of your next reply.`;
+      `If the child's last reply already satisfies this goal, call the ${MARK_STEP_TOOL} function now ` +
+      `with step_order ${step.stepOrder}, then praise them and move on to the next step.`;
     this._send({
       clientContent: {
         turns: [{ role: 'user', parts: [{ text }] }],
@@ -592,7 +660,7 @@ export class LiveClient {
 
   private _flushCurrentAiTurn() {
     const rawText = this.currentAiText.trim();
-    const text = this._consumeMarkers(rawText);
+    const text = this._stripLeftoverMarkers(rawText);
     if (text || this.aiPcmChunks.length > 0) {
       const pcm = concat(this.aiPcmChunks);
       this.aiAudioSegments.push({ pcm, text, order: this.turnOrder });
@@ -608,34 +676,31 @@ export class LiveClient {
     }
   }
 
-  // Kid Mode (guided): tách marker tiến trình khỏi text hiển thị/lưu trữ + bắn callback.
-  // Fuzzy-match thực tế nằm ở lib/markerProtocol.ts (pure, có unit test riêng).
-  private _consumeMarkers(text: string): string {
-    let cleaned = text;
-    this.lastFlushAdvancedStep = false;
+  // Kid Mode (guided): AI gọi mark_step_complete (qua toolCall) → sang bước kế. Client tự tăng
+  // stepIndex 1 đơn vị mỗi lần (không tin tham số step_order để tránh desync). stepAdvancedThisTurn
+  // báo cho _checkStepProgress biết lượt này đã có sự kiện (khỏi đếm dồn reminder/force-advance).
+  private _handleStepComplete() {
+    this.offTopicStreak = 0;
+    this.stepAdvancedThisTurn = true;
+    this.stepIndex = Math.min(this.stepIndex + 1, this.missionSteps.length);
+    this.turnsSinceStepEvent = 0;
+    this.reminderSentForCurrentStep = false;
+    this.cb.onStepAdvance?.();
+  }
 
-    const step = stripStepDoneMarker(cleaned);
-    if (step.matched) {
-      cleaned = step.cleaned;
-      this.offTopicStreak = 0;
-      this.lastFlushAdvancedStep = true;
-      this.stepIndex = Math.min(this.stepIndex + 1, this.missionSteps.length);
-      this.turnsSinceStepEvent = 0;
-      this.reminderSentForCurrentStep = false;
-      this.cb.onStepAdvance?.();
-    }
+  // Kid Mode (guided): AI gọi report_off_topic. Giữ lại (dù system prompt tự lái về chủ đề) vì
+  // app cần log offtopic_turns cho Parent Dashboard (xem onOffTopic).
+  private _handleOffTopic() {
+    this.offTopicThisTurn = true;
+    this.offTopicStreak++;
+    this.cb.onOffTopic?.(this.offTopicStreak, this.turnOrder);
+  }
 
-    const offTopic = stripOffTopicMarker(cleaned);
-    if (offTopic.matched) {
-      cleaned = offTopic.cleaned;
-      this.offTopicStreak++;
-      this.cb.onOffTopic?.(this.offTopicStreak, this.turnOrder);
-    } else if (this.turnLimitMs > 0) {
-      // Chỉ reset streak trong Kid Mode guided — AI quay lại đúng nhiệm vụ
-      this.offTopicStreak = 0;
-    }
-
-    return cleaned;
+  // Defensive: tiến trình nay do tool-call điều khiển, nhưng phòng model thi thoảng vẫn đọc trại
+  // marker cũ ("step done"/"off topic") vào audio → strip khỏi text hiển thị/lưu trữ. Không bắn
+  // callback. Fuzzy-match nằm ở lib/markerProtocol.ts (pure, có unit test riêng).
+  private _stripLeftoverMarkers(text: string): string {
+    return stripOffTopicMarker(stripStepDoneMarker(text).cleaned).cleaned;
   }
 
   private _send(payload: unknown) {
