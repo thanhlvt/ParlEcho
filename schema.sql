@@ -159,6 +159,7 @@ create table profiles (
   is_kid_mode               boolean not null default false,
   parent_pin                text,                       -- hash PIN 4 số (KHÔNG lưu plaintext)
   companion_id              text,                       -- nhân vật đồng hành đã chọn
+  active_costume_id         text references costumes(id), -- trang phục đang mặc (null = không mặc gì)
   screen_time_limit_minutes int not null default 20,    -- giới hạn phút/phiên
   child_name                text,
   child_level               text default 'beginner',    -- 'beginner' | 'intermediate'

@@ -7,6 +7,7 @@ import { Companion } from '../../components/kid/Companion';
 import { LuckyWheel } from '../../components/kid/LuckyWheel';
 import { StarRow } from '../../components/kid/StarRow';
 import { useMissionSession } from '../../components/kid/useMissionSession';
+import { useProfile } from '../../providers/ProfileProvider';
 import { useTheme } from '../../providers/ThemeProvider';
 
 export default function MissionLiveScreen() {
@@ -14,12 +15,18 @@ export default function MissionLiveScreen() {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const session = useMissionSession(missionId);
+  const { activeCostumeEmoji } = useProfile();
 
   if (session.view === 'loading' || session.view === 'connecting' || session.view === 'saving') {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.centerFull}>
-          <Companion companionId={session.companion?.id} expression="thinking" size={120} />
+          <Companion
+            companionId={session.companion?.id}
+            expression="thinking"
+            size={120}
+            costumeEmoji={activeCostumeEmoji}
+          />
           <Text style={styles.statusText}>
             {session.view === 'saving' ? session.savingMsg : 'Đang chuẩn bị nhiệm vụ...'}
           </Text>
@@ -32,7 +39,12 @@ export default function MissionLiveScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.centerFull}>
-          <Companion companionId={session.companion?.id} expression="surprised" size={120} />
+          <Companion
+            companionId={session.companion?.id}
+            expression="surprised"
+            size={120}
+            costumeEmoji={activeCostumeEmoji}
+          />
           <Text style={styles.statusText}>{session.errorMsg || 'Có lỗi xảy ra.'}</Text>
           <TouchableOpacity style={styles.homeBtn} onPress={session.goHome} activeOpacity={0.85}>
             <Text style={styles.homeBtnText}>Về nhà</Text>
@@ -46,7 +58,12 @@ export default function MissionLiveScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={styles.finishedScroll}>
-          <Companion companionId={session.companion?.id} expression="cheering" size={140} />
+          <Companion
+            companionId={session.companion?.id}
+            expression="cheering"
+            size={140}
+            costumeEmoji={activeCostumeEmoji}
+          />
           <Text style={styles.finishedTitle}>Tuyệt vời! 🎉</Text>
           <Text style={styles.statusText}>Con đã hoàn thành nhiệm vụ rồi đó!</Text>
 
@@ -109,7 +126,12 @@ export default function MissionLiveScreen() {
       </View>
 
       <View style={styles.centerFull}>
-        <Companion companionId={session.companion?.id} expression={session.expression} size={170} />
+        <Companion
+          companionId={session.companion?.id}
+          expression={session.expression}
+          size={170}
+          costumeEmoji={activeCostumeEmoji}
+        />
 
         {session.lastAiText ? (
           <View style={styles.bubble}>

@@ -20,6 +20,7 @@ export default function CostumesScreen() {
   const [costumes, setCostumes] = useState<Costume[]>([]);
   const [ownedCostumeIds, setOwnedCostumeIds] = useState<Set<string>>(new Set());
   const [buyingId, setBuyingId] = useState<string | null>(null);
+  const [wearingId, setWearingId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -59,6 +60,20 @@ export default function CostumesScreen() {
     setBuyingId(null);
   }
 
+  // Mặc/cởi trang phục — chỉ đổi profiles.active_costume_id (RLS "own profile" đã cho phép
+  // tự update). Chạm vào costume đang mặc để cởi ra (active_costume_id = null).
+  async function toggleWear(costume: Costume) {
+    if (!user || wearingId) return;
+    setWearingId(costume.id);
+    const nextId = profile?.active_costume_id === costume.id ? null : costume.id;
+    const { error } = await supabase
+      .from('profiles')
+      .update({ active_costume_id: nextId })
+      .eq('id', user.id);
+    if (!error) await refreshProfile();
+    setWearingId(null);
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <TouchableOpacity
@@ -79,13 +94,25 @@ export default function CostumesScreen() {
           {costumes.map((c) => {
             const owned = ownedCostumeIds.has(c.id);
             const canAfford = (profile?.biscuit_count ?? 0) >= c.price_biscuits;
+            const isWorn = profile?.active_costume_id === c.id;
             return (
-              <View key={c.id} style={styles.cell}>
+              <View key={c.id} style={[styles.cell, isWorn && styles.cellWorn]}>
                 <View style={styles.cellEmojiArea}>
                   <Text style={[styles.cellEmoji, owned && styles.cellEmojiOwned]}>{c.emoji}</Text>
                 </View>
                 <Text style={styles.cellLabel}>{c.name}</Text>
-                {!owned ? (
+                {owned ? (
+                  <TouchableOpacity
+                    style={[styles.wearBtn, isWorn && styles.wearBtnActive]}
+                    onPress={() => toggleWear(c)}
+                    disabled={wearingId === c.id}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={[styles.wearBtnText, isWorn && styles.wearBtnTextActive]}>
+                      {isWorn ? 'Đang mặc ✓' : 'Mặc vào'}
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
                   <TouchableOpacity
                     style={[styles.buyBtn, !canAfford && styles.buyBtnDisabled]}
                     onPress={() => buyCostume(c)}
@@ -96,7 +123,7 @@ export default function CostumesScreen() {
                       🍪 {c.price_biscuits}
                     </Text>
                   </TouchableOpacity>
-                ) : null}
+                )}
               </View>
             );
           })}
@@ -153,5 +180,16 @@ const getStyles = (colors: any) =>
     buyBtnDisabled: { backgroundColor: colors.surfaceAlt },
     buyBtnText: { fontSize: 12, fontWeight: '700', color: '#fff' },
     buyBtnTextDisabled: { color: colors.textMuted },
+    cellWorn: { borderColor: colors.primary },
+    wearBtn: {
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      marginTop: 2,
+    },
+    wearBtnActive: { backgroundColor: colors.primary },
+    wearBtnText: { fontSize: 11, fontWeight: '700', color: colors.textMuted },
+    wearBtnTextActive: { color: '#fff' },
     empty: { fontSize: 14, color: colors.textMuted },
   });

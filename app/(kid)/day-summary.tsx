@@ -15,7 +15,7 @@ export default function DaySummaryScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
-  const { profile, refresh } = useProfile();
+  const { profile, refresh, activeCostumeEmoji } = useProfile();
   const { usedSeconds } = useScreenTime();
 
   const minutes = Math.round(usedSeconds / 60);
@@ -41,7 +41,12 @@ export default function DaySummaryScreen() {
       </TouchableOpacity>
 
       <View style={styles.center}>
-        <Companion companionId={profile?.companion_id} expression="cheering" size={150} />
+        <Companion
+          companionId={profile?.companion_id}
+          expression="cheering"
+          size={150}
+          costumeEmoji={activeCostumeEmoji}
+        />
         <Text style={styles.title}>Hết giờ chơi rồi! 🌙</Text>
         <Text style={styles.note}>
           Phiên này con đã học được {minutes} phút. Nghỉ một chút rồi vào lại chơi tiếp nhé!

@@ -17,7 +17,7 @@ export default function KidHome() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user } = useAuth();
-  const { profile, refresh } = useProfile();
+  const { profile, refresh, activeCostumeEmoji } = useProfile();
 
   const [companion, setCompanion] = useState<CompanionType | null>(null);
   const [expression, setExpression] = useState<CompanionExpression>('idle');
@@ -78,7 +78,12 @@ export default function KidHome() {
 
       <View style={styles.center}>
         <TouchableOpacity activeOpacity={0.9} onPress={react}>
-          <Companion companionId={profile?.companion_id} expression={expression} size={180} />
+          <Companion
+            companionId={profile?.companion_id}
+            expression={expression}
+            size={180}
+            costumeEmoji={activeCostumeEmoji}
+          />
         </TouchableOpacity>
 
         <Text style={styles.greeting}>

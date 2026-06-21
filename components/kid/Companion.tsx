@@ -9,16 +9,32 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { baseEmojiFor, CompanionExpression, EXPRESSION_BADGE } from './companionAssets';
+import {
+  baseEmojiFor,
+  CompanionExpression,
+  EXPRESSION_BADGE,
+  layoutForCostume,
+} from './companionAssets';
 
 interface CompanionProps {
   companionId: string | null | undefined;
   /** Biểu cảm theo ngữ cảnh: vui khi đúng, ngạc nhiên khi im lặng, cổ vũ khi sắp xong... */
   expression?: CompanionExpression;
   size?: number;
+  /** Emoji trang phục đang mặc (profiles.active_costume_id → costumes.emoji), null = không mặc gì. */
+  costumeEmoji?: string | null;
 }
 
-export function Companion({ companionId, expression = 'idle', size = 120 }: CompanionProps) {
+// Khi có trang phục, khung ngoài cần rộng hơn để chứa phần trang phục lồi ra (mũ phía trên
+// đầu, cánh/áo choàng hai bên) mà không bị layout xung quanh cắt mất.
+const COSTUME_SPACE_FACTOR = 1.4;
+
+export function Companion({
+  companionId,
+  expression = 'idle',
+  size = 120,
+  costumeEmoji,
+}: CompanionProps) {
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const rotate = useSharedValue(0);
@@ -97,18 +113,50 @@ export function Companion({ companionId, expression = 'idle', size = 120 }: Comp
   }));
 
   const badge = EXPRESSION_BADGE[expression];
+  const layout = layoutForCostume(costumeEmoji);
+  const stageSize = costumeEmoji ? size * COSTUME_SPACE_FACTOR : size;
+
+  const costumeNode =
+    costumeEmoji && layout ? (
+      <Text
+        style={[
+          styles.costume,
+          {
+            top: `${layout.top}%`,
+            left: `${layout.left}%`,
+            fontSize: size * layout.sizeRatio,
+            transform: [
+              { translateX: -(size * layout.sizeRatio) / 2 },
+              { translateY: -(size * layout.sizeRatio) / 2 },
+              ...(layout.rotate ? [{ rotate: `${layout.rotate}rad` }] : []),
+            ],
+          },
+        ]}
+      >
+        {costumeEmoji}
+      </Text>
+    ) : null;
 
   return (
-    <View style={[styles.wrap, { width: size, height: size }]}>
-      <Animated.Text style={[{ fontSize: size * 0.78 }, animStyle]}>
-        {baseEmojiFor(companionId)}
-      </Animated.Text>
-      {badge ? <Text style={[styles.badge, { fontSize: size * 0.3 }]}>{badge}</Text> : null}
+    <View style={[styles.reserve, { width: stageSize, height: stageSize }]}>
+      <View style={[styles.wrap, { width: size, height: size }]}>
+        {/* Trang phục nằm trong cùng Animated.View với thân nhân vật nên luôn animate
+            đồng bộ (cùng transform, cùng tâm xoay) chứ không cần lặp lại animation. */}
+        <Animated.View style={[styles.stage, { width: size, height: size }, animStyle]}>
+          {layout?.behind ? costumeNode : null}
+          <Text style={{ fontSize: size * 0.78 }}>{baseEmojiFor(companionId)}</Text>
+          {!layout?.behind ? costumeNode : null}
+        </Animated.View>
+        {badge ? <Text style={[styles.badge, { fontSize: size * 0.3 }]}>{badge}</Text> : null}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  reserve: { alignItems: 'center', justifyContent: 'center' },
   wrap: { alignItems: 'center', justifyContent: 'center' },
+  stage: { alignItems: 'center', justifyContent: 'center' },
   badge: { position: 'absolute', top: 0, right: 0 },
+  costume: { position: 'absolute' },
 });

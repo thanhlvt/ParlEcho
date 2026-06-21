@@ -176,6 +176,7 @@ export type Profile = {
   is_kid_mode: boolean;
   parent_pin: string | null;
   companion_id: string | null;
+  active_costume_id: string | null;
   screen_time_limit_minutes: number;
   child_name: string | null;
   child_level: string | null;

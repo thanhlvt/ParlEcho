@@ -15,12 +15,14 @@ import { Companion } from '../../components/kid/Companion';
 import { LuckyWheel } from '../../components/kid/LuckyWheel';
 import { StarRow } from '../../components/kid/StarRow';
 import { useExplorationSession } from '../../components/kid/useExplorationSession';
+import { useProfile } from '../../providers/ProfileProvider';
 import { useTheme } from '../../providers/ThemeProvider';
 
 export default function ExplorationScreen() {
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const session = useExplorationSession();
+  const { activeCostumeEmoji } = useProfile();
 
   if (session.view === 'loading' || session.view === 'connecting' || session.view === 'saving') {
     return (
@@ -32,7 +34,12 @@ export default function ExplorationScreen() {
           </TouchableOpacity>
         ) : null}
         <View style={styles.centerFull}>
-          <Companion companionId={session.companion?.id} expression="thinking" size={120} />
+          <Companion
+            companionId={session.companion?.id}
+            expression="thinking"
+            size={120}
+            costumeEmoji={activeCostumeEmoji}
+          />
           <Text style={styles.statusText}>
             {session.view === 'saving' ? session.savingMsg : 'Đang tìm ảnh để khám phá...'}
           </Text>
@@ -87,7 +94,12 @@ export default function ExplorationScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.centerFull}>
-          <Companion companionId={session.companion?.id} expression="surprised" size={120} />
+          <Companion
+            companionId={session.companion?.id}
+            expression="surprised"
+            size={120}
+            costumeEmoji={activeCostumeEmoji}
+          />
           <Text style={styles.statusText}>{session.errorMsg || 'Có lỗi xảy ra.'}</Text>
           <TouchableOpacity style={styles.homeBtn} onPress={session.goHome} activeOpacity={0.85}>
             <Text style={styles.homeBtnText}>Về nhà</Text>
@@ -101,7 +113,12 @@ export default function ExplorationScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={styles.finishedScroll}>
-          <Companion companionId={session.companion?.id} expression="cheering" size={140} />
+          <Companion
+            companionId={session.companion?.id}
+            expression="cheering"
+            size={140}
+            costumeEmoji={activeCostumeEmoji}
+          />
           <Text style={styles.finishedTitle}>Khám phá xong rồi! 🎉</Text>
           <Text style={styles.statusText}>Con đã quan sát và trả lời rất giỏi đó!</Text>
 
@@ -152,7 +169,12 @@ export default function ExplorationScreen() {
           <Image source={{ uri: session.imageUrl }} style={styles.image} resizeMode="cover" />
         ) : null}
 
-        <Companion companionId={session.companion?.id} expression={session.expression} size={120} />
+        <Companion
+          companionId={session.companion?.id}
+          expression={session.expression}
+          size={120}
+          costumeEmoji={activeCostumeEmoji}
+        />
 
         {session.lastAiText ? (
           <View style={styles.bubble}>

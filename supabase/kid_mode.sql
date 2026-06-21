@@ -833,3 +833,9 @@ begin
     end if;
   end loop;
 end $$;
+
+-- 37. Trang phục đang mặc (Reward System) — trẻ chọn 1 costume đã sở hữu để hiển thị chung
+-- với Companion (mũ/cánh/áo... vẽ chồng lên nhân vật theo COSTUME_LAYOUT trong
+-- components/kid/companionAssets.ts). Null = không mặc gì. Chọn ở (kid)/costumes.tsx, đọc
+-- lại ở mọi màn hình có hiển thị <Companion>.
+alter table profiles add column if not exists active_costume_id text references costumes(id);
