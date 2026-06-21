@@ -84,11 +84,14 @@ export default function MissionsScreen() {
         if (hasAutoScrolledRef.current) return;
         hasAutoScrolledRef.current = true;
         const firstIncompleteIndex = sortedMissions.findIndex((m) => (best[m.id] ?? 0) === 0);
+        // FlatList numColumns=2 nhóm item theo hàng nên scrollToIndex nhận row index, không phải flat index.
+        const firstIncompleteRow = Math.floor(firstIncompleteIndex / 2);
         if (firstIncompleteIndex > 1) {
           scrollTimeoutRef.current = setTimeout(() => {
-            if (firstIncompleteIndex >= missionsCountRef.current) return;
+            const rowCount = Math.ceil(missionsCountRef.current / 2);
+            if (firstIncompleteRow >= rowCount) return;
             flatListRef.current?.scrollToIndex({
-              index: firstIncompleteIndex,
+              index: firstIncompleteRow,
               animated: true,
               viewPosition: 0.15,
             });
@@ -127,12 +130,12 @@ export default function MissionsScreen() {
         contentContainerStyle={styles.list}
         getItemLayout={(_, index) => ({
           length: CARD_HEIGHT,
-          offset: Math.floor(index / 2) * (CARD_HEIGHT + CARD_GAP),
+          offset: index * (CARD_HEIGHT + CARD_GAP),
           index,
         })}
         onScrollToIndexFailed={({ index }) => {
           flatListRef.current?.scrollToOffset({
-            offset: Math.floor(index / 2) * (CARD_HEIGHT + CARD_GAP),
+            offset: index * (CARD_HEIGHT + CARD_GAP),
             animated: true,
           });
         }}
