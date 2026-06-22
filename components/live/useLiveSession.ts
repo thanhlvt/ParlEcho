@@ -7,14 +7,15 @@ import {
   AudioContext,
   decodePCMInBase64,
 } from 'react-native-audio-api';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, FlatList } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { bytesToBase64, LiveClient, LiveState, pcmToWav } from '../../lib/liveClient';
 import { supabase } from '../../lib/supabase';
 import { logError } from '../../lib/sentry';
 import { scoreUtterance } from '../../lib/pronunciationScoring';
-import { LanguageId, LiveTurn, PronounceApiResponse } from '../../lib/types';
+import { dedupeFlaggedWordsAcross } from '../../lib/scoring';
+import { FlaggedWord, LanguageId, LiveTurn, PronounceApiResponse } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import {
   AccentId,
@@ -52,8 +53,16 @@ export function useLiveSession() {
   const lastErrorMsgRef = useRef<string>('');
   const isPausedRef = useRef(false);
   // Chấm phát âm Azure (unscripted) ngay khi từng câu nói xong, key = sort_order của turn —
-  // map sang message_id sau khi lưu messages (xem onUserUtterance + endSession bước 3).
+  // map sang message_id sau khi lưu messages (xem onUserUtterance + endSession bước 3). Ref
+  // (không phải state) để endSession luôn đọc được giá trị mới nhất, không bị stale closure.
   const pronunciationScoresRef = useRef<Map<number, PronounceApiResponse>>(new Map());
+  // Mỗi onUserUtterance đẩy 1 promise vào đây — endSession PHẢI await hết trước khi đọc
+  // pronunciationScoresRef, nếu không câu cuối cùng (chấm điểm bắt đầu đúng lúc client.stop())
+  // có thể chưa kịp có kết quả khi attemptRows được build, làm câu đó bị bỏ sót không chấm điểm.
+  const pendingScoringRef = useRef<Promise<void>[]>([]);
+  // State (snapshot của ref) chỉ để trigger re-render hiển thị gợi ý sửa ngay trong lúc đang
+  // live, giống Practice — không dùng để đọc giá trị trong endSession (tránh stale closure).
+  const [scoresByOrder, setScoresByOrder] = useState<Map<number, PronounceApiResponse>>(new Map());
   const { startRecording, stopRecording } = useAudioRecorder();
 
   function togglePause() {
@@ -162,6 +171,8 @@ export function useLiveSession() {
     setIsPaused(false);
     isPausedRef.current = false;
     pronunciationScoresRef.current.clear();
+    pendingScoringRef.current = [];
+    setScoresByOrder(new Map());
 
     const client = new LiveClient({
       onStateChange: (s) => {
@@ -237,10 +248,14 @@ export function useLiveSession() {
       },
       onUserUtterance: (pcm, _text, order) => {
         if (!user) return;
-        // Fire-and-forget — không await trong message loop của LiveClient.
-        scoreUtterance(user.id, pcm, languageId, accent).then((score) => {
-          if (score) pronunciationScoresRef.current.set(order, score);
+        // Fire-and-forget — không await trong message loop của LiveClient. Promise được lưu lại
+        // để endSession có thể await hết trước khi đọc pronunciationScoresRef (xem khai báo ref).
+        const p = scoreUtterance(user.id, pcm, languageId, accent).then((score) => {
+          if (!score) return;
+          pronunciationScoresRef.current.set(order, score);
+          setScoresByOrder(new Map(pronunciationScoresRef.current));
         });
+        pendingScoringRef.current.push(p);
       },
     });
 
@@ -266,6 +281,11 @@ export function useLiveSession() {
 
     const { turns: finalTurns, rawUserSegments, rawAiSegments } = client.stop();
     clientRef.current = null;
+
+    // client.stop() flush lượt nói cuối cùng (nếu có) → bắn onUserUtterance đồng bộ ngay trên,
+    // đẩy 1 promise mới vào pendingScoringRef — PHẢI await hết ở đây trước khi đọc
+    // pronunciationScoresRef bên dưới, nếu không câu cuối có thể chưa kịp chấm điểm xong.
+    await Promise.all(pendingScoringRef.current);
 
     if (finalTurns.length === 0) {
       setView('setup');
@@ -400,6 +420,18 @@ export function useLiveSession() {
     }
   }
 
+  // Gợi ý sửa hiển thị ngay trong lúc đang live (giống Practice) — bỏ gợi ý đã hiện ở lượt nói
+  // TRƯỚC trong cùng phiên khi trùng cả word VÀ tip (xem dedupeFlaggedWordsAcross), theo đúng
+  // thứ tự lượt nói hiện tại trong `turns`.
+  const flaggedWordsByOrder = useMemo(() => {
+    const userTurns = turns.filter((t) => t.role === 'user');
+    const lists = userTurns.map((t) => scoresByOrder.get(t.sort_order)?.flagged_words ?? []);
+    const deduped = dedupeFlaggedWordsAcross(lists, (fw) => `${fw.word}|||${fw.tip}`);
+    const out = new Map<number, FlaggedWord[]>();
+    userTurns.forEach((t, i) => out.set(t.sort_order, deduped[i]));
+    return out;
+  }, [turns, scoresByOrder]);
+
   return {
     view,
     languageId,
@@ -416,6 +448,7 @@ export function useLiveSession() {
     setTopic,
     liveState,
     turns,
+    flaggedWordsByOrder,
     elapsedSec,
     savingMsg,
     isPaused,

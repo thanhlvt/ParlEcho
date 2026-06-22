@@ -23,6 +23,11 @@ export interface AzureAssessmentResult {
   // null ở đây CHỈ xảy ra khi parse JSON thất bại. Lớp gọi (pronounce/index.ts) phải tự ép null
   // khi không có reference_text, KHÔNG dùng thẳng giá trị 100 mặc định đó.
   completeness: number | null;
+  // false khi Azure không nhận diện được giọng nói (NoMatch — thường do audio quá ngắn/nhỏ,
+  // hay gặp với câu cực ngắn kiểu "はい。"/"yes."). Khi false, accuracy/fluency luôn là 0 nhưng
+  // đó là "không chấm được", KHÔNG phải điểm 0 thật — lớp gọi PHẢI kiểm tra field này trước khi
+  // dùng accuracy/fluency, không tự ý insert/hiển thị như điểm thật (xem pronounce/index.ts).
+  recognized: boolean;
   transcript: string;
   words: WordAssessment[];
 }
@@ -145,6 +150,7 @@ function recognizeOnce(recognizer: sdk.SpeechRecognizer): Promise<AzureAssessmen
             fluency: 0,
             prosody: null,
             completeness: null,
+            recognized: false,
             transcript: '',
             words: [],
           });
@@ -160,6 +166,7 @@ function recognizeOnce(recognizer: sdk.SpeechRecognizer): Promise<AzureAssessmen
             (pronResult as unknown as { prosodyScore?: number }).prosodyScore ??
             prosodyFromJsonResult(jsonResult),
           completeness: pronResult.completenessScore ?? completenessFromJsonResult(jsonResult),
+          recognized: true,
           transcript: result.text,
           words: wordsFromJsonResult(jsonResult),
         });
@@ -254,6 +261,7 @@ function recognizeContinuous(recognizer: sdk.SpeechRecognizer): Promise<AzureAss
               : 0,
           prosody,
           completeness,
+          recognized: transcripts.length > 0,
           transcript: transcripts.join(' '),
           words: allWords,
         });

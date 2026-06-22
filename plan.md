@@ -334,6 +334,73 @@ Pronunciation Assessment, secrets production đã set, docs/skills đã đồng
 bộ. Gemini chỉ còn dùng cho Live API (STT/TTS/conversation thật) và
 `image-moderation` — không còn liên quan tới chấm điểm phát âm.
 
+## Bổ sung sau migration: sửa bug điểm 0 giả khi Azure NoMatch
+
+**Bug được user phát hiện qua screenshot:** màn review Live, lượt "はい。"
+(đã có transcript từ Gemini Live) nhưng `Rõ: 0`/`Trôi chảy: 0` — nhìn như
+chấm điểm "tệ nhất có thể" trong khi thực ra Azure không hề chấm được câu
+này. Root cause: nhánh `recognizeOnce` trong `azurePronunciation.ts`, khi
+`result.reason !== sdk.ResultReason.RecognizedSpeech` (Azure trả `NoMatch`
+— hay gặp với audio rất ngắn, vd câu 1 từ "はい." dù Gemini Live STT riêng
+vẫn transcribe được trong ngữ cảnh hội thoại), code cũ **resolve cứng
+`accuracy:0, fluency:0`** — một điểm 0 GIẢ bị lưu vào DB như điểm thật,
+kéo theo hiển thị sai trong UI + lệch `avg_pronunciation`/sao.
+
+Sửa: thêm field `recognized: boolean` vào `AzureAssessmentResult` (false khi
+NoMatch ở single-shot; với continuous mode = `transcripts.length > 0`).
+`pronounce/index.ts`: nếu `score_only && !azureResult.recognized`, return
+sớm `{recognized: false}` (không tính điểm, xoá file storage, KHÔNG để
+client insert `pronunciation_attempts`); nhánh thường (scripted,
+Practice/Notebook) giữ nguyên hành vi cũ (vẫn ghi điểm 0 thật khi không
+nghe được gì — hợp lý vì học viên cần biết "chưa đọc gì cả"), chỉ field
+`recognized` phản ánh đúng trạng thái thật, không early-return.
+`lib/pronunciationScoring.ts#scoreUtterance`: kiểm tra `!data.recognized` →
+trả `null` (giống case `pcm.length===0` đã có) — câu đó bị bỏ qua hoàn
+toàn, không vào `pronunciationScoresRef`, không ảnh hưởng `avg_pronunciation`.
+
+**Đã verify bằng test thật**: audio gần như trống (1 byte PCM, do thao tác
+cắt audio test bị lỗi) → Azure trả NoMatch → code mới ra đúng
+`{recognized: false, accuracy: 0, fluency: 0}`, xác nhận đúng code path
+`result.reason !== RecognizedSpeech` hoạt động như thiết kế. Đã deploy
+`pronounce` lên production. `tsc`/`deno check`/`lint`/`jest` đều sạch.
+
+## Bổ sung sau migration: hiển thị gợi ý sửa trong Live + sửa bug bỏ sót câu cuối
+
+**1. Bug: câu cuối cùng của user đôi khi không được chấm điểm (Live + Kid
+Mission/Exploration).** Root cause: `onUserUtterance` (per-utterance scoring,
+Phase 4) gọi `scoreUtterance` **fire-and-forget** — câu cuối cùng chỉ được
+bắn ra đúng lúc `client.stop()` (đầu `endSession`), nhưng `endSession` đọc
+`pronunciationScoresRef` để build `attemptRows` mà KHÔNG đợi promise đó xong.
+Nếu các bước insert conversation/messages (vài await ngắn) xong NHANH HƠN
+round-trip chấm điểm Azure (upload + edge function + Azure, có thể 1-3s),
+câu cuối bị bỏ sót — không có trong `pronunciation_attempts`, kéo theo
+`avg_pronunciation`/sao tính thiếu 1 câu.
+
+Sửa ở cả 3 hook (`useLiveSession.ts`, `useMissionSession.ts`,
+`useExplorationSession.ts`): thêm `pendingScoringRef = useRef<Promise<void>[]>([])`,
+mỗi `onUserUtterance` đẩy promise vào đây; `endSession` gọi
+`await Promise.all(pendingScoringRef.current)` ngay sau `client.stop()`
+(trước khi đọc `pronunciationScoresRef`) — đảm bảo cả câu cuối cùng cũng
+được chấm điểm xong trước khi build `attemptRows`. Clear `pendingScoringRef`
+cùng lúc với `pronunciationScoresRef` ở `startSession`.
+
+**2. Live tự do (adult) hiển thị gợi ý sửa ngay trong lúc đang nói, giống
+Practice** — trước đây chỉ thấy ở màn review SAU khi kết thúc phiên. Vì điểm
+đã được chấm theo từng câu nói (Phase 4), chỉ cần expose ra UI ngay:
+- `useLiveSession.ts`: thêm state `scoresByOrder` (snapshot của
+  `pronunciationScoresRef`, set lại mỗi khi có điểm mới — dùng để trigger
+  re-render hiển thị; `pronunciationScoresRef` vẫn là nguồn đọc duy nhất
+  trong `endSession` để tránh stale closure). Thêm `flaggedWordsByOrder`
+  (`useMemo`) — áp `dedupeFlaggedWordsAcross` (cùng helper dùng cho Practice/
+  Live review) theo thứ tự `turns` hiện tại, trả ra cho UI.
+- `LiveConversationView.tsx`: nhận prop `flaggedWordsByOrder`, render danh
+  sách `• "word" - tip` nhỏ dưới bong bóng chat của user (nếu có).
+- **Chỉ áp dụng cho Live tự do (adult)**, KHÔNG áp dụng cho Kid Mode — giữ
+  đúng quy ước cũ "Kid Mode chưa có UI sửa ngữ pháp/chi tiết lỗi" (xem skill
+  `app-code`), tránh phá vỡ UX đơn giản hoá dành cho trẻ em.
+
+Đã verify: `tsc --noEmit`, `expo lint`, `npx jest` (76/76) đều sạch.
+
 ## Bổ sung sau migration: completeness dùng thẳng CompletenessScore của Azure
 
 Đổi quyết định ban đầu (Phase 1/2: "KHÔNG dùng CompletenessScore của Azure,

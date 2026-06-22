@@ -50,6 +50,7 @@ export default function LiveScreen() {
     <LiveConversationView
       flatRef={session.flatRef}
       turns={session.turns}
+      flaggedWordsByOrder={session.flaggedWordsByOrder}
       liveState={session.liveState}
       isPaused={session.isPaused}
       elapsedSec={session.elapsedSec}

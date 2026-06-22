@@ -33,7 +33,11 @@ export async function scoreUtterance(
       },
     });
     if (error) throw new Error(error.message);
-    return data ?? null;
+    // Azure không nhận diện được giọng nói (NoMatch — hay gặp với câu rất ngắn) → KHÔNG phải
+    // điểm 0 thật, bỏ qua hẳn câu này (không insert pronunciation_attempts, không tính vào
+    // avg_pronunciation) thay vì hiển thị điểm 0 sai lệch.
+    if (!data || !data.recognized) return null;
+    return data;
   } catch (err) {
     console.warn('[scoreUtterance] failed:', err);
     return null;

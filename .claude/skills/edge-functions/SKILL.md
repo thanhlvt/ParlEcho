@@ -58,7 +58,16 @@ convention RN của app).
   ghi PCM vào `PushAudioInputStream` theo chunk ~100ms + delay — đẩy cả
   buffer 1 lần làm Azure kẹt ở `speech.hypothesis`, không bao giờ trả
   `speech.phrase` cuối (đã verify bằng spike, tái hiện 2 lần) — không tự ý
-  đổi cách ghi này.
+  đổi cách ghi này. **`recognized: false`** trên `AzureAssessmentResult`/
+  response: Azure không nhận diện được giọng nói (`NoMatch`, hay gặp với
+  audio rất ngắn/nhỏ — vd câu "はい." trong Live) → `accuracy`/`fluency` lúc
+  đó luôn là 0 nhưng đó là "không chấm được", KHÔNG phải điểm 0 thật. Với
+  `score_only`, response khi đó CHỈ có `{recognized:false}` (các field điểm
+  số không tồn tại ở runtime) — `lib/pronunciationScoring.ts#scoreUtterance`
+  PHẢI kiểm tra field này trước, trả `null` (bỏ qua hẳn câu đó, không insert
+  `pronunciation_attempts`) nếu `false`. Với `pronounce` thường (scripted),
+  vẫn giữ hành vi cũ (ghi điểm 0 thật) — chỉ field `recognized` phản ánh
+  đúng trạng thái, không early-return.
 - **`tts`**: sinh audio mẫu cho `scenario_lines`.
 - **`live-token`**: tạo ephemeral token cho Gemini Live WebSocket + dựng
   system prompt (kể cả `buildKidExplorationPrompt` cho Image Exploration —

@@ -305,6 +305,13 @@ export type ChatApiResponse = {
 // gọi kèm reference_text (scripted, vd Practice/Notebook); null khi score_only/unscripted
 // (Live/Kid chấm theo từng câu nói tự do, không có câu mẫu để so khớp).
 export type PronounceApiResponse = {
+  /** false khi Azure không nhận diện được giọng nói (NoMatch, hay gặp với câu rất ngắn như
+   *  "はい."). Với `score_only` (xem lib/pronunciationScoring.ts#scoreUtterance), response thật
+   *  khi đó CHỈ có field này (các field còn lại không tồn tại ở runtime dù type khai required —
+   *  PHẢI kiểm tra `recognized` TRƯỚC khi đọc field khác, không tự ý truy cập khi false). Với
+   *  pronounce thường (scripted, Practice/Notebook), field khác vẫn luôn có giá trị thật (0 khi
+   *  NoMatch) — giữ nguyên hành vi cũ, không bỏ qua. */
+  recognized: boolean;
   overall_score: number;
   clarity: number;
   fluency: number;

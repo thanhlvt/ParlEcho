@@ -86,6 +86,16 @@ Deno.serve(async (req: Request) => {
       locale: toAzureLocale(language_id, accent),
       referenceText: reference_text || undefined,
     });
+
+    if (score_only && !azureResult.recognized) {
+      // Azure không nhận diện được giọng nói (NoMatch — hay gặp với câu rất ngắn như
+      // "はい."/"yes.", dù Gemini Live vẫn transcribe được trong ngữ cảnh hội thoại). KHÔNG
+      // trả điểm 0 giả — báo recognized:false để client (lib/pronunciationScoring.ts) bỏ qua
+      // hẳn câu này, không insert pronunciation_attempts, không tính vào avg_pronunciation.
+      await supabase.storage.from('recordings').remove([audio_storage_path]);
+      return Response.json({ recognized: false }, { headers: corsHeaders });
+    }
+
     const { clarity, fluency } = mergeClarityFluency(azureResult);
     const flagged_words = pickFlaggedWords(azureResult.words);
 
@@ -106,6 +116,7 @@ Deno.serve(async (req: Request) => {
       await supabase.storage.from('recordings').remove([audio_storage_path]);
       return Response.json(
         {
+          recognized: true,
           overall_score,
           clarity,
           fluency,
@@ -212,6 +223,7 @@ Deno.serve(async (req: Request) => {
 
     return Response.json(
       {
+        recognized: azureResult.recognized,
         overall_score,
         clarity,
         fluency,

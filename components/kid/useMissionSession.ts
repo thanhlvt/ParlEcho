@@ -98,6 +98,10 @@ export function useMissionSession(missionId: string) {
   // Chấm phát âm Azure (unscripted) ngay khi từng câu nói xong, key = sort_order của turn —
   // map sang message_id sau khi lưu messages (xem onUserUtterance + endSession).
   const pronunciationScoresRef = useRef<Map<number, PronounceApiResponse>>(new Map());
+  // Mỗi onUserUtterance đẩy 1 promise vào đây — endSession PHẢI await hết trước khi đọc
+  // pronunciationScoresRef, nếu không lượt nói cuối cùng (chấm điểm bắt đầu đúng lúc
+  // client.stop()) có thể chưa kịp có kết quả khi attemptRows được build, bị bỏ sót.
+  const pendingScoringRef = useRef<Promise<void>[]>([]);
 
   const setReaction = useCallback((expr: CompanionExpression, durationMs: number) => {
     setExpression(expr);
@@ -248,6 +252,7 @@ export function useMissionSession(missionId: string) {
     setIsPaused(false);
     isPausedRef.current = false;
     pronunciationScoresRef.current.clear();
+    pendingScoringRef.current = [];
 
     const client = new LiveClient({
       onStateChange: (s: LiveState) => {
@@ -364,10 +369,12 @@ export function useMissionSession(missionId: string) {
       },
       onUserUtterance: (pcm, _text, order) => {
         if (!user || !mission) return;
-        // Fire-and-forget — không await trong message loop của LiveClient.
-        scoreUtterance(user.id, pcm, mission.language_id).then((score) => {
+        // Fire-and-forget — không await trong message loop của LiveClient. Promise lưu lại để
+        // endSession await hết trước khi đọc pronunciationScoresRef (xem khai báo ref).
+        const p = scoreUtterance(user.id, pcm, mission.language_id).then((score) => {
           if (score) pronunciationScoresRef.current.set(order, score);
         });
+        pendingScoringRef.current.push(p);
       },
     });
 
@@ -405,6 +412,11 @@ export function useMissionSession(missionId: string) {
     // stop() → 'ended' → ...). Null trước để lần gọi lại đó rơi vào early-return ở trên.
     clientRef.current = null;
     const { turns: finalTurns, rawUserSegments, rawAiSegments } = client.stop();
+
+    // client.stop() flush lượt nói cuối cùng (nếu có) → bắn onUserUtterance đồng bộ ngay trên,
+    // đẩy 1 promise mới vào pendingScoringRef — PHẢI await hết trước khi đọc
+    // pronunciationScoresRef bên dưới, nếu không lượt cuối có thể chưa kịp chấm điểm xong.
+    await Promise.all(pendingScoringRef.current);
 
     // Vào màn kết quả (Companion chúc mừng) NGAY — không bắt trẻ chờ ở màn "đang lưu" trống.
     // Chỗ sao báo "đang chấm điểm" (cờ scoring) cho tới khi session-review xong, rồi lộ TOÀN BỘ

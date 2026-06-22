@@ -4,7 +4,7 @@ import { FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
 import { LiveState } from '../../lib/liveClient';
-import { LanguageId, LiveTurn } from '../../lib/types';
+import { FlaggedWord, LanguageId, LiveTurn } from '../../lib/types';
 
 function formatTime(sec: number) {
   const m = Math.floor(sec / 60)
@@ -17,6 +17,8 @@ function formatTime(sec: number) {
 interface LiveConversationViewProps {
   flatRef: RefObject<FlatList<LiveTurn> | null>;
   turns: LiveTurn[];
+  /** Gợi ý sửa phát âm theo từng lượt user (key = sort_order) — chấm ngay trong lúc đang live. */
+  flaggedWordsByOrder: Map<number, FlaggedWord[]>;
   liveState: LiveState;
   isPaused: boolean;
   elapsedSec: number;
@@ -28,6 +30,7 @@ interface LiveConversationViewProps {
 export function LiveConversationView({
   flatRef,
   turns,
+  flaggedWordsByOrder,
   liveState,
   isPaused,
   elapsedSec,
@@ -74,20 +77,38 @@ export function LiveConversationView({
             </Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <View
-            style={[styles.turnRow, item.role === 'user' ? styles.turnRowUser : styles.turnRowAI]}
-          >
-            <Text
-              style={[
-                styles.turnText,
-                item.role === 'user' ? styles.turnTextUser : styles.turnTextAI,
-              ]}
-            >
-              {item.text}
-            </Text>
-          </View>
-        )}
+        renderItem={({ item }) => {
+          const flaggedWords =
+            item.role === 'user' ? flaggedWordsByOrder.get(item.sort_order) : undefined;
+          return (
+            <View style={styles.turnWrap}>
+              <View
+                style={[
+                  styles.turnRow,
+                  item.role === 'user' ? styles.turnRowUser : styles.turnRowAI,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.turnText,
+                    item.role === 'user' ? styles.turnTextUser : styles.turnTextAI,
+                  ]}
+                >
+                  {item.text}
+                </Text>
+              </View>
+              {flaggedWords && flaggedWords.length > 0 ? (
+                <View style={styles.flaggedList}>
+                  {flaggedWords.map((fw, i) => (
+                    <Text key={i} style={styles.flaggedText}>
+                      • &quot;{fw.word}&quot; - {fw.tip}
+                    </Text>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          );
+        }}
       />
 
       {/* End / Control bar */}
@@ -147,6 +168,7 @@ const getStyles = (colors: any) =>
     emptyTranscript: { paddingTop: 60, alignItems: 'center' },
     emptyTranscriptText: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
 
+    turnWrap: { gap: 4 },
     turnRow: { maxWidth: '85%', borderRadius: 16, padding: 12 },
     turnRowUser: {
       alignSelf: 'flex-end',
@@ -168,6 +190,8 @@ const getStyles = (colors: any) =>
     turnText: { fontSize: 15, lineHeight: 22 },
     turnTextUser: { color: '#fff' },
     turnTextAI: { color: colors.textPrimary },
+    flaggedList: { alignSelf: 'flex-end', maxWidth: '85%', gap: 2, paddingHorizontal: 4 },
+    flaggedText: { fontSize: 12, color: colors.textMuted, lineHeight: 16 },
 
     endBar: {
       flexDirection: 'row',
