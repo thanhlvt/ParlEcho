@@ -63,9 +63,12 @@ describe('calculateScoreStats', () => {
 });
 
 describe('calculateMissionStars', () => {
-  it('awards 0 stars when nothing is satisfied', () => {
+  it('awards 0 stars when not completed, regardless of pronunciation/hint', () => {
     expect(
       calculateMissionStars({ completed: false, avgPronunciation: null, usedHint: true }),
+    ).toBe(0);
+    expect(
+      calculateMissionStars({ completed: false, avgPronunciation: 99, usedHint: false }),
     ).toBe(0);
   });
 
@@ -82,7 +85,7 @@ describe('calculateMissionStars', () => {
   });
 
   it('awards 3 stars when completed, pronunciation above threshold, and no hint used', () => {
-    expect(calculateMissionStars({ completed: true, avgPronunciation: 75, usedHint: false })).toBe(
+    expect(calculateMissionStars({ completed: true, avgPronunciation: 90, usedHint: false })).toBe(
       3,
     );
   });
@@ -91,34 +94,49 @@ describe('calculateMissionStars', () => {
     expect(
       calculateMissionStars({
         completed: true,
-        avgPronunciation: 69,
+        avgPronunciation: 80,
         usedHint: false,
-        pronunciationThreshold: 70,
+        pronunciationThreshold: 85,
       }),
     ).toBe(2);
+  });
+
+  it('defaults the pronunciation threshold to 85', () => {
+    expect(calculateMissionStars({ completed: true, avgPronunciation: 84, usedHint: false })).toBe(
+      2,
+    );
+    expect(calculateMissionStars({ completed: true, avgPronunciation: 85, usedHint: false })).toBe(
+      3,
+    );
   });
 });
 
 describe('calculateExplorationStars', () => {
-  it('always awards at least 1 star', () => {
-    expect(calculateExplorationStars({ avgPronunciation: null })).toBe(1);
+  it('awards 0 stars when not completed, regardless of pronunciation', () => {
+    expect(calculateExplorationStars({ completed: false, avgPronunciation: null })).toBe(0);
+    expect(calculateExplorationStars({ completed: false, avgPronunciation: 99 })).toBe(0);
+  });
+
+  it('awards at least 1 star once completed', () => {
+    expect(calculateExplorationStars({ completed: true, avgPronunciation: null })).toBe(1);
   });
 
   it('awards 1 star below the good threshold', () => {
-    expect(calculateExplorationStars({ avgPronunciation: 50 })).toBe(1);
+    expect(calculateExplorationStars({ completed: true, avgPronunciation: 50 })).toBe(1);
   });
 
   it('awards 2 stars between the good and excellent thresholds', () => {
-    expect(calculateExplorationStars({ avgPronunciation: 75 })).toBe(2);
+    expect(calculateExplorationStars({ completed: true, avgPronunciation: 75 })).toBe(2);
   });
 
   it('awards 3 stars at or above the excellent threshold', () => {
-    expect(calculateExplorationStars({ avgPronunciation: 90 })).toBe(3);
+    expect(calculateExplorationStars({ completed: true, avgPronunciation: 90 })).toBe(3);
   });
 
   it('respects custom thresholds', () => {
     expect(
       calculateExplorationStars({
+        completed: true,
         avgPronunciation: 95,
         goodThreshold: 50,
         excellentThreshold: 90,

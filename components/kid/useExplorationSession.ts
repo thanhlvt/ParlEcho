@@ -45,8 +45,9 @@ const TIME_UP_FALLBACK_MS = 20000;
 const ACTIVITY_END_SILENCE_MS = 5000;
 const IMAGE_POOL_SIZE = 50;
 const IMAGE_MAX_DIMENSION = 1024;
-// Không có bước/hint như Guided Conversation — tính sao theo điểm phát âm trung bình
-// (/session-review): star 1 luôn có khi hoàn thành phiên, star 2/3 theo 2 ngưỡng điểm.
+// Không có bước/hint như Guided Conversation — chưa hoàn thành hoạt động (AI chưa nói xong lời
+// tạm biệt) thì 0 sao; hoàn thành rồi mới có star 1 + star 2/3 theo 2 ngưỡng điểm phát âm
+// trung bình (/session-review).
 const PRONUNCIATION_STAR_THRESHOLD = 70;
 const PRONUNCIATION_EXCELLENT_THRESHOLD = 85;
 
@@ -636,9 +637,12 @@ export function useExplorationSession() {
 
   // Tính sao theo điểm phát âm + thưởng biscuit — Image Exploration không có bước/hint
   // như Guided Conversation nên không dùng mission_results, chỉ thưởng biscuit/biscuit_count.
+  // `completed` = activityCompletedRef: AI đã gọi tool end_activity (nói xong lời tạm biệt) —
+  // trẻ bỏ ngang/hết giờ giữa hoạt động thì KHÔNG được sao nào.
   async function awardExplorationResult(avgPronunciation: number | null, conversationId: string) {
     if (!user) return;
     const earnedStars = calculateExplorationStars({
+      completed: activityCompletedRef.current,
       avgPronunciation,
       goodThreshold: PRONUNCIATION_STAR_THRESHOLD,
       excellentThreshold: PRONUNCIATION_EXCELLENT_THRESHOLD,
@@ -654,10 +658,12 @@ export function useExplorationSession() {
       });
     }
 
-    const amount = await awardBiscuits(user.id, earnedStars);
-    setBiscuitsAwarded(amount);
-    await refreshProfile();
-    if (earnedStars === 3) setShowLuckyWheel(true);
+    if (earnedStars > 0) {
+      const amount = await awardBiscuits(user.id, earnedStars);
+      setBiscuitsAwarded(amount);
+      await refreshProfile();
+      if (earnedStars === 3) setShowLuckyWheel(true);
+    }
   }
 
   // Vòng quay may mắn — chỉ hiện khi đạt tròn 3 sao, quay 1 lần duy nhất/phiên. Trả về số

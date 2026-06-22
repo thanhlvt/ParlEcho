@@ -21,29 +21,33 @@ export function calculateScoreStats(activities: DailyActivity[]): { avg: number;
   return { avg, max };
 }
 
-// Kid Mode — Guided Conversation mission: 3 sao độc lập (hoàn thành bước, phát âm đạt
-// ngưỡng, không dùng hint). Xem useMissionSession.ts awardMissionResult().
+// Kid Mode — Guided Conversation mission: chưa hoàn thành hết các bước thì 0 sao, không xét
+// tới phát âm/hint. Hoàn thành rồi mới cộng thêm phát âm đạt ngưỡng + không dùng hint.
+// Xem useMissionSession.ts awardMissionResult().
 export function calculateMissionStars(params: {
   completed: boolean;
   avgPronunciation: number | null;
   usedHint: boolean;
   pronunciationThreshold?: number;
 }): number {
-  const { completed, avgPronunciation, usedHint, pronunciationThreshold = 70 } = params;
-  const starCompleted = completed;
+  const { completed, avgPronunciation, usedHint, pronunciationThreshold = 85 } = params;
+  if (!completed) return 0;
   const starPronunciation = avgPronunciation !== null && avgPronunciation >= pronunciationThreshold;
   const starNoHint = !usedHint;
-  return [starCompleted, starPronunciation, starNoHint].filter(Boolean).length;
+  return 1 + (starPronunciation ? 1 : 0) + (starNoHint ? 1 : 0);
 }
 
-// Kid Mode — Image Exploration mission: star 1 luôn có khi hoàn thành phiên, star 2/3 theo
-// 2 ngưỡng điểm phát âm trung bình. Xem useExplorationSession.ts.
+// Kid Mode — Image Exploration mission: chưa trả lời hết câu hỏi của AI (AI chưa nói xong lời
+// tạm biệt kết thúc hoạt động) thì 0 sao. Hoàn thành mới được star 1, rồi cộng thêm star 2/3
+// theo 2 ngưỡng điểm phát âm trung bình. Xem useExplorationSession.ts.
 export function calculateExplorationStars(params: {
+  completed: boolean;
   avgPronunciation: number | null;
   goodThreshold?: number;
   excellentThreshold?: number;
 }): number {
-  const { avgPronunciation, goodThreshold = 70, excellentThreshold = 85 } = params;
+  const { completed, avgPronunciation, goodThreshold = 70, excellentThreshold = 85 } = params;
+  if (!completed) return 0;
   const starGood = avgPronunciation !== null && avgPronunciation >= goodThreshold;
   const starExcellent = avgPronunciation !== null && avgPronunciation >= excellentThreshold;
   return 1 + (starGood ? 1 : 0) + (starExcellent ? 1 : 0);

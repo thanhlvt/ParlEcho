@@ -35,8 +35,9 @@ const SESSION_LIMIT_MINUTES = 10;
 const TURN_LIMIT_SEC = 8;
 const NUDGE_DISPLAY_MS = 4000;
 const REACTION_DISPLAY_MS = 1600;
-// Star 2 (phát âm): ngưỡng điểm clarity trung bình từ Azure (/pronounce score_only mỗi câu).
-const PRONUNCIATION_STAR_THRESHOLD = 70;
+// Star 2 (phát âm): ngưỡng điểm clarity trung bình từ Azure (/pronounce score_only mỗi câu) —
+// chỉ tính khi đã hoàn thành hết bước (calculateMissionStars trả 0 nếu chưa completed).
+const PRONUNCIATION_STAR_THRESHOLD = 85;
 // Hết giờ chơi phiên (Pha 4) mà AI không nói thêm gì nữa — vẫn kết thúc sau tối đa khoảng này
 // để tránh phiên treo vô hạn chờ "lượt nói hiện tại" không bao giờ tới.
 const TIME_UP_FALLBACK_MS = 20000;

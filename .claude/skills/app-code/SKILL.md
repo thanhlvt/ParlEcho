@@ -96,10 +96,14 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
     chấm phát âm Azure ngay từng câu nói qua `lib/pronunciationScoring.ts`,
     xem dưới), theo dõi turn timeout/step advance/off-topic, cuối phiên
     insert `pronunciation_attempts` từ điểm đã chấm rồi gọi `/session-review`
-    (chỉ tổng hợp + phân tích ngữ pháp, không chấm audio nữa), chấm sao + lưu
+    (chỉ tổng hợp + phân tích ngữ pháp, không chấm audio nữa), chấm sao qua
+    `calculateMissionStars` (`lib/scoring.ts`) — CHƯA hoàn thành hết bước
+    (`missionCompletedRef`) thì 0 sao bất kể phát âm/hint; hoàn thành mới được
+    star 1 + cộng thêm star phát âm (`avgPronunciation >=
+    PRONUNCIATION_STAR_THRESHOLD` = 85) + star không dùng hint — rồi lưu
     `mission_results` (dùng để hiện sao ở `missions.tsx`) + mở sticker +
-    thưởng biscuit (`lib/biscuits.ts`) + Lucky Wheel khi tròn 3 sao
-    (costume KHÔNG mở qua đây — mua bằng biscuit ở `costumes.tsx`), lưu
+    thưởng biscuit (`lib/biscuits.ts`, chỉ khi > 0 sao) + Lucky Wheel khi tròn
+    3 sao (costume KHÔNG mở qua đây — mua bằng biscuit ở `costumes.tsx`), lưu
     `conversations.mode='kid_guided'`, kết thúc sau lượt nói hiện tại
     khi hết giờ chơi.
   - `useExplorationSession`: state machine cho Image Exploration Mission —
@@ -109,14 +113,18 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
     `sendImageTurn()`, cuối phiên insert `pronunciation_attempts` rồi gọi
     `/session-review` rồi tự lưu `vocab_to_learn`/`corrections` vào
     `saved_items` (Kid Mode chưa có UI tap-to-save), lưu
-    `conversations.mode='kid_exploration'`; chấm sao theo
-    `avg_pronunciation` (không có bước/hint), lưu `exploration_results`
-    (theo `exploration_image_id` đã chọn — dùng để hiện sao ở lưới chọn
-    ảnh) + thưởng biscuit + Lucky Wheel giống `useMissionSession`. Tự kết thúc
-    sau lời tạm biệt qua tool `end_activity` (`onActivityComplete` → đợi AI nói
-    xong rồi `endSession`; fallback `activityEndFallbackRef` reset ở
-    `onAudioChunk`) — giống cơ chế kết thúc bước cuối của Guided, không chỉ dựa
-    vào Gemini đóng socket.
+    `conversations.mode='kid_exploration'`; chấm sao qua
+    `calculateExplorationStars` (`lib/scoring.ts`, không có bước/hint) — trẻ
+    bỏ ngang/hết giờ giữa hoạt động (AI CHƯA gọi tool `end_activity`, tức
+    `activityCompletedRef.current === false`) thì 0 sao; hoàn thành (AI đã nói
+    xong lời tạm biệt) mới được star 1 + cộng thêm star theo
+    `avg_pronunciation` (>= 70 và >= 85), lưu `exploration_results` (theo
+    `exploration_image_id` đã chọn — dùng để hiện sao ở lưới chọn ảnh) +
+    thưởng biscuit (chỉ khi > 0 sao) + Lucky Wheel giống `useMissionSession`.
+    Tự kết thúc sau lời tạm biệt qua tool `end_activity` (`onActivityComplete`
+    → đợi AI nói xong rồi `endSession`; fallback `activityEndFallbackRef` reset
+    ở `onAudioChunk`) — giống cơ chế kết thúc bước cuối của Guided, không chỉ
+    dựa vào Gemini đóng socket.
 - `SwipeableRow.tsx`: dùng cho list có hành động xoá (vd. lịch sử phiên).
 
 ## Lib (`lib/`)
