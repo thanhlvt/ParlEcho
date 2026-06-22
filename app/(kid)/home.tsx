@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Href, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Companion } from '../../components/kid/Companion';
 import { CompanionExpression } from '../../components/kid/companionAssets';
@@ -76,7 +76,7 @@ export default function KidHome() {
         <Ionicons name="ellipsis-horizontal" size={18} color={colors.textMuted} />
       </TouchableOpacity>
 
-      <View style={styles.center}>
+      <ScrollView contentContainerStyle={styles.center}>
         <TouchableOpacity activeOpacity={0.9} onPress={react}>
           <Companion
             companionId={profile?.companion_id}
@@ -130,11 +130,11 @@ export default function KidHome() {
         >
           <Text style={styles.collectionBtnText}>Trang phục 👕</Text>
         </TouchableOpacity>
-      </View>
 
-      <TouchableOpacity style={styles.exitBtn} onPress={exitKidMode} activeOpacity={0.8}>
-        <Text style={styles.exitText}>(Tạm) Thoát Kid Mode</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.exitBtn} onPress={exitKidMode} activeOpacity={0.8}>
+          <Text style={styles.exitText}>(Tạm) Thoát Kid Mode</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -144,10 +144,8 @@ const getStyles = (colors: any) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-      justifyContent: 'space-between',
-      paddingBottom: 24,
     },
-    center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+    center: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
     parentGateBtn: {
       position: 'absolute',
       left: 8,
@@ -185,6 +183,7 @@ const getStyles = (colors: any) =>
     collectionBtnText: { fontSize: 16, fontWeight: '700', color: colors.textPrimary },
     exitBtn: {
       alignSelf: 'center',
+      marginTop: 24,
       paddingHorizontal: 20,
       paddingVertical: 10,
       borderRadius: 12,
