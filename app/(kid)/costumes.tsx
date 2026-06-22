@@ -15,10 +15,11 @@ export default function CostumesScreen() {
   const styles = getStyles(colors);
   const router = useRouter();
   const { user } = useAuth();
-  const { profile, refresh: refreshProfile } = useProfile();
+  const { profile, refresh: refreshProfile, refreshActiveCostume } = useProfile();
 
   const [costumes, setCostumes] = useState<Costume[]>([]);
   const [ownedCostumeIds, setOwnedCostumeIds] = useState<Set<string>>(new Set());
+  const [wornCostumeId, setWornCostumeId] = useState<string | null>(null);
   const [buyingId, setBuyingId] = useState<string | null>(null);
   const [wearingId, setWearingId] = useState<string | null>(null);
 
@@ -32,6 +33,16 @@ export default function CostumesScreen() {
           .eq('companion_id', profile.companion_id)
           .order('sort_order')
           .then(({ data }) => setCostumes((data as Costume[]) ?? []));
+
+        supabase
+          .from('companion_costume_state')
+          .select('active_costume_id')
+          .eq('user_id', user.id)
+          .eq('companion_id', profile.companion_id)
+          .maybeSingle()
+          .then(({ data }) =>
+            setWornCostumeId((data as { active_costume_id: string } | null)?.active_costume_id ?? null),
+          );
       }
 
       supabase
@@ -60,17 +71,28 @@ export default function CostumesScreen() {
     setBuyingId(null);
   }
 
-  // Mặc/cởi trang phục — chỉ đổi profiles.active_costume_id (RLS "own profile" đã cho phép
-  // tự update). Chạm vào costume đang mặc để cởi ra (active_costume_id = null).
+  // Mặc/cởi trang phục — lưu riêng theo companion hiện tại trong companion_costume_state
+  // (RLS "own" đã cho phép tự ghi), không đụng tới costume đang mặc của companion khác.
+  // Chạm vào costume đang mặc để cởi ra (xoá row khỏi bảng).
   async function toggleWear(costume: Costume) {
-    if (!user || wearingId) return;
+    if (!user || !profile?.companion_id || wearingId) return;
     setWearingId(costume.id);
-    const nextId = profile?.active_costume_id === costume.id ? null : costume.id;
-    const { error } = await supabase
-      .from('profiles')
-      .update({ active_costume_id: nextId })
-      .eq('id', user.id);
-    if (!error) await refreshProfile();
+    const isCurrentlyWorn = wornCostumeId === costume.id;
+    const { error } = isCurrentlyWorn
+      ? await supabase
+          .from('companion_costume_state')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('companion_id', profile.companion_id)
+      : await supabase.from('companion_costume_state').upsert({
+          user_id: user.id,
+          companion_id: profile.companion_id,
+          active_costume_id: costume.id,
+        });
+    if (!error) {
+      setWornCostumeId(isCurrentlyWorn ? null : costume.id);
+      await refreshActiveCostume();
+    }
     setWearingId(null);
   }
 
@@ -94,7 +116,7 @@ export default function CostumesScreen() {
           {costumes.map((c) => {
             const owned = ownedCostumeIds.has(c.id);
             const canAfford = (profile?.biscuit_count ?? 0) >= c.price_biscuits;
-            const isWorn = profile?.active_costume_id === c.id;
+            const isWorn = wornCostumeId === c.id;
             return (
               <View key={c.id} style={[styles.cell, isWorn && styles.cellWorn]}>
                 <View style={styles.cellEmojiArea}>

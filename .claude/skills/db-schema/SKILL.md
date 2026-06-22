@@ -31,19 +31,21 @@ huynh tự thêm).
 **Dữ liệu user** (RLS owner-only qua `auth.uid()`): `profiles`,
 `conversations`, `messages`, `pronunciation_attempts`, `user_progress`,
 `daily_activity`, `daily_kid_usage`, `saved_items`, `user_stickers`,
-`user_costumes`, `mission_results`, `exploration_results`,
+`user_costumes`, `companion_costume_state` (xem "Costume shop" dưới),
+`mission_results`, `exploration_results`,
 `exploration_images` (ngoại lệ: SELECT mở rộng cho ảnh `is_approved =
 true` bất kể chủ sở hữu).
 
 ## `profiles` — các cột liên quan Kid Mode
 
 `is_kid_mode`, `parent_pin` (hash SHA-256, KHÔNG bao giờ lưu plaintext),
-`companion_id`, `active_costume_id` (FK `costumes.id`, null = không mặc
-gì — trẻ tự chọn ở `(kid)/costumes.tsx`, update trực tiếp qua Supabase JS
-client vì RLS "own profile" đã cho `for all`, không cần RPC),
-`screen_time_limit_minutes` (mặc định 20), `child_name`,
+`companion_id`, `screen_time_limit_minutes` (mặc định 20), `child_name`,
 `child_level`, `biscuit_count` (mặc định 0, cộng dồn qua RPC
 `increment_biscuits`).
+
+Trang phục đang mặc KHÔNG còn nằm ở `profiles` — xem `companion_costume_state`
+trong "Costume shop" dưới (lưu riêng theo từng companion, tránh lẫn khi đổi
+companion).
 
 ## `conversations` / `messages`
 
@@ -76,12 +78,16 @@ biscuit_count = biscuit_count + p_amount where id = p_user_id`. Dùng vì
 tự mua bằng biscuit đã gom ở `(kid)/costumes.tsx` qua RPC
 `purchase_costume` (xem trên) — costume KHÔNG tự mở theo số sao đạt được,
 chỉ sticker mới mở tự động khi hoàn thành mission (qua `sticker_pool`).
-Costume đã mua có thể "mặc" — set `profiles.active_costume_id`, chỉ 1
-costume mặc cùng lúc; chạm lại costume đang mặc để cởi ra (set null).
-Catalog costume dùng chung 1 bộ 16 emoji (🎩🕶️👑🎒☂️👢🧤📿🏅🪽🎭🧙🏴‍☠️🌼🎗️🦋)
-cho cả 3 companion (id khác nhau nhưng emoji giống nhau) + 3 costume gốc
-riêng theo companion (🧣 bear/🎀 cat/🦸 robot) — `Companion.tsx` khớp vị
-trí hiển thị theo **emoji**, xem skill `app-code`.
+Costume đã mua có thể "mặc" — upsert vào `companion_costume_state`
+(PK `(user_id, companion_id)`, FK `active_costume_id → costumes.id`), chỉ 1
+costume mặc cùng lúc CHO MỖI companion; chạm lại costume đang mặc để cởi ra
+(xoá row đó, không phải set null — không có cột nullable). Lưu riêng theo
+`companion_id` nên đổi companion không "mượn" costume của companion khác và
+companion cũ vẫn nhớ costume đã chọn khi đổi lại. Catalog costume dùng 1 bộ
+16 emoji RIÊNG cho mỗi companion (không trùng nhau giữa bear/cat/robot,
+xem `COSTUME_LAYOUT` trong `companionAssets.ts`) + 3 costume gốc riêng theo
+companion (🧣 bear/🎀 cat/🦸 robot) — `Companion.tsx` khớp vị trí hiển thị
+theo **emoji**, xem skill `app-code`.
 
 ## Image Exploration / moderation
 

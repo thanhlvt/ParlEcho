@@ -60,21 +60,26 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
 - `kid/`:
   - `Companion` (emoji + reanimated, biểu cảm
     idle/happy/surprised/cheering/thinking), `companionAssets`. Nhận
-    `costumeEmoji` (lấy từ `profile.active_costume_id` qua
-    `useProfile().activeCostumeEmoji`, tra ở `ProfileProvider`) để vẽ chồng
-    trang phục đang mặc lên thân nhân vật, theo vị trí cố định trong
-    `COSTUME_LAYOUT` (`companionAssets.ts`) — khớp theo **emoji** (không
-    theo id costume, vì 3 companion dùng chung 1 bộ emoji costume): mũ/vương
-    miện ở trên đầu, kính/mặt nạ ở mặt, khăn/vòng cổ/huy chương ở cổ-ngực,
-    balo/cánh/áo choàng vẽ phía sau thân (`behind: true`, lộ ra hai bên),
-    bao tay/giày/dù ở tay-chân. Trang phục nằm trong cùng `Animated.View`
-    với thân nhân vật nên animate đồng bộ theo cùng 1 transform (không lặp
-    lại logic animation). Khi có `costumeEmoji`, khung ngoài Companion tự
-    phình to hơn (`COSTUME_SPACE_FACTOR`) để chứa phần trang phục lồi ra
-    mà không bị layout xung quanh cắt mất. Chọn mặc/cởi ở
-    `(kid)/costumes.tsx` (chỉ costume đã mua), update trực tiếp
-    `profiles.active_costume_id` (RLS "own profile" cho phép tự update,
-    không cần RPC).
+    `costumeEmoji` (tra theo companion HIỆN TẠI trong
+    `useProfile().activeCostumeEmoji`, `ProfileProvider` query bảng
+    `companion_costume_state` lọc theo `companion_id` — đổi companion sẽ tra
+    lại nên không bị "mượn" costume của companion khác) để vẽ chồng trang
+    phục đang mặc lên thân nhân vật, theo vị trí cố định trong
+    `COSTUME_LAYOUT` (`companionAssets.ts`) — khớp theo **emoji** (mỗi
+    companion dùng 1 bộ emoji RIÊNG, không trùng nhau, nên mỗi costume id
+    chỉ khớp đúng 1 entry layout): mũ/vương miện ở trên đầu, kính/mặt nạ ở
+    mặt, khăn/vòng cổ/huy chương ở cổ-ngực, balo/cánh/áo choàng vẽ phía sau
+    thân (`behind: true`, lộ ra hai bên), bao tay/giày/dù ở tay-chân. Trang
+    phục nằm trong cùng `Animated.View` với thân nhân vật nên animate đồng
+    bộ theo cùng 1 transform (không lặp lại logic animation). Khi có
+    `costumeEmoji`, khung ngoài Companion tự phình to hơn
+    (`COSTUME_SPACE_FACTOR`) để chứa phần trang phục lồi ra mà không bị
+    layout xung quanh cắt mất. Chọn mặc/cởi ở `(kid)/costumes.tsx` (chỉ
+    costume đã mua) — upsert/delete trực tiếp row trong
+    `companion_costume_state` cho `(user_id, companion_id)` hiện tại (RLS
+    "own" cho phép tự ghi, không cần RPC), rồi gọi
+    `useProfile().refreshActiveCostume()` để cập nhật lại
+    `activeCostumeEmoji`.
   - `StarRow` (animation sao bay khi tổng kết mission).
   - `BiscuitBadge` (bộ đếm biscuit, đặt ở `(kid)/_layout.tsx`, đọc
     `profile.biscuit_count`, góc phải — ngay dưới `ScreenTimeBadge` để

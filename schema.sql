@@ -159,7 +159,6 @@ create table profiles (
   is_kid_mode               boolean not null default false,
   parent_pin                text,                       -- hash PIN 4 số (KHÔNG lưu plaintext)
   companion_id              text,                       -- nhân vật đồng hành đã chọn
-  active_costume_id         text references costumes(id), -- trang phục đang mặc (null = không mặc gì)
   screen_time_limit_minutes int not null default 20,    -- giới hạn phút/phiên
   child_name                text,
   child_level               text default 'beginner',    -- 'beginner' | 'intermediate'
@@ -293,6 +292,17 @@ create table user_costumes (
   costume_id  text not null references costumes(id) on delete cascade,
   unlocked_at timestamptz not null default now(),
   unique (user_id, costume_id)
+);
+
+-- Kid Mode: trang phục đang mặc, lưu RIÊNG theo từng companion (1 user có thể có 1 costume
+-- đang mặc cho bear, 1 costume khác cho cat...) — đổi companion không "mượn" costume của
+-- companion khác. Chọn/cởi ở (kid)/costumes.tsx, đọc ở providers/ProfileProvider.tsx.
+create table companion_costume_state (
+  user_id           uuid not null references auth.users(id) on delete cascade,
+  companion_id      text not null references companions(id) on delete cascade,
+  active_costume_id text not null references costumes(id) on delete cascade,
+  updated_at        timestamptz not null default now(),
+  primary key (user_id, companion_id)
 );
 
 -- Kid Mode: kết quả mỗi lần hoàn thành mission — chấm sao (Pha 3)
@@ -442,6 +452,7 @@ alter table daily_kid_usage        enable row level security;
 alter table saved_items            enable row level security;
 alter table user_stickers          enable row level security;
 alter table user_costumes          enable row level security;
+alter table companion_costume_state enable row level security;
 alter table mission_results        enable row level security;
 alter table exploration_results    enable row level security;
 alter table priority_vocab         enable row level security;
@@ -474,6 +485,9 @@ create policy "own user_stickers"  on user_stickers
   for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create policy "own user_costumes"  on user_costumes
+  for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+create policy "own companion_costume_state" on companion_costume_state
   for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 create policy "own mission_results" on mission_results
@@ -786,45 +800,14 @@ from unnest(
 ) as t(name, theme, emoji)
 on conflict (id) do nothing;
 
--- Kid Mode: mở rộng catalog costume lên 50 (đã có 3 ở trên, thêm 47) ---------
-insert into costumes (id, companion_id, name, emoji, sort_order)
-select 'costume-bear-' || (idx + 1), 'bear', name, emoji, (idx + 1)
-from (
-  select row_number() over () as idx, name, emoji from unnest(
-    array['Nón vui nhộn','Kính râm','Vương miện','Balo phiêu lưu','Dù che nắng','Giày boots',
-          'Bao tay ấm','Vòng cổ lấp lánh','Huy chương','Cánh thiên thần','Mặt nạ bí ẩn',
-          'Áo choàng phù thủy','Nón cướp biển','Vòng hoa','Nơ lấp lánh','Đôi cánh bướm'],
-    array['🎩','🕶️','👑','🎒','☂️','👢','🧤','📿','🏅','🪽','🎭','🧙','🏴‍☠️','🌼','🎗️','🦋']
-  ) as t(name, emoji)
-) s
-on conflict (id) do nothing;
-
-insert into costumes (id, companion_id, name, emoji, sort_order)
-select 'costume-cat-' || (idx + 1), 'cat', name, emoji, (idx + 1)
-from (
-  select row_number() over () as idx, name, emoji from unnest(
-    array['Nón vui nhộn','Kính râm','Vương miện','Balo phiêu lưu','Dù che nắng','Giày boots',
-          'Bao tay ấm','Vòng cổ lấp lánh','Huy chương','Cánh thiên thần','Mặt nạ bí ẩn',
-          'Áo choàng phù thủy','Nón cướp biển','Vòng hoa','Nơ lấp lánh','Đôi cánh bướm'],
-    array['🎩','🕶️','👑','🎒','☂️','👢','🧤','📿','🏅','🪽','🎭','🧙','🏴‍☠️','🌼','🎗️','🦋']
-  ) as t(name, emoji)
-) s
-on conflict (id) do nothing;
-
-insert into costumes (id, companion_id, name, emoji, sort_order)
-select 'costume-robot-' || (idx + 1), 'robot', name, emoji, (idx + 1)
-from (
-  select row_number() over () as idx, name, emoji from unnest(
-    array['Nón vui nhộn','Kính râm','Vương miện','Balo phiêu lưu','Dù che nắng','Giày boots',
-          'Bao tay ấm','Vòng cổ lấp lánh','Huy chương','Cánh thiên thần','Mặt nạ bí ẩn',
-          'Áo choàng phù thủy','Nón cướp biển','Vòng hoa','Nơ lấp lánh'],
-    array['🎩','🕶️','👑','🎒','☂️','👢','🧤','📿','🏅','🪽','🎭','🧙','🏴‍☠️','🌼','🎗️']
-  ) as t(name, emoji)
-) s
+-- Kid Mode: mở rộng catalog costume lên 50 (đã có 3 ở trên, thêm 47) — mỗi companion dùng
+-- 1 bộ emoji RIÊNG (không trùng giữa bear/cat/robot) để trang phục không bị lẫn hình ảnh
+-- khi đổi companion; xem components/kid/companionAssets.ts COSTUME_LAYOUT khớp theo emoji.
+INSERT INTO "public"."costumes" ("id", "companion_id", "name", "emoji", "sort_order", "price_biscuits") VALUES ('costume-bear-10', 'bear', 'Huy chương', '🏅', 10, 280), ('costume-bear-11', 'bear', 'Cánh thiên thần', '🪽', 11, 300), ('costume-bear-12', 'bear', 'Mặt nạ bí ẩn', '👺', 12, 320), ('costume-bear-13', 'bear', 'Áo choàng phù thủy', '🧙', 13, 340), ('costume-bear-14', 'bear', 'Nón cướp biển', '🏴‍☠️', 14, 360), ('costume-bear-15', 'bear', 'Vòng hoa', '🌼', 15, 380), ('costume-bear-16', 'bear', 'Nơ lấp lánh', '🎗️', 16, 400), ('costume-bear-17', 'bear', 'Đôi cánh bướm', '🦋', 17, 420), ('costume-bear-2', 'bear', 'Nón vui nhộn', '🎩', 2, 120), ('costume-bear-3', 'bear', 'Kính râm', '🕶️', 3, 140), ('costume-bear-4', 'bear', 'Vương miện', '👑', 4, 160), ('costume-bear-5', 'bear', 'Balo phiêu lưu', '🎒', 5, 180), ('costume-bear-6', 'bear', 'Dù che nắng', '☂️', 6, 200), ('costume-bear-7', 'bear', 'Giày boots', '👢', 7, 220), ('costume-bear-8', 'bear', 'Bao tay ấm', '🥊', 8, 240), ('costume-bear-9', 'bear', 'Vòng cổ lấp lánh', '📿', 9, 260), ('costume-bear-scarf', 'bear', 'Khăn len ấm', '🧣', 1, 100), ('costume-cat-10', 'cat', 'Thiên thần', '🧚', 10, 280), ('costume-cat-11', 'cat', 'Thần bài', '🃏', 11, 300), ('costume-cat-12', 'cat', 'Gậy phù thuỷ', '🪄', 12, 320), ('costume-cat-13', 'cat', 'Kiếm sắt', '⚔️', 13, 340), ('costume-cat-14', 'cat', 'Hoa hồng', '🌺', 14, 360), ('costume-cat-15', 'cat', 'Vòng hoa', '💫', 15, 380), ('costume-cat-16', 'cat', 'Rồng nhỏ', '🐉', 16, 400), ('costume-cat-17', 'cat', 'Nón vui nhộn', '🧢', 17, 420), ('costume-cat-2', 'cat', 'Kính bơi', '🥽', 2, 120), ('costume-cat-3', 'cat', 'Vương miện', '💎', 3, 140), ('costume-cat-4', 'cat', 'Túi xách', '👜', 4, 160), ('costume-cat-5', 'cat', 'Dù che nắng', '🌂', 5, 180), ('costume-cat-6', 'cat', 'Guốc mộc', '👡', 6, 200), ('costume-cat-7', 'cat', 'Đôi vớ', '🧦', 7, 220), ('costume-cat-8', 'cat', 'Vòng cổ lấp lánh', '💠', 8, 240), ('costume-cat-9', 'cat', 'Huy chương', '🥇', 9, 260), ('costume-cat-bowtie', 'cat', 'Nơ xinh', '🎀', 1, 100), ('costume-robot-10', 'robot', 'Tên lửa', '🚀', 10, 280), ('costume-robot-11', 'robot', 'Mặt nạ bí ẩn', '👾', 11, 300), ('costume-robot-12', 'robot', 'UFO', '🛸', 12, 320), ('costume-robot-13', 'robot', 'Mũ phù thủy', '🦹', 13, 340), ('costume-robot-14', 'robot', 'Vòng sao', '🌟', 14, 360), ('costume-robot-15', 'robot', 'Cờ lê', '🔧', 15, 380), ('costume-robot-16', 'robot', 'Mũ anh hùng', '🦸', 16, 400), ('costume-robot-2', 'robot', 'Kính râm', '👓', 2, 120), ('costume-robot-3', 'robot', 'Cup', '🏆', 3, 140), ('costume-robot-4', 'robot', 'Hộp phiêu lưu', '🧰', 4, 160), ('costume-robot-5', 'robot', 'Khiên che nắng', '🛡️', 5, 180), ('costume-robot-6', 'robot', 'Chân robot', '🦿', 6, 200), ('costume-robot-7', 'robot', 'Tay robot', '🦾', 7, 220), ('costume-robot-8', 'robot', 'Vòng cổ', '🔗', 8, 240), ('costume-robot-9', 'robot', 'Huy chương lấp lánh', '🎖️', 9, 260), ('costume-robot-cape', 'robot', 'Nón vui nhộn', '⛑️', 1, 100)
 on conflict (id) do nothing;
 
 -- Kid Mode: giá costume tăng dần theo sort_order (100, 120, 140... biscuit) để trẻ dành dụm dần.
-update costumes set price_biscuits = 100 + (sort_order - 1) * 20;
+update costumes set price_biscuits = 100 + (sort_order - 1) * 10;
 
 -- Kid Mode: gắn sticker_pool (3 sticker/nhiệm vụ) cho 29 nhiệm vụ mới — không có pool thì
 -- không mở được sticker nào khi đạt sao (xem useMissionSession.awardMissionResult).

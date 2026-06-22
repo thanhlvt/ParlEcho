@@ -12,6 +12,7 @@ import Animated, {
 import {
   baseEmojiFor,
   CompanionExpression,
+  CostumeLayout,
   EXPRESSION_BADGE,
   layoutForCostume,
 } from './companionAssets';
@@ -21,7 +22,7 @@ interface CompanionProps {
   /** Biểu cảm theo ngữ cảnh: vui khi đúng, ngạc nhiên khi im lặng, cổ vũ khi sắp xong... */
   expression?: CompanionExpression;
   size?: number;
-  /** Emoji trang phục đang mặc (profiles.active_costume_id → costumes.emoji), null = không mặc gì. */
+  /** Emoji trang phục đang mặc của companion này (companion_costume_state → costumes.emoji), null = không mặc gì. */
   costumeEmoji?: string | null;
 }
 
@@ -116,25 +117,39 @@ export function Companion({
   const layout = layoutForCostume(costumeEmoji);
   const stageSize = costumeEmoji ? size * COSTUME_SPACE_FACTOR : size;
 
-  const costumeNode =
-    costumeEmoji && layout ? (
+  // count = 2: vẽ thêm 1 bản sao theo `second` (override 1 phần layout, vd đổi `left` để đặt
+  // sang bên kia thân nhân vật — bao tay/giày mỗi bên 1 cái).
+  function renderCostumeIcon(part: CostumeLayout, key: string) {
+    const iconSize = size * part.sizeRatio;
+    return (
       <Text
+        key={key}
         style={[
           styles.costume,
           {
-            top: `${layout.top}%`,
-            left: `${layout.left}%`,
-            fontSize: size * layout.sizeRatio,
+            top: `${part.top}%`,
+            left: `${part.left}%`,
+            fontSize: iconSize,
             transform: [
-              { translateX: -(size * layout.sizeRatio) / 2 },
-              { translateY: -(size * layout.sizeRatio) / 2 },
-              ...(layout.rotate ? [{ rotate: `${layout.rotate}rad` }] : []),
+              { translateX: -iconSize / 2 },
+              { translateY: -iconSize / 2 },
+              ...(part.rotate ? [{ rotate: `${part.rotate}rad` }] : []),
+              ...(part.flip ? [{ scaleX: -1 }] : []),
             ],
           },
         ]}
       >
         {costumeEmoji}
       </Text>
+    );
+  }
+
+  const costumeNode =
+    costumeEmoji && layout ? (
+      <>
+        {renderCostumeIcon(layout, 'costume-1')}
+        {layout.count === 2 ? renderCostumeIcon({ ...layout, ...layout.second }, 'costume-2') : null}
+      </>
     ) : null;
 
   return (

@@ -610,40 +610,7 @@ from unnest(
 on conflict (id) do nothing;
 
 -- 28. Mở rộng catalog costume lên 50 (đã có 3, thêm 47: 16 bear + 16 cat + 15 robot) ----
-insert into costumes (id, companion_id, name, emoji, sort_order)
-select 'costume-bear-' || (idx + 1), 'bear', name, emoji, (idx + 1)
-from (
-  select row_number() over () as idx, name, emoji from unnest(
-    array['Nón vui nhộn','Kính râm','Vương miện','Balo phiêu lưu','Dù che nắng','Giày boots',
-          'Bao tay ấm','Vòng cổ lấp lánh','Huy chương','Cánh thiên thần','Mặt nạ bí ẩn',
-          'Áo choàng phù thủy','Nón cướp biển','Vòng hoa','Nơ lấp lánh','Đôi cánh bướm'],
-    array['🎩','🕶️','👑','🎒','☂️','👢','🧤','📿','🏅','🪽','🎭','🧙','🏴‍☠️','🌼','🎗️','🦋']
-  ) as t(name, emoji)
-) s
-on conflict (id) do nothing;
-
-insert into costumes (id, companion_id, name, emoji, sort_order)
-select 'costume-cat-' || (idx + 1), 'cat', name, emoji, (idx + 1)
-from (
-  select row_number() over () as idx, name, emoji from unnest(
-    array['Nón vui nhộn','Kính râm','Vương miện','Balo phiêu lưu','Dù che nắng','Giày boots',
-          'Bao tay ấm','Vòng cổ lấp lánh','Huy chương','Cánh thiên thần','Mặt nạ bí ẩn',
-          'Áo choàng phù thủy','Nón cướp biển','Vòng hoa','Nơ lấp lánh','Đôi cánh bướm'],
-    array['🎩','🕶️','👑','🎒','☂️','👢','🧤','📿','🏅','🪽','🎭','🧙','🏴‍☠️','🌼','🎗️','🦋']
-  ) as t(name, emoji)
-) s
-on conflict (id) do nothing;
-
-insert into costumes (id, companion_id, name, emoji, sort_order)
-select 'costume-robot-' || (idx + 1), 'robot', name, emoji, (idx + 1)
-from (
-  select row_number() over () as idx, name, emoji from unnest(
-    array['Nón vui nhộn','Kính râm','Vương miện','Balo phiêu lưu','Dù che nắng','Giày boots',
-          'Bao tay ấm','Vòng cổ lấp lánh','Huy chương','Cánh thiên thần','Mặt nạ bí ẩn',
-          'Áo choàng phù thủy','Nón cướp biển','Vòng hoa','Nơ lấp lánh'],
-    array['🎩','🕶️','👑','🎒','☂️','👢','🧤','📿','🏅','🪽','🎭','🧙','🏴‍☠️','🌼','🎗️']
-  ) as t(name, emoji)
-) s
+INSERT INTO "public"."costumes" ("id", "companion_id", "name", "emoji", "sort_order", "price_biscuits") VALUES ('costume-bear-10', 'bear', 'Huy chương', '🏅', 10, 280), ('costume-bear-11', 'bear', 'Cánh thiên thần', '🪽', 11, 300), ('costume-bear-12', 'bear', 'Mặt nạ bí ẩn', '👺', 12, 320), ('costume-bear-13', 'bear', 'Áo choàng phù thủy', '🧙', 13, 340), ('costume-bear-14', 'bear', 'Nón cướp biển', '🏴‍☠️', 14, 360), ('costume-bear-15', 'bear', 'Vòng hoa', '🌼', 15, 380), ('costume-bear-16', 'bear', 'Nơ lấp lánh', '🎗️', 16, 400), ('costume-bear-17', 'bear', 'Đôi cánh bướm', '🦋', 17, 420), ('costume-bear-2', 'bear', 'Nón vui nhộn', '🎩', 2, 120), ('costume-bear-3', 'bear', 'Kính râm', '🕶️', 3, 140), ('costume-bear-4', 'bear', 'Vương miện', '👑', 4, 160), ('costume-bear-5', 'bear', 'Balo phiêu lưu', '🎒', 5, 180), ('costume-bear-6', 'bear', 'Dù che nắng', '☂️', 6, 200), ('costume-bear-7', 'bear', 'Giày boots', '👢', 7, 220), ('costume-bear-8', 'bear', 'Bao tay ấm', '🥊', 8, 240), ('costume-bear-9', 'bear', 'Vòng cổ lấp lánh', '📿', 9, 260), ('costume-bear-scarf', 'bear', 'Khăn len ấm', '🧣', 1, 100), ('costume-cat-10', 'cat', 'Thiên thần', '🧚', 10, 280), ('costume-cat-11', 'cat', 'Thần bài', '🃏', 11, 300), ('costume-cat-12', 'cat', 'Gậy phù thuỷ', '🪄', 12, 320), ('costume-cat-13', 'cat', 'Kiếm sắt', '⚔️', 13, 340), ('costume-cat-14', 'cat', 'Hoa hồng', '🌺', 14, 360), ('costume-cat-15', 'cat', 'Vòng hoa', '💫', 15, 380), ('costume-cat-16', 'cat', 'Rồng nhỏ', '🐉', 16, 400), ('costume-cat-17', 'cat', 'Nón vui nhộn', '🧢', 17, 420), ('costume-cat-2', 'cat', 'Kính bơi', '🥽', 2, 120), ('costume-cat-3', 'cat', 'Vương miện', '💎', 3, 140), ('costume-cat-4', 'cat', 'Túi xách', '👜', 4, 160), ('costume-cat-5', 'cat', 'Dù che nắng', '🌂', 5, 180), ('costume-cat-6', 'cat', 'Guốc mộc', '👡', 6, 200), ('costume-cat-7', 'cat', 'Đôi vớ', '🧦', 7, 220), ('costume-cat-8', 'cat', 'Vòng cổ lấp lánh', '💠', 8, 240), ('costume-cat-9', 'cat', 'Huy chương', '🥇', 9, 260), ('costume-cat-bowtie', 'cat', 'Nơ xinh', '🎀', 1, 100), ('costume-robot-10', 'robot', 'Tên lửa', '🚀', 10, 280), ('costume-robot-11', 'robot', 'Mặt nạ bí ẩn', '👾', 11, 300), ('costume-robot-12', 'robot', 'UFO', '🛸', 12, 320), ('costume-robot-13', 'robot', 'Mũ phù thủy', '🦹', 13, 340), ('costume-robot-14', 'robot', 'Vòng sao', '🌟', 14, 360), ('costume-robot-15', 'robot', 'Cờ lê', '🔧', 15, 380), ('costume-robot-16', 'robot', 'Mũ anh hùng', '🦸', 16, 400), ('costume-robot-2', 'robot', 'Kính râm', '👓', 2, 120), ('costume-robot-3', 'robot', 'Cup', '🏆', 3, 140), ('costume-robot-4', 'robot', 'Hộp phiêu lưu', '🧰', 4, 160), ('costume-robot-5', 'robot', 'Khiên che nắng', '🛡️', 5, 180), ('costume-robot-6', 'robot', 'Chân robot', '🦿', 6, 200), ('costume-robot-7', 'robot', 'Tay robot', '🦾', 7, 220), ('costume-robot-8', 'robot', 'Vòng cổ', '🔗', 8, 240), ('costume-robot-9', 'robot', 'Huy chương lấp lánh', '🎖️', 9, 260), ('costume-robot-cape', 'robot', 'Nón vui nhộn', '⛑️', 1, 100)
 on conflict (id) do nothing;
 
 -- 29. Gắn sticker_pool (3 sticker/nhiệm vụ) cho 29 nhiệm vụ mới — không có pool thì
@@ -687,7 +654,7 @@ grant execute on function increment_biscuits(uuid, int) to authenticated;
 
 -- 32. Costume shop: trẻ mua costume bằng biscuit (thay cho mở tự động khi đạt 3 sao) -----
 alter table costumes add column if not exists price_biscuits int not null default 100;
-update costumes set price_biscuits =  100 + (sort_order - 1) * 20;
+update costumes set price_biscuits =  100 + (sort_order - 1) * 10;
 
 -- 33. RPC mua costume bằng biscuit — atomic: trừ biscuit_count chỉ khi đủ tiền (điều kiện
 -- trong WHERE của UPDATE, tránh race double-spend), rồi mới insert user_costumes.
@@ -839,3 +806,34 @@ end $$;
 -- components/kid/companionAssets.ts). Null = không mặc gì. Chọn ở (kid)/costumes.tsx, đọc
 -- lại ở mọi màn hình có hiển thị <Companion>.
 alter table profiles add column if not exists active_costume_id text references costumes(id);
+
+-- 39. Trang phục đang mặc lưu RIÊNG theo từng companion — trước đây chỉ có 1 cột
+-- profiles.active_costume_id chung cho mọi companion nên đổi companion vẫn hiển thị costume
+-- của companion cũ (dù companion mới chưa mua costume nào). Chuyển sang bảng map
+-- (user_id, companion_id) -> costume đang mặc, đọc/ghi ở (kid)/costumes.tsx + ProfileProvider.
+create table if not exists companion_costume_state (
+  user_id           uuid not null references auth.users(id) on delete cascade,
+  companion_id      text not null references companions(id) on delete cascade,
+  active_costume_id text not null references costumes(id) on delete cascade,
+  updated_at        timestamptz not null default now(),
+  primary key (user_id, companion_id)
+);
+
+alter table companion_costume_state enable row level security;
+
+drop policy if exists "own companion_costume_state" on companion_costume_state;
+create policy "own companion_costume_state" on companion_costume_state
+  for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+grant all on table companion_costume_state to authenticated, service_role;
+
+-- Chuyển dữ liệu cũ từ profiles.active_costume_id (nếu có) sang bảng mới, gắn vào companion
+-- hiện tại của user, rồi bỏ cột cũ vì không còn dùng (xem providers/ProfileProvider.tsx,
+-- app/(kid)/costumes.tsx).
+insert into companion_costume_state (user_id, companion_id, active_costume_id)
+select id, companion_id, active_costume_id
+from profiles
+where active_costume_id is not null and companion_id is not null
+on conflict (user_id, companion_id) do nothing;
+
+alter table profiles drop column if exists active_costume_id;

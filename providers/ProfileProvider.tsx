@@ -7,10 +7,13 @@ interface ProfileContextType {
   profile: Profile | null;
   isKidMode: boolean;
   loading: boolean;
-  /** Emoji trang phục đang mặc (tra theo profile.active_costume_id), null = không mặc gì. */
+  /** Emoji trang phục đang mặc của companion hiện tại (tra theo companion_costume_state),
+   *  null = không mặc gì. Đổi companion sẽ tra lại, không bị lẫn costume của companion khác. */
   activeCostumeEmoji: string | null;
   /** Tải lại profile từ DB (gọi sau khi bật/tắt Kid Mode) để theme + route cập nhật. */
   refresh: () => Promise<void>;
+  /** Tải lại costume đang mặc của companion hiện tại (gọi sau khi mặc/cởi ở (kid)/costumes.tsx). */
+  refreshActiveCostume: () => Promise<void>;
 }
 
 const ProfileContext = createContext<ProfileContextType>({
@@ -19,6 +22,7 @@ const ProfileContext = createContext<ProfileContextType>({
   loading: true,
   activeCostumeEmoji: null,
   refresh: async () => {},
+  refreshActiveCostume: async () => {},
 });
 
 export function useProfile() {
@@ -48,20 +52,29 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     refresh();
   }, [authLoading, user, refresh]);
 
-  // Tra emoji của costume đang mặc mỗi khi active_costume_id đổi, để Companion hiển thị
-  // trang phục mà không cần mỗi màn hình tự query lại bảng costumes.
-  useEffect(() => {
-    if (!profile?.active_costume_id) {
+  // Tra emoji costume đang mặc của companion HIỆN TẠI trong companion_costume_state, để
+  // Companion hiển thị mà không cần mỗi màn hình tự query lại. Lưu riêng theo companion_id
+  // nên đổi companion sẽ tra ra costume khác (hoặc null nếu companion đó chưa mặc gì) —
+  // không bị "mượn" costume của companion vừa đổi khỏi.
+  const refreshActiveCostume = useCallback(async () => {
+    if (!user || !profile?.companion_id) {
       setActiveCostumeEmoji(null);
       return;
     }
-    supabase
-      .from('costumes')
-      .select('emoji')
-      .eq('id', profile.active_costume_id)
-      .single()
-      .then(({ data }) => setActiveCostumeEmoji((data as { emoji: string } | null)?.emoji ?? null));
-  }, [profile?.active_costume_id]);
+    const { data } = await supabase
+      .from('companion_costume_state')
+      .select('costumes(emoji)')
+      .eq('user_id', user.id)
+      .eq('companion_id', profile.companion_id)
+      .maybeSingle();
+    setActiveCostumeEmoji(
+      (data as { costumes: { emoji: string } | null } | null)?.costumes?.emoji ?? null,
+    );
+  }, [user, profile?.companion_id]);
+
+  useEffect(() => {
+    refreshActiveCostume();
+  }, [refreshActiveCostume]);
 
   return (
     <ProfileContext.Provider
@@ -71,6 +84,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         loading,
         activeCostumeEmoji,
         refresh,
+        refreshActiveCostume,
       }}
     >
       {children}

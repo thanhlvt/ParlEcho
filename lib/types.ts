@@ -121,6 +121,14 @@ export type UserCostume = {
   unlocked_at: string;
 };
 
+// Trang phục đang mặc, lưu riêng theo từng companion (xem companion_costume_state)
+export type CompanionCostumeState = {
+  user_id: string;
+  companion_id: string;
+  active_costume_id: string;
+  updated_at: string;
+};
+
 export type MissionResult = {
   id: string;
   user_id: string;
@@ -176,7 +184,6 @@ export type Profile = {
   is_kid_mode: boolean;
   parent_pin: string | null;
   companion_id: string | null;
-  active_costume_id: string | null;
   screen_time_limit_minutes: number;
   child_name: string | null;
   child_level: string | null;
