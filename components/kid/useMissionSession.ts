@@ -414,6 +414,12 @@ export function useMissionSession(missionId: string) {
     clientRef.current = null;
     const { turns: finalTurns, rawUserSegments, rawAiSegments } = client.stop();
 
+    // Đặt scoring=true TRƯỚC await — nếu đặt sau (cùng lúc với setView('finished')), 2 setState
+    // có thể không được batch chung 1 lần render (tuỳ thời điểm gọi từ message loop WebSocket,
+    // không phải React event), khiến màn "finished" thoáng hiện 0 sao (state mặc định) trước khi
+    // "đang chấm điểm" kịp hiện. Đặt sớm để chắc chắn đã commit trước khi view đổi sang 'finished'.
+    setScoring(true);
+
     // client.stop() flush lượt nói cuối cùng (nếu có) → bắn onUserUtterance đồng bộ ngay trên,
     // đẩy 1 promise mới vào pendingScoringRef — PHẢI await hết trước khi đọc
     // pronunciationScoresRef bên dưới, nếu không lượt cuối có thể chưa kịp chấm điểm xong.
@@ -423,7 +429,6 @@ export function useMissionSession(missionId: string) {
     // Chỗ sao báo "đang chấm điểm" (cờ scoring) cho tới khi session-review xong, rồi lộ TOÀN BỘ
     // sao + biscuit/sticker/vòng quay một lần kèm animation (không hiện sao lẻ rồi đổi).
     setView('finished');
-    setScoring(true);
 
     if (finalTurns.length === 0) {
       setScoring(false);

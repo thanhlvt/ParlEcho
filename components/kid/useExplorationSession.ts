@@ -39,9 +39,10 @@ import { CompanionExpression } from './companionAssets';
 const SESSION_LIMIT_MINUTES = 8;
 const REACTION_DISPLAY_MS = 1600;
 const TIME_UP_FALLBACK_MS = 20000;
-// AI gọi tool `end_activity` (onActivityComplete) sau khi chào tạm biệt → tự kết thúc phiên
-// thay vì chỉ chờ Gemini đóng socket (không đáng tin). `onAiAudioDone` kết thúc ngay khi nói
-// xong; fallback này phòng khi model gọi tool mà không phát thêm audio (reset ở onAudioChunk).
+// AI gọi tool `end_activity` (onActivityComplete) NGAY sau câu trả lời cuối, TRƯỚC khi nói lời
+// tạm biệt → tự kết thúc phiên thay vì chỉ chờ Gemini đóng socket (không đáng tin). `onAiAudioDone`
+// kết thúc ngay khi nói xong lời tạm biệt; fallback này phòng khi model gọi tool xong mà không
+// phát thêm audio tạm biệt nào (reset ở onAudioChunk mỗi khi vẫn còn audio).
 const ACTIVITY_END_SILENCE_MS = 5000;
 const IMAGE_POOL_SIZE = 50;
 const IMAGE_MAX_DIMENSION = 1024;
@@ -337,7 +338,7 @@ export function useExplorationSession() {
       },
       onAudioChunk: async (pcm24Base64) => {
         if (isPausedRef.current) return;
-        // AI vẫn đang nói lời tạm biệt sau end_activity → đẩy lùi fallback để không cắt ngang;
+        // AI vẫn đang nói (lời tạm biệt sau end_activity) → đẩy lùi fallback để không cắt ngang;
         // onAiAudioDone sẽ kết thúc ngay khi nói xong.
         if (activityCompletedRef.current && activityEndFallbackRef.current) {
           clearTimeout(activityEndFallbackRef.current);
@@ -361,7 +362,8 @@ export function useExplorationSession() {
       onInterrupted: () => {
         audioQueueRef.current?.clearBuffers();
       },
-      // AI báo đã chào tạm biệt xong (tool end_activity) → đợi nói hết audio rồi tự kết thúc.
+      // AI báo đã trả lời xong câu cuối (tool end_activity, gọi TRƯỚC khi nói lời tạm biệt) →
+      // đợi nói hết audio tạm biệt rồi tự kết thúc.
       onActivityComplete: () => {
         activityCompletedRef.current = true;
         if (activityEndFallbackRef.current) clearTimeout(activityEndFallbackRef.current);
@@ -431,6 +433,12 @@ export function useExplorationSession() {
     clientRef.current = null;
     const { turns: finalTurns, rawUserSegments, rawAiSegments } = client.stop();
 
+    // Đặt scoring=true TRƯỚC await — nếu đặt sau (cùng lúc với setView('finished')), 2 setState
+    // có thể không được batch chung 1 lần render (tuỳ thời điểm gọi từ message loop WebSocket,
+    // không phải React event), khiến màn "finished" thoáng hiện 0 sao (state mặc định) trước khi
+    // "đang chấm điểm" kịp hiện. Đặt sớm để chắc chắn đã commit trước khi view đổi sang 'finished'.
+    setScoring(true);
+
     // client.stop() flush lượt nói cuối cùng (nếu có) → bắn onUserUtterance đồng bộ ngay trên,
     // đẩy 1 promise mới vào pendingScoringRef — PHẢI await hết trước khi đọc
     // pronunciationScoresRef bên dưới, nếu không lượt cuối có thể chưa kịp chấm điểm xong.
@@ -440,7 +448,6 @@ export function useExplorationSession() {
     // Chỗ sao báo "đang chấm điểm" (cờ scoring) cho tới khi session-review xong, rồi lộ TOÀN BỘ
     // sao + biscuit/vòng quay một lần kèm animation (không hiện sao lẻ rồi đổi).
     setView('finished');
-    setScoring(true);
 
     if (finalTurns.length === 0) {
       setScoring(false);
@@ -637,8 +644,8 @@ export function useExplorationSession() {
 
   // Tính sao theo điểm phát âm + thưởng biscuit — Image Exploration không có bước/hint
   // như Guided Conversation nên không dùng mission_results, chỉ thưởng biscuit/biscuit_count.
-  // `completed` = activityCompletedRef: AI đã gọi tool end_activity (nói xong lời tạm biệt) —
-  // trẻ bỏ ngang/hết giờ giữa hoạt động thì KHÔNG được sao nào.
+  // `completed` = activityCompletedRef: AI đã gọi tool end_activity (đã trả lời xong câu hỏi
+  // cuối) — trẻ bỏ ngang/hết giờ giữa hoạt động thì KHÔNG được sao nào.
   async function awardExplorationResult(avgPronunciation: number | null, conversationId: string) {
     if (!user) return;
     const earnedStars = calculateExplorationStars({

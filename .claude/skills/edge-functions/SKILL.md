@@ -81,7 +81,11 @@ convention RN của app).
   `toolResponse` có `id` khớp + `response.result`, sau đó nói tiếp khen + hỏi
   bước kế. (Trước đây tưởng FC "treo phiên" — thực ra do chưa gửi/sai `id`
   trong `toolResponse`; gửi đúng thì model nói tiếp bình thường.) Image
-  Exploration cũng dùng 1 tool `end_activity()`: AI gọi sau khi chào tạm biệt
+  Exploration cũng dùng 1 tool `end_activity()`: AI gọi NGAY sau câu trả lời
+  cuối, TRƯỚC khi nói lời tạm biệt (cùng pattern "tool trước, lời nói sau"
+  với `mark_step_complete` — gọi SAU khi đã nói goodbye không đáng tin, model
+  hay coi goodbye là điểm dừng tự nhiên rồi quên gọi tool theo sau, khiến
+  `activityCompletedRef` không bao giờ true dù trẻ đã trả lời hết câu hỏi),
   để client tự kết thúc phiên (thay vì chỉ chờ Gemini đóng socket — không đáng
   tin). Tên các tool ở prompt PHẢI khớp `functionDeclarations` trong
   `lib/liveClient.ts` (guided → mark/off-topic; exploration → end_activity).

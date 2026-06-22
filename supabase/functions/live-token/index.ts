@@ -38,8 +38,11 @@ const METHOD_PROMPTS: Record<string, string> = {
 // functionDeclarations trong lib/liveClient.ts (setup message).
 const MARK_STEP_TOOL = 'mark_step_complete';
 const OFF_TOPIC_TOOL = 'report_off_topic';
-// Kid Mode (exploration): AI gọi sau khi chào tạm biệt xong để client tự kết thúc phiên.
-// PHẢI khớp functionDeclarations trong lib/liveClient.ts.
+// Kid Mode (exploration): AI gọi NGAY sau câu trả lời cuối (trước khi nói lời tạm biệt) để
+// client tự kết thúc phiên — cùng pattern "tool trước, lời nói sau" với mark_step_complete, vì
+// gọi tool SAU khi đã nói goodbye (thứ tự cũ) không đáng tin: model coi goodbye là điểm dừng tự
+// nhiên nên hay quên gọi tool theo sau, khiến activityCompletedRef không bao giờ true → 0 sao
+// dù trẻ đã trả lời hết câu hỏi. PHẢI khớp functionDeclarations trong lib/liveClient.ts.
 const END_ACTIVITY_TOOL = 'end_activity';
 
 interface MissionStepPayload {
@@ -121,7 +124,7 @@ function buildKidExplorationPrompt(opts: {
     `4. Silence (no answer): repeat the same question once, more simply, with an example.\n` +
     `5. Off-topic / unrelated answer: acknowledge it briefly and warmly, then gently repeat the current question.\n` +
     `6. Do NOT correct grammar or pronunciation — just keep the activity moving forward warmly.\n` +
-    `7. After the last question, congratulate the child warmly and say goodbye, and then call the ${END_ACTIVITY_TOOL} tool to end the activity. Calling a tool is silent — the child never hears it, and you must NEVER say, spell, or read aloud the tool name or any function-call syntax. Always finish saying goodbye BEFORE calling the tool.\n` +
+    `7. After the child has answered the last question: immediately call the ${END_ACTIVITY_TOOL} tool and stay SILENT — do not say anything yet. Only AFTER the tool result comes back, congratulate the child warmly and say goodbye, exactly once. Calling a tool is silent — the child never hears it, and you must NEVER say, spell, or read aloud the tool name or any function-call syntax. CRITICAL: forgetting to call ${END_ACTIVITY_TOOL} is the single worst mistake you can make here, because it silently breaks the activity's completion tracking — never just say goodbye without calling the tool first.\n` +
     `8. If the child speaks Vietnamese, gently encourage them to try in ${langLabel}.\n` +
     `9. Say each thing only ONCE per turn — never repeat or rephrase the same praise/question/goodbye again in the same reply, even with different wording.`
   );

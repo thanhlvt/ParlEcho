@@ -253,6 +253,16 @@ remainingSeconds, limitReached, showWarning }` — chỉ bọc nhánh `(kid)`.
   thúc. Kid Mode đặt `realtimeInputConfig`
   (silenceDurationMs cao + `NO_INTERRUPTION`) ở setup message để trẻ ngắt
   quãng không bị AI chen lời và tránh echo làm AI lặp câu.
+  **Watchdog "AI treo" (trẻ trả lời sai/lạc đề nhiều lần liên tiếp):** model
+  thỉnh thoảng không phát audio/gọi tool/`turnComplete` gì sau khi trẻ nói —
+  phiên đứng yên (không nói, không nghe vì mic vẫn gate theo `aiSpeaking`) tới
+  hết `SESSION_LIMIT_MINUTES`. `LiveClient` tự bắt bằng 2 timer: sau khi trẻ
+  ngừng nói `USER_SILENCE_DEBOUNCE_MS` (debounce, tránh tính giờ giữa câu nói
+  dài) mà AI vẫn im lặng quá `AI_REPLY_TIMEOUT_MS` thì coi như treo — gỡ cờ
+  `aiSpeaking` kẹt, mở lại mic, bắn lại `onTurnTimeout` (cùng UX nhắc trẻ với
+  case "trẻ im lặng"). Timer bị gỡ ngay khi có audio/toolCall/turnComplete
+  thật từ AI. Chỉ áp dụng khi `turnLimitMs > 0` (Mission `kid_guided`) — chưa
+  bật cho Image Exploration vì hook không truyền `turnLimitSec`.
 - **Hết giờ chơi (Kid Mode, giới hạn theo phiên) không cắt phiên giữa
   câu** — `useMissionSession`/`useExplorationSession` chỉ đặt cờ chờ
   (`timeUpPendingRef`) khi `ScreenTimeProvider` báo `limitReached`, và chỉ

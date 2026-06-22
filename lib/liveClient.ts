@@ -44,9 +44,18 @@ export type LiveState = 'idle' | 'connecting' | 'live' | 'ended' | 'error';
 // toolResponse NGAY, đồng bộ (không await ở giữa) nếu không model sẽ treo.
 const MARK_STEP_TOOL = 'mark_step_complete';
 const OFF_TOPIC_TOOL = 'report_off_topic';
-// Kid Mode (exploration): AI gọi khi đã chào tạm biệt xong ở cuối hoạt động, để client tự kết
-// thúc phiên (thay vì chỉ chờ Gemini đóng socket — không đáng tin). PHẢI khớp prompt live-token.
+// Kid Mode (exploration): AI gọi NGAY sau câu trả lời cuối, TRƯỚC khi nói lời tạm biệt (cùng
+// pattern "tool trước, lời nói sau" với mark_step_complete — gọi sau khi đã nói goodbye không
+// đáng tin, model hay quên), để client tự kết thúc phiên. PHẢI khớp prompt live-token.
 const END_ACTIVITY_TOOL = 'end_activity';
+
+// Kid Mode (guided): nếu trẻ trả lời sai liên tục, model thỉnh thoảng "treo" — không phát audio,
+// không gọi tool, không turnComplete — khiến phiên đứng yên (không nói, không nghe) vô thời hạn.
+// Watchdog: sau khi trẻ ngừng nói USER_SILENCE_DEBOUNCE_MS (coi như đã nói xong lượt), nếu AI
+// không có phản hồi gì trong AI_REPLY_TIMEOUT_MS thì coi như treo — tự gỡ cờ kẹt + nhắc trẻ thử
+// lại, thay vì chờ tới khi hết SESSION_LIMIT_MINUTES mới thoát được.
+const USER_SILENCE_DEBOUNCE_MS = 2000;
+const AI_REPLY_TIMEOUT_MS = 10000;
 
 // Image Exploration (Pha 5): câu mở đầu cố định gửi kèm ảnh qua clientContent — chỉ là
 // chỉ dẫn nội bộ cho model, không hiển thị cho trẻ (không qua inputAudioTranscription).
@@ -128,6 +137,9 @@ export class LiveClient {
   private turnLimitMs = 0;
   private turnTimer: ReturnType<typeof setTimeout> | null = null;
   private offTopicStreak = 0;
+  // Watchdog "AI treo" — xem khai báo USER_SILENCE_DEBOUNCE_MS/AI_REPLY_TIMEOUT_MS.
+  private userSilenceTimer: ReturnType<typeof setTimeout> | null = null;
+  private aiReplyWatchdog: ReturnType<typeof setTimeout> | null = null;
 
   // Kid Mode (guided): theo dõi bước hiện tại.
   private missionSteps: { stepOrder: number; targetSentence: string; intent: string }[] = [];
@@ -434,6 +446,7 @@ export class LiveClient {
       this.ws = null;
     }
     this._clearTurnTimer();
+    this._clearAiReplyWatchdog();
     this._flushCurrentUserTurn();
     this._flushCurrentAiTurn();
     this.cb.onStateChange('ended');
@@ -482,6 +495,7 @@ export class LiveClient {
       | { functionCalls?: Array<{ id?: string; name?: string; args?: Record<string, unknown> }> }
       | undefined;
     if (toolCall?.functionCalls) {
+      this._clearAiReplyWatchdog();
       const functionResponses = toolCall.functionCalls.map((fc) => {
         let response: Record<string, unknown> = { result: 'success' };
         if (fc.name === MARK_STEP_TOOL) {
@@ -512,6 +526,7 @@ export class LiveClient {
 
     // Barge-in: AI bị ngắt → discard current AI audio
     if (sc.interrupted) {
+      this._clearAiReplyWatchdog();
       this.aiSpeaking = false;
       this.aiAudioByteCount = 0;
       this.currentAiText = '';
@@ -524,6 +539,7 @@ export class LiveClient {
         // Audio PCM24 → UI play
         const inlineData = part.inlineData as { mimeType?: string; data?: string } | undefined;
         if (inlineData?.data) {
+          this._clearAiReplyWatchdog();
           if (!this.aiSpeaking) {
             this.aiSpeaking = true;
             this.aiAudioStartTime = Date.now();
@@ -553,6 +569,15 @@ export class LiveClient {
       this.childSpokeSinceAdvance = true;
       // Trẻ đã bắt đầu nói ở lượt của mình — không cần nudge nữa
       this._clearTurnTimer();
+      // Trẻ vẫn còn đang nói → hoãn watchdog; chỉ thực sự tính giờ chờ AI trả lời sau khi trẻ
+      // ngừng nói được USER_SILENCE_DEBOUNCE_MS (debounce, tránh tính giờ giữa câu nói dài).
+      if (this.turnLimitMs > 0) {
+        if (this.userSilenceTimer) clearTimeout(this.userSilenceTimer);
+        this.userSilenceTimer = setTimeout(
+          () => this._armAiReplyWatchdog(),
+          USER_SILENCE_DEBOUNCE_MS,
+        );
+      }
       // Gemini confirmed it's receiving user audio — cancel any stale aiSpeaking flag
       if (this.aiSpeaking) {
         this.aiSpeaking = false;
@@ -592,6 +617,7 @@ export class LiveClient {
 
     // turnComplete OR generationComplete = AI finished its turn, ready for next input
     if (sc.turnComplete || sc.generationComplete) {
+      this._clearAiReplyWatchdog();
       this._flushCurrentUserTurn();
       this._flushCurrentAiTurn();
       // Fallback: nếu lượt mở đầu hoàn tất mà không có audio (hiếm), vẫn mở mic để không kẹt.
@@ -634,6 +660,33 @@ export class LiveClient {
     if (this.turnTimer) {
       clearTimeout(this.turnTimer);
       this.turnTimer = null;
+    }
+  }
+
+  // Trẻ đã ngừng nói được một khoảng (debounce) mà AI vẫn chưa phản hồi gì (không audio, không
+  // toolCall, không turnComplete) → coi như model treo. Tự gỡ cờ kẹt + mở lại mic + nhắc trẻ thử
+  // lại qua onTurnTimeout (cùng UX với nudge "trẻ im lặng"), thay vì đứng yên tới hết phiên.
+  private _armAiReplyWatchdog() {
+    if (this.turnLimitMs <= 0) return;
+    if (this.aiReplyWatchdog) clearTimeout(this.aiReplyWatchdog);
+    this.aiReplyWatchdog = setTimeout(() => {
+      this.aiReplyWatchdog = null;
+      logError('LiveClient.aiReplyTimeout', new Error('AI không phản hồi sau khi trẻ nói'));
+      this.aiSpeaking = false;
+      this.aiAudioByteCount = 0;
+      this._startTurnTimer();
+      this.cb.onTurnTimeout?.();
+    }, AI_REPLY_TIMEOUT_MS);
+  }
+
+  private _clearAiReplyWatchdog() {
+    if (this.userSilenceTimer) {
+      clearTimeout(this.userSilenceTimer);
+      this.userSilenceTimer = null;
+    }
+    if (this.aiReplyWatchdog) {
+      clearTimeout(this.aiReplyWatchdog);
+      this.aiReplyWatchdog = null;
     }
   }
 
