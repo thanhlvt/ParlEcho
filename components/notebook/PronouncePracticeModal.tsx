@@ -24,6 +24,7 @@ import { useTheme } from '../../providers/ThemeProvider';
 import { SavedItem, PronounceApiResponse } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { compareWords } from '../../lib/wordDiff';
+import { extractMainText } from '../../lib/savedItemText';
 import { bytesToBase64, concatUint8Arrays, pcmToWav } from '../../lib/audioFormat';
 import { ScorePanel } from '../practice/ScorePanel';
 import { WordHighlight } from '../practice/WordHighlight';
@@ -43,9 +44,18 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
   const { user } = useAuth();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [recordedUri, setRecordedUri] = useState<string | null>(null);
   const [isPlayingUser, setIsPlayingUser] = useState(false);
-  const [pronounceResult, setPronounceResult] = useState<PronounceApiResponse | null>(null);
+  // Modal này KHÔNG unmount giữa các lần mở/đóng (notebook.tsx chỉ đổi prop `item`, không có
+  // `key`) — nếu lưu kết quả/audio trong state đơn (không theo id) thì mở từ khác sẽ vẫn thấy
+  // điểm/ghi âm của từ trước. Lưu theo `item.id` để mỗi từ giữ đúng kết quả của riêng nó, và từ
+  // chưa chấm thì không hiện điểm của từ khác.
+  const [resultsByItemId, setResultsByItemId] = useState<Record<string, PronounceApiResponse>>({});
+  const [recordedUriByItemId, setRecordedUriByItemId] = useState<Record<string, string>>({});
+  const pronounceResult = item ? (resultsByItemId[item.id] ?? null) : null;
+  const recordedUri = item ? (recordedUriByItemId[item.id] ?? null) : null;
+  // Phần content thực sự được TTS đọc (xem notebook.tsx#handleSpeak) — dùng làm câu mẫu hiển thị
+  // + chấm điểm, để khớp đúng với âm thanh người dùng đã nghe, không lẫn dịch/giải thích phía sau.
+  const mainText = extractMainText(item?.content ?? '');
 
   const {
     startRecording: startCapture,
@@ -97,8 +107,17 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
 
       await startCapture({ sampleRate: 16000, channels: 1, encoding: 'pcm_16bit', interval: 100 });
       setIsRecording(true);
-      setPronounceResult(null);
-      setRecordedUri(null);
+      // Xoá kết quả/ghi âm CŨ của chính từ này (đang ghi lại) — không đụng tới các từ khác.
+      setResultsByItemId((prev) => {
+        const next = { ...prev };
+        delete next[item.id];
+        return next;
+      });
+      setRecordedUriByItemId((prev) => {
+        const next = { ...prev };
+        delete next[item.id];
+        return next;
+      });
     } catch (err) {
       console.error(err);
       Alert.alert('Lỗi', 'Không thể bắt đầu ghi âm.');
@@ -127,7 +146,7 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
       await FileSystem.writeAsStringAsync(localUri, bytesToBase64(wavBytes), {
         encoding: FileSystem.EncodingType.Base64,
       });
-      setRecordedUri(localUri);
+      setRecordedUriByItemId((prev) => ({ ...prev, [item.id]: localUri }));
 
       // Upload to supabase storage
       const storagePath = await uploadRecording(wavBytes);
@@ -189,11 +208,12 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
         );
       }
 
-      // Call edge function
+      // Call edge function — reference_text chỉ phần đã được phát âm cho người dùng nghe (xem
+      // extractMainText), không phải toàn bộ content (có thể kèm dịch/giải thích phía sau).
       const { data, error } = await supabase.functions.invoke('pronounce', {
         body: {
           audio_storage_path: storagePath,
-          reference_text: item.content,
+          reference_text: mainText,
           language_id: item.language_id,
           audio_mime_type: 'audio/wav',
           scenario_line_id: scenarioLineId,
@@ -202,7 +222,7 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
       });
 
       if (error) throw new Error(error.message);
-      setPronounceResult(data as PronounceApiResponse);
+      setResultsByItemId((prev) => ({ ...prev, [item.id]: data as PronounceApiResponse }));
     } catch (err) {
       console.error(err);
       Alert.alert('Lỗi chấm điểm', err instanceof Error ? err.message : 'Không thể chấm điểm.');
@@ -281,11 +301,11 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
             <View style={styles.practiceCard}>
               {pronounceResult ? (
                 <WordHighlight
-                  text={item?.content || ''}
-                  wordScores={compareWords(item?.content || '', pronounceResult.transcript)}
+                  text={mainText}
+                  wordScores={compareWords(mainText, pronounceResult.transcript)}
                 />
               ) : (
-                <Text style={styles.practiceText}>{item?.content}</Text>
+                <Text style={styles.practiceText}>{mainText}</Text>
               )}
               {item?.translation && (
                 <Text style={styles.practiceTranslation}>{item.translation}</Text>

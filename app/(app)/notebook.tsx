@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../providers/ThemeProvider';
 import { supabase } from '../../lib/supabase';
 import { SavedItem } from '../../lib/types';
+import { extractMainText } from '../../lib/savedItemText';
 import { useAuth } from '../../providers/AuthProvider';
 
 import { SavedItemCard } from '../../components/notebook/SavedItemCard';
@@ -105,13 +106,9 @@ export default function NotebookScreen() {
     // entry's onStop callback (which would otherwise overwrite this state to null).
     stopActiveAudio();
 
-    // Clean content to read only the main word (ignore translations/notes after delimiters)
-    // 1. Split by common delimiters that have surrounding spaces (protect compound words like self-esteem)
-    let speakText = item.content.split(/\s+[\-–—]\s+/)[0];
-    // 2. Split by other delimiters with optional spaces (colon, tilde/wave tilde)
-    speakText = speakText.split(/\s*[:：~～]\s*/)[0];
-    // 3. Split by half-width and full-width open parentheses
-    speakText = speakText.split(/[\(（]/)[0];
+    // Chỉ đọc phần chính (bỏ dịch/giải thích phía sau) — dùng chung với reference_text khi
+    // chấm phát âm ở PronouncePracticeModal, để câu mẫu chấm điểm khớp đúng phần đã phát âm.
+    const speakText = extractMainText(item.content);
 
     registerActiveSpeech(
       () => Speech.stop(),
@@ -123,7 +120,7 @@ export default function NotebookScreen() {
     speakingItemIdRef.current = item.id;
     setSpeakingItemId(item.id);
 
-    Speech.speak(speakText.trim(), {
+    Speech.speak(speakText, {
       language: item.language_id === 'ja' ? 'ja-JP' : 'en-US',
       onDone: () => {
         clearActiveSpeech();

@@ -52,7 +52,10 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
 - `chat/`: `ChatBubble`, `CorrectionRow`.
 - `live/`: `SetupView`, `LiveConversationView`, `StatusView`,
   `useLiveSession` (state machine cho Live tự do, adult).
-- `notebook/`: `FlashcardModal`, `PronouncePracticeModal`, `SavedItemCard`.
+- `notebook/`: `FlashcardModal`, `PronouncePracticeModal` (luyện phát âm 1
+  `saved_item` — câu mẫu hiển thị + `reference_text` gửi `/pronounce` đều
+  qua `lib/savedItemText.ts#extractMainText`, KHÔNG dùng `item.content`
+  thẳng — xem quy tắc nghiệp vụ dưới), `SavedItemCard`.
 - `analytics/`: `ProgressRing`, `NotebookPieChart`.
 - `kid/`:
   - `Companion` (emoji + reanimated, biểu cảm
@@ -165,6 +168,16 @@ remainingSeconds, limitReached, showWarning }` — chỉ bọc nhánh `(kid)`.
   (`AudioPlayer`/`createAudioPlayer`) và xin quyền mic
   (`requestRecordingPermissionsAsync`) — chỉ phần capture đổi sang
   audio-studio.
+- **`saved_items.content` có thể chứa cả dịch/giải thích phía sau từ/câu
+  chính** (vd `"hello - xin chào"`, `"draw: vẽ"`, `"self-esteem (tự
+  trọng)"`) — TTS (`notebook.tsx#handleSpeak`) chỉ đọc to phần ĐẦU. Bất kỳ
+  nơi nào dùng `content` làm câu mẫu để hiển thị/chấm điểm/so khớp transcript
+  (không phải tra cứu DB) PHẢI cắt qua `lib/savedItemText.ts#extractMainText`
+  trước — nếu dùng thẳng `content` đầy đủ, điểm completeness sẽ luôn thấp vì
+  Azure không nghe được phần dịch/giải thích mà người dùng không hề được
+  yêu cầu đọc. Đổi quy tắc cắt (thêm dấu phân tách mới) phải sửa
+  `extractMainText` (có unit test) — không tự viết lại logic cắt riêng ở
+  từng màn hình.
 - **Audio không được phát chồng lấp**: trước khi tạo `AudioPlayer` hoặc gọi
   `expo-speech` mới, PHẢI gọi `stopActiveAudio()` từ `lib/audioPlayback.ts`
   trước, sau đó `registerActiveAudio(player, onStop)` (hoặc
