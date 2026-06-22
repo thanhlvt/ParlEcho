@@ -19,7 +19,7 @@ import { supabase } from './supabase';
 import { logError } from './sentry';
 import { buildWavHeader, pcmToWav, bytesToBase64 } from './audioFormat';
 import { stripStepDoneMarker, stripOffTopicMarker, stripToolCallArtifacts } from './markerProtocol';
-import { LiveAudioSegment, LiveTokenApiResponse, LiveTurn } from './types';
+import { LiveTokenApiResponse, LiveTurn } from './types';
 
 export { buildWavHeader, pcmToWav, bytesToBase64 };
 
@@ -86,12 +86,13 @@ export interface LiveClientCallbacks {
   onOffTopic?: (streak: number, sortOrder: number) => void;
   /** Kid Mode (exploration): AI báo đã chào tạm biệt xong → client tự kết thúc phiên. */
   onActivityComplete?: () => void;
-}
-
-export interface LiveSessionResult {
-  conversationId: string;
-  turns: LiveTurn[];
-  userSegments: LiveAudioSegment[];
+  /**
+   * Bắn ngay khi 1 lượt user vừa chốt xong (có text) — dùng để chấm phát âm Azure
+   * (unscripted) ngay trong lúc phiên đang diễn ra, không chờ tới cuối phiên. `order` khớp
+   * `sort_order` của turn này trong `turns`/`userAudioSegments` (dùng để map message_id sau
+   * khi lưu `messages`). Không await trong handler — fire-and-forget, không chặn message loop.
+   */
+  onUserUtterance?: (pcm: Uint8Array, text: string, order: number) => void;
 }
 
 // Ephemeral token endpoint requires BidiGenerateContentConstrained (not BidiGenerateContent)
@@ -643,6 +644,7 @@ export class LiveClient {
       this.userAudioSegments.push({ pcm, text, order: this.turnOrder });
       if (text) {
         this.turns.push({ role: 'user', text, sort_order: this.turnOrder });
+        this.cb.onUserUtterance?.(pcm, text, this.turnOrder);
         this.turnOrder++;
       }
       this.currentUserText = '';
@@ -703,30 +705,4 @@ export class LiveClient {
       this.ws.send(JSON.stringify(payload));
     }
   }
-}
-
-// ── Upload helpers (dùng trong UI sau khi stop()) ────────────────────
-
-/**
- * Wrap PCM16 bytes thành WAV rồi upload lên Storage "recordings".
- * Trả về storage path (dùng cho /session-review).
- */
-export async function uploadLiveSegment(
-  userId: string,
-  conversationId: string,
-  order: number,
-  pcm: Uint8Array,
-): Promise<string> {
-  const wav = pcmToWav(pcm, 16000, 16);
-  const path = `${userId}/live/${conversationId}/${order}.wav`;
-
-  // Upload qua XHR (cách duy nhất đáng tin cậy trên React Native cho ArrayBuffer)
-  const arrayBuffer = wav.buffer as ArrayBuffer;
-
-  const { error } = await supabase.storage
-    .from('recordings')
-    .upload(path, arrayBuffer, { contentType: 'audio/wav', upsert: true });
-
-  if (error) throw new Error(error.message);
-  return path;
 }

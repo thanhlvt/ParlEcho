@@ -13,8 +13,16 @@ Screen Time, Parent Dashboard). React Native + Expo, backend Supabase.
 - **LLM chat:** Claude API (`claude-sonnet-4-6`) qua Edge Function `/chat`
 - **STT/TTS/Live:** Google Gemini (`gemini-2.5-flash` cho STT/TTS,
   `gemini-*-live-preview` cho WebSocket Live)
+- **Pronunciation scoring:** Azure AI Speech — Pronunciation Assessment
+  (`microsoft-cognitiveservices-speech-sdk` qua `npm:` specifier trong Edge
+  Function `/pronounce`, xem `supabase/functions/_shared/azurePronunciation.ts`)
+  — scripted (câu mẫu cố định) ở `pronounce`, theo từng câu nói tự do
+  (unscripted, `score_only`) ở Live/Kid Mode. Cần secret `AZURE_SPEECH_KEY`
+  + `AZURE_SPEECH_REGION`.
 - **Audio:** `expo-audio`, `expo-speech`, `@siteed/expo-audio-studio` (mic
-  streaming + AEC), `react-native-audio-api` (buffer queue cho Live)
+  streaming + AEC, dùng cả cho Live/Kid lẫn ghi âm Practice/Notebook —
+  Azure Pronunciation Assessment chỉ nhận PCM WAV 16kHz/16-bit/mono, không
+  nhận m4a/AAC), `react-native-audio-api` (buffer queue cho Live)
 - **Image:** `expo-image-manipulator` (resize + nén ảnh trước khi gửi
   multimodal cho Image Exploration Mission), `expo-image-picker` (chụp ảnh
   camera hoặc chọn từ thư viện cho Parent Dashboard upload — cần plugin

@@ -12,20 +12,15 @@ import {
 } from 'react-native-audio-api';
 import { awardBiscuits, spinLuckyWheel as spinLuckyWheelReward } from '../../lib/biscuits';
 import { calculateMissionStars } from '../../lib/scoring';
-import {
-  bytesToBase64,
-  LiveClient,
-  LiveState,
-  pcmToWav,
-  uploadLiveSegment,
-} from '../../lib/liveClient';
+import { bytesToBase64, LiveClient, LiveState, pcmToWav } from '../../lib/liveClient';
 import { supabase } from '../../lib/supabase';
+import { scoreUtterance } from '../../lib/pronunciationScoring';
 import {
   Companion as CompanionType,
-  LiveAudioSegment,
   LiveTurn,
   Mission,
   MissionStep,
+  PronounceApiResponse,
   SessionReviewApiResponse,
   Sticker,
 } from '../../lib/types';
@@ -40,7 +35,7 @@ const SESSION_LIMIT_MINUTES = 10;
 const TURN_LIMIT_SEC = 8;
 const NUDGE_DISPLAY_MS = 4000;
 const REACTION_DISPLAY_MS = 1600;
-// Star 2 (phát âm): ngưỡng điểm clarity trung bình từ Gemini (/session-review).
+// Star 2 (phát âm): ngưỡng điểm clarity trung bình từ Azure (/pronounce score_only mỗi câu).
 const PRONUNCIATION_STAR_THRESHOLD = 70;
 // Hết giờ chơi phiên (Pha 4) mà AI không nói thêm gì nữa — vẫn kết thúc sau tối đa khoảng này
 // để tránh phiên treo vô hạn chờ "lượt nói hiện tại" không bao giờ tới.
@@ -100,6 +95,9 @@ export function useMissionSession(missionId: string) {
   const audioQueueRef = useRef<AudioBufferQueueSourceNode | null>(null);
   const audioEmitter = useRef(new LegacyEventEmitter(ExpoAudioStreamModule));
   const { startRecording, stopRecording } = useAudioRecorder();
+  // Chấm phát âm Azure (unscripted) ngay khi từng câu nói xong, key = sort_order của turn —
+  // map sang message_id sau khi lưu messages (xem onUserUtterance + endSession).
+  const pronunciationScoresRef = useRef<Map<number, PronounceApiResponse>>(new Map());
 
   const setReaction = useCallback((expr: CompanionExpression, durationMs: number) => {
     setExpression(expr);
@@ -249,6 +247,7 @@ export function useMissionSession(missionId: string) {
     setTimeUp(false);
     setIsPaused(false);
     isPausedRef.current = false;
+    pronunciationScoresRef.current.clear();
 
     const client = new LiveClient({
       onStateChange: (s: LiveState) => {
@@ -363,6 +362,13 @@ export function useMissionSession(missionId: string) {
         offTopicTurnsRef.current = [...offTopicTurnsRef.current, sortOrder];
         setReaction('surprised', REACTION_DISPLAY_MS);
       },
+      onUserUtterance: (pcm, _text, order) => {
+        if (!user || !mission) return;
+        // Fire-and-forget — không await trong message loop của LiveClient.
+        scoreUtterance(user.id, pcm, mission.language_id).then((score) => {
+          if (score) pronunciationScoresRef.current.set(order, score);
+        });
+      },
     });
 
     clientRef.current = client;
@@ -470,25 +476,38 @@ export function useMissionSession(missionId: string) {
         (savedMessages ?? []).map((m: { id: string; sort_order: number }) => [m.sort_order, m.id]),
       );
 
-      const audioSegments: LiveAudioSegment[] = [];
-      for (const seg of rawUserSegments) {
-        if (seg.pcm.length === 0 || !seg.text) continue;
-        const messageId = messageIdByOrder.get(seg.order);
+      // Lưu pronunciation_attempts từ điểm đã chấm trong lúc phiên diễn ra (xem
+      // onUserUtterance) — không gọi lại Azure, chỉ map order → message_id vừa lưu.
+      setSavingMsg('Đang chấm điểm...');
+      const attemptRows = [];
+      for (const [order, score] of pronunciationScoresRef.current.entries()) {
+        const messageId = messageIdByOrder.get(order);
         if (!messageId) continue;
-        try {
-          const storagePath = await uploadLiveSegment(user.id, conversationId, seg.order, seg.pcm);
-          audioSegments.push({
-            message_id: messageId,
-            audio_storage_path: storagePath,
-            text: seg.text,
-            sort_order: seg.order,
-          });
-        } catch (uploadErr) {
-          console.warn('[MissionSession] audio upload failed', seg.order, uploadErr);
-        }
+        const turnText = finalTurns.find((t) => t.sort_order === order && t.role === 'user')?.text;
+        attemptRows.push({
+          user_id: user.id,
+          language_id: mission.language_id,
+          message_id: messageId,
+          recognized_text: turnText ?? score.transcript,
+          overall_score: score.overall_score,
+          accuracy_score: score.clarity,
+          fluency_score: score.fluency,
+          completeness_score: null,
+          word_scores: score.flagged_words.map((fw) => ({
+            word: fw.word,
+            score: 0,
+            error_type: fw.tip,
+          })),
+        });
+      }
+      if (attemptRows.length > 0) {
+        const { error: attemptsErr } = await supabase
+          .from('pronunciation_attempts')
+          .insert(attemptRows);
+        if (attemptsErr)
+          console.warn('[MissionSession] pronunciation_attempts insert error:', attemptsErr);
       }
 
-      setSavingMsg('Đang chấm điểm...');
       let avgPronunciation: number | null = null;
       let reviewResult: SessionReviewApiResponse | null = null;
       try {
@@ -499,7 +518,6 @@ export function useMissionSession(missionId: string) {
               conversation_id: conversationId,
               language_id: mission.language_id,
               transcript: finalTurns.map((t) => ({ role: t.role, text: t.text })),
-              user_segments: audioSegments,
             },
           },
         );

@@ -39,6 +39,18 @@ export function pcmToWav(pcm: Uint8Array, sampleRate = 16000, bitDepth = 16): Ui
   return wav;
 }
 
+// Ghép nhiều Uint8Array (chunk PCM từ mic streaming) thành một
+export function concatUint8Arrays(arrays: Uint8Array[]): Uint8Array {
+  const total = arrays.reduce((sum, a) => sum + a.length, 0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const a of arrays) {
+    out.set(a, offset);
+    offset += a.length;
+  }
+  return out;
+}
+
 // Convert Uint8Array to Base64 (safe for large arrays in React Native)
 export function bytesToBase64(bytes: Uint8Array): string {
   let binary = '';

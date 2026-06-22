@@ -299,16 +299,17 @@ export type ChatApiResponse = {
   hints: string[];
 };
 
-// Response shape từ Edge Function /pronounce — chấm điểm holistic bằng Gemini
-// (cùng cơ chế với /session-review, xem SegmentPronunciation), riêng có thêm
-// completeness vì pronounce luyện theo câu mẫu cố định (scenario_lines) nên
-// cần kiểm tra user nói đủ câu hay bị cắt/bỏ từ.
+// Response shape từ Edge Function /pronounce — chấm điểm bằng Azure Pronunciation
+// Assessment (clarity/fluency gộp từ accuracy+prosody, xem
+// supabase/functions/_shared/azurePronunciation.ts). completeness chỉ có giá trị khi
+// gọi kèm reference_text (scripted, vd Practice/Notebook); null khi score_only/unscripted
+// (Live/Kid chấm theo từng câu nói tự do, không có câu mẫu để so khớp).
 export type PronounceApiResponse = {
   overall_score: number;
   clarity: number;
   fluency: number;
-  completeness: number;
-  /** Gemini STT thô — dùng để so sánh với câu mẫu (xem lib/wordDiff.ts) */
+  completeness: number | null;
+  /** Azure STT recognized text — dùng để so sánh với câu mẫu (xem lib/wordDiff.ts) */
   transcript: string;
   flagged_words: FlaggedWord[];
 };
@@ -329,25 +330,9 @@ export type LiveTurn = {
   sort_order: number;
 };
 
-export type LiveAudioSegment = {
-  message_id: string;
-  audio_storage_path: string;
-  text: string;
-  sort_order: number;
-};
-
 export type FlaggedWord = {
   word: string;
   tip: string;
-};
-
-export type SegmentPronunciation = {
-  message_id: string;
-  sort_order: number;
-  text: string;
-  clarity: number;
-  fluency: number;
-  flagged_words: FlaggedWord[];
 };
 
 export type SessionReviewApiResponse = {
@@ -355,6 +340,5 @@ export type SessionReviewApiResponse = {
   fluency_notes: string;
   corrections: Correction[];
   vocab_to_learn: string[];
-  pronunciation: SegmentPronunciation[];
   avg_pronunciation: number | null;
 };

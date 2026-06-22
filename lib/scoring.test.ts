@@ -3,6 +3,7 @@ import {
   calculateScoreStats,
   calculateMissionStars,
   calculateExplorationStars,
+  dedupeFlaggedWordsAcross,
 } from './scoring';
 import { DailyActivity } from './types';
 
@@ -69,9 +70,9 @@ describe('calculateMissionStars', () => {
   });
 
   it('awards 1 star for completion only', () => {
-    expect(
-      calculateMissionStars({ completed: true, avgPronunciation: null, usedHint: true }),
-    ).toBe(1);
+    expect(calculateMissionStars({ completed: true, avgPronunciation: null, usedHint: true })).toBe(
+      1,
+    );
   });
 
   it('awards 2 stars for completion + no hint', () => {
@@ -81,9 +82,9 @@ describe('calculateMissionStars', () => {
   });
 
   it('awards 3 stars when completed, pronunciation above threshold, and no hint used', () => {
-    expect(
-      calculateMissionStars({ completed: true, avgPronunciation: 75, usedHint: false }),
-    ).toBe(3);
+    expect(calculateMissionStars({ completed: true, avgPronunciation: 75, usedHint: false })).toBe(
+      3,
+    );
   });
 
   it('does not award the pronunciation star below the threshold', () => {
@@ -123,5 +124,63 @@ describe('calculateExplorationStars', () => {
         excellentThreshold: 90,
       }),
     ).toBe(3);
+  });
+});
+
+describe('dedupeFlaggedWordsAcross', () => {
+  type Tip = { word: string; tip: string };
+  const key = (fw: Tip) => `${fw.word}|||${fw.tip}`;
+
+  it('keeps the first occurrence and drops later exact (word+tip) duplicates', () => {
+    const lists: Tip[][] = [
+      [{ word: 'weather', tip: 'Phát âm chưa chuẩn' }],
+      [
+        { word: 'weather', tip: 'Phát âm chưa chuẩn' },
+        { word: 'nice', tip: 'Ngữ điệu đều đều' },
+      ],
+    ];
+    expect(dedupeFlaggedWordsAcross(lists, key)).toEqual([
+      [{ word: 'weather', tip: 'Phát âm chưa chuẩn' }],
+      [{ word: 'nice', tip: 'Ngữ điệu đều đều' }],
+    ]);
+  });
+
+  it('keeps same word with a different tip — not considered a duplicate', () => {
+    const lists: Tip[][] = [
+      [{ word: 'weather', tip: 'Phát âm chưa chuẩn' }],
+      [{ word: 'weather', tip: 'Ngữ điệu đều đều' }],
+    ];
+    expect(dedupeFlaggedWordsAcross(lists, key)).toEqual([
+      [{ word: 'weather', tip: 'Phát âm chưa chuẩn' }],
+      [{ word: 'weather', tip: 'Ngữ điệu đều đều' }],
+    ]);
+  });
+
+  it('is case-insensitive on the key', () => {
+    const lists: Tip[][] = [
+      [{ word: 'Weather', tip: 'Phát âm chưa chuẩn' }],
+      [{ word: 'weather', tip: 'Phát âm chưa chuẩn' }],
+    ];
+    expect(dedupeFlaggedWordsAcross(lists, key)).toEqual([
+      [{ word: 'Weather', tip: 'Phát âm chưa chuẩn' }],
+      [],
+    ]);
+  });
+
+  it('dedupes within the same inner list too', () => {
+    const lists: Tip[][] = [
+      [
+        { word: 'weather', tip: 'Phát âm chưa chuẩn' },
+        { word: 'weather', tip: 'Phát âm chưa chuẩn' },
+      ],
+    ];
+    expect(dedupeFlaggedWordsAcross(lists, key)).toEqual([
+      [{ word: 'weather', tip: 'Phát âm chưa chuẩn' }],
+    ]);
+  });
+
+  it('handles empty input', () => {
+    expect(dedupeFlaggedWordsAcross([], key)).toEqual([]);
+    expect(dedupeFlaggedWordsAcross([[]], key)).toEqual([[]]);
   });
 });

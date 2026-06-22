@@ -1,17 +1,20 @@
 import {
   AudioPlayer,
   createAudioPlayer,
-  RecordingPresets,
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
-  useAudioRecorder,
 } from 'expo-audio';
+import { ExpoAudioStreamModule, useAudioRecorder } from '@siteed/audio-studio';
+import { LegacyEventEmitter } from 'expo-modules-core';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../../providers/ThemeProvider';
 import { supabase } from '../../../lib/supabase';
+import { bytesToBase64, concatUint8Arrays, pcmToWav } from '../../../lib/audioFormat';
+import { dedupeFlaggedWordsAcross } from '../../../lib/scoring';
 import { PronounceApiResponse, Scenario, ScenarioLine } from '../../../lib/types';
 import { useAuth } from '../../../providers/AuthProvider';
 import { LineCard } from '../../../components/practice/LineCard';
@@ -39,7 +42,7 @@ export default function ShadowingScreen() {
   const [results, setResults] = useState<Record<string, PronounceApiResponse>>({});
   const [recordedUris, setRecordedUris] = useState<Record<string, string>>({});
 
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const { startRecording, stopRecording, isRecording } = useAudioRecorder();
   const soundRef = useRef<AudioPlayer | null>(null);
   const userSoundRef = useRef<AudioPlayer | null>(null);
   // Mirror playingLineId/playingUserLineId synchronously — React state updates are
@@ -47,6 +50,11 @@ export default function ShadowingScreen() {
   // both try to start a new player instead of the second one toggling playback off.
   const playingLineIdRef = useRef<string | null>(null);
   const playingUserLineIdRef = useRef<string | null>(null);
+  // Mic streaming (giống Live/Kid) — gom PCM chunk rồi đóng WAV khi dừng ghi, thay vì ghi
+  // m4a/AAC (Azure Pronunciation Assessment chỉ nhận PCM WAV 16kHz/16-bit/mono).
+  const audioEmitter = useRef(new LegacyEventEmitter(ExpoAudioStreamModule));
+  const audioDataSubRef = useRef<{ remove: () => void } | null>(null);
+  const pcmChunksRef = useRef<Uint8Array[]>([]);
 
   const fetchData = useCallback(async () => {
     const [scenRes, linesRes, savedRes] = await Promise.all([
@@ -69,6 +77,7 @@ export default function ShadowingScreen() {
       soundRef.current?.remove();
       userSoundRef.current?.pause();
       userSoundRef.current?.remove();
+      audioDataSubRef.current?.remove();
     };
   }, [fetchData]);
 
@@ -191,29 +200,43 @@ export default function ShadowingScreen() {
       playsInSilentMode: true,
     });
 
-    await recorder.prepareToRecordAsync();
-    recorder.record();
+    pcmChunksRef.current = [];
+    audioDataSubRef.current = audioEmitter.current.addListener('AudioData', (event: any) => {
+      if (event?.encoded) {
+        const bytes = Uint8Array.from(atob(event.encoded), (c) => c.charCodeAt(0));
+        pcmChunksRef.current.push(bytes);
+      }
+    });
+
+    await startRecording({ sampleRate: 16000, channels: 1, encoding: 'pcm_16bit', interval: 100 });
     setRecordingLineId(lineId);
   }
 
   async function handleStopRecord(line: ScenarioLine) {
-    if (!recorder.isRecording) return;
+    if (!isRecording) return;
 
     setRecordingLineId(null);
     setProcessingLineId(line.id);
 
     try {
-      await recorder.stop();
+      await stopRecording();
+      audioDataSubRef.current?.remove();
+      audioDataSubRef.current = null;
       await setAudioModeAsync({ allowsRecording: false });
 
-      const uri = recorder.uri;
-      if (!uri) throw new Error('Không lấy được file ghi âm');
+      const pcm = concatUint8Arrays(pcmChunksRef.current);
+      if (pcm.length === 0) throw new Error('Không ghi được âm thanh');
+      const wavBytes = pcmToWav(pcm, 16000, 16);
 
-      // Save URI so user can replay their recording
-      setRecordedUris((prev) => ({ ...prev, [line.id]: uri }));
+      // Lưu file cục bộ để người dùng nghe lại
+      const localUri = `${FileSystem.cacheDirectory}practice-${line.id}-${Date.now()}.wav`;
+      await FileSystem.writeAsStringAsync(localUri, bytesToBase64(wavBytes), {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      setRecordedUris((prev) => ({ ...prev, [line.id]: localUri }));
 
       // Upload → Storage "recordings" bucket
-      const storagePath = await uploadRecording(uri);
+      const storagePath = await uploadRecording(wavBytes);
 
       // Gọi Edge Function /pronounce
       const { data, error } = await supabase.functions.invoke('pronounce', {
@@ -221,7 +244,7 @@ export default function ShadowingScreen() {
           audio_storage_path: storagePath,
           reference_text: line.text,
           language_id: line.language_id,
-          audio_mime_type: 'audio/mp4',
+          audio_mime_type: 'audio/wav',
           scenario_line_id: line.id,
         },
       });
@@ -235,28 +258,11 @@ export default function ShadowingScreen() {
     }
   }
 
-  async function uploadRecording(uri: string): Promise<string> {
-    const fileName = `${user!.id}/${Date.now()}.m4a`;
-
-    // Thử fetch trực tiếp (không qua blob)
-    let arrayBuffer: ArrayBuffer;
-    try {
-      arrayBuffer = await fetch(uri).then((r) => r.arrayBuffer());
-    } catch {
-      // Fallback: XHR (đáng tin cậy hơn trên một số thiết bị Android)
-      arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', uri, true);
-        xhr.responseType = 'arraybuffer';
-        xhr.onload = () => resolve(xhr.response as ArrayBuffer);
-        xhr.onerror = () => reject(new Error('Không đọc được file ghi âm'));
-        xhr.send();
-      });
-    }
-
+  async function uploadRecording(wavBytes: Uint8Array): Promise<string> {
+    const fileName = `${user!.id}/${Date.now()}.wav`;
     const { error } = await supabase.storage
       .from('recordings')
-      .upload(fileName, arrayBuffer, { contentType: 'audio/mp4' });
+      .upload(fileName, wavBytes.buffer as ArrayBuffer, { contentType: 'audio/wav' });
 
     if (error) throw new Error(error.message);
     return fileName;
@@ -304,6 +310,19 @@ export default function ShadowingScreen() {
     }
   }
 
+  // Bỏ gợi ý sửa (word + tip) đã hiện ở dòng TRƯỚC trong cùng kịch bản — tránh lặp lại y
+  // nguyên 1 lời khuyên nhiều lần khi cùng lỗi xảy ra ở nhiều câu (xem dedupeFlaggedWordsAcross).
+  const displayResults = useMemo(() => {
+    const flaggedLists = lines.map((line) => results[line.id]?.flagged_words ?? []);
+    const deduped = dedupeFlaggedWordsAcross(flaggedLists, (fw) => `${fw.word}|||${fw.tip}`);
+    const out: Record<string, PronounceApiResponse> = {};
+    lines.forEach((line, i) => {
+      const result = results[line.id];
+      if (result) out[line.id] = { ...result, flagged_words: deduped[i] };
+    });
+    return out;
+  }, [lines, results]);
+
   // ── Render ──────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -340,7 +359,7 @@ export default function ShadowingScreen() {
             isRecording={recordingLineId === line.id}
             isProcessing={processingLineId === line.id}
             isPlayingUser={playingUserLineId === line.id}
-            result={results[line.id] ?? null}
+            result={displayResults[line.id] ?? null}
             recordedUri={recordedUris[line.id] ?? null}
             onPlay={() => handlePlay(line)}
             onRecord={() => handleStartRecord(line.id)}

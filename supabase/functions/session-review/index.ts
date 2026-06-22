@@ -1,20 +1,11 @@
 import { corsHeaders, handleCors } from '../_shared/cors.ts';
 import { verifyUser } from '../_shared/auth.ts';
 
-interface AudioSegmentInput {
-  message_id: string;
-  audio_storage_path: string;
-  text: string;
-  sort_order: number;
-}
-
 interface ReviewRequest {
   conversation_id: string;
   language_id: 'en' | 'ja';
   /** Full transcript — cả user + assistant */
   transcript: Array<{ role: 'user' | 'assistant'; text: string }>;
-  /** Chỉ các đoạn user, kèm đường dẫn audio để chấm phát âm */
-  user_segments: AudioSegmentInput[];
 }
 
 // ── Claude: phân tích ngữ pháp + từ vựng ─────────────────────────────
@@ -68,60 +59,6 @@ async function analyzeGrammar(
   }
 }
 
-// ── Gemini: chấm phát âm holistic cho 1 đoạn audio ──────────────────
-async function scorePronunciation(
-  audioBase64: string,
-  mimeType: string,
-  referenceText: string,
-  languageId: string,
-  geminiKey: string,
-): Promise<{
-  clarity: number;
-  fluency: number;
-  flagged_words: Array<{ word: string; tip: string }>;
-}> {
-  const lang = languageId === 'ja' ? 'Japanese' : 'English';
-
-  const resp = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { inlineData: { mimeType, data: audioBase64 } },
-              {
-                text:
-                  `This is a ${lang} learner recording. Reference sentence: "${referenceText}"\n` +
-                  `Score this recording and respond with ONLY valid JSON:\n` +
-                  `{"clarity":85,"fluency":80,"flagged_words":[{"word":"example","tip":"how to improve"}]}\n` +
-                  `clarity: overall pronunciation clarity AND correct word stress 0-100.` +
-                  `fluency: speaking flow AND natural intonation 0-100. ` +
-                  `flagged_words: max 3 specific words that need improvement. The 'tip' in Vietnamese must provide actionable advice on pronunciation, wrong word stress, or unnatural intonation. ` +
-                  `If pronunciation is good, flagged_words can be [].`,
-              },
-            ],
-          },
-        ],
-      }),
-    },
-  );
-
-  if (!resp.ok) throw new Error(`Gemini pronunciation error: ${await resp.text()}`);
-  const data = await resp.json();
-  const raw: string = (data.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim();
-
-  try {
-    // Strip possible markdown fences
-    const json = raw.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '');
-    return JSON.parse(json);
-  } catch {
-    return { clarity: 0, fluency: 0, flagged_words: [] };
-  }
-}
-
 // ── Main handler ──────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
   const corsResp = handleCors(req);
@@ -130,7 +67,7 @@ Deno.serve(async (req: Request) => {
   try {
     const { user, supabase } = await verifyUser(req);
     const body: ReviewRequest = await req.json();
-    const { conversation_id, language_id, transcript, user_segments } = body;
+    const { conversation_id, language_id, transcript } = body;
 
     console.log(
       `[session-review] user=${user.id} conv=${conversation_id} turns=${transcript?.length}`,
@@ -160,97 +97,37 @@ Deno.serve(async (req: Request) => {
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
     if (!anthropicKey) throw new Error('ANTHROPIC_API_KEY not configured');
 
-    const geminiKey = Deno.env.get('GOOGLE_GENAI_API_KEY');
-    if (!geminiKey) throw new Error('GOOGLE_GENAI_API_KEY not configured');
+    // ── Chấm phát âm đã xong từ trước (Azure, theo từng câu nói — xem pronounce
+    // score_only) — client insert pronunciation_attempts trước khi gọi function này.
+    // Ở đây chỉ TỔNG HỢP avg_pronunciation, không chấm audio nữa.
+    const avgPronunciationPromise = (async (): Promise<number | null> => {
+      const { data: userMessages } = await supabase
+        .from('messages')
+        .select('id')
+        .eq('conversation_id', conversation_id)
+        .eq('role', 'user');
 
-    // ── Run grammar analysis + pronunciation scoring in parallel ──────
-    const [grammarResult, pronunciationResults] = await Promise.all([
-      analyzeGrammar(transcript, language_id, anthropicKey),
+      const messageIds = (userMessages ?? []).map((m: { id: string }) => m.id);
+      if (messageIds.length === 0) return null;
 
-      Promise.all(
-        user_segments.map(async (seg) => {
-          try {
-            const { data: audioBlob, error: dlErr } = await supabase.storage
-              .from('recordings')
-              .download(seg.audio_storage_path);
+      const { data: attempts } = await supabase
+        .from('pronunciation_attempts')
+        .select('accuracy_score')
+        .in('message_id', messageIds);
 
-            if (dlErr || !audioBlob) {
-              return {
-                message_id: seg.message_id,
-                sort_order: seg.sort_order,
-                text: seg.text,
-                clarity: 0,
-                fluency: 0,
-                flagged_words: [] as Array<{ word: string; tip: string }>,
-              };
-            }
+      const scores = (attempts ?? [])
+        .map((a: { accuracy_score: number | null }) => a.accuracy_score)
+        .filter((s): s is number => s != null);
 
-            const audioBuffer = await audioBlob.arrayBuffer();
-            // Avoid spread operator on large Uint8Array (stack overflow for big audio files)
-            const bytes = new Uint8Array(audioBuffer);
-            let binary = '';
-            for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-            const audioBase64 = btoa(binary);
-            // Recordings uploaded as WAV (user audio wrapped with WAV header)
-            const scores = await scorePronunciation(
-              audioBase64,
-              'audio/wav',
-              seg.text,
-              language_id,
-              geminiKey,
-            );
-
-            // Persist as pronunciation_attempt linked to message_id
-            await supabase.from('pronunciation_attempts').insert({
-              user_id: user.id,
-              language_id,
-              message_id: seg.message_id,
-              audio_url: seg.audio_storage_path,
-              recognized_text: seg.text,
-              overall_score: scores.clarity,
-              accuracy_score: scores.clarity,
-              fluency_score: scores.fluency,
-              completeness_score: null,
-              word_scores: scores.flagged_words.map((fw) => ({
-                word: fw.word,
-                score: 0,
-                error_type: fw.tip,
-              })),
-            });
-
-            return {
-              message_id: seg.message_id,
-              sort_order: seg.sort_order,
-              text: seg.text,
-              ...scores,
-            };
-          } catch (err) {
-            console.error(`[session-review] pronunciation failed for ${seg.message_id}:`, err);
-            return {
-              message_id: seg.message_id,
-              sort_order: seg.sort_order,
-              text: seg.text,
-              clarity: 0,
-              fluency: 0,
-              flagged_words: [] as Array<{ word: string; tip: string }>,
-            };
-          }
-        }),
-      ),
-    ]);
-
-    const avgPronunciation =
-      pronunciationResults.length > 0
-        ? Math.round(
-            pronunciationResults.reduce((s, p) => s + p.clarity, 0) / pronunciationResults.length,
-          )
+      return scores.length > 0
+        ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length)
         : null;
+    })();
 
-    // Delete audio files — scoring is done, results are in pronunciation_attempts
-    const audioPaths = user_segments.map((s) => s.audio_storage_path);
-    if (audioPaths.length > 0) {
-      await supabase.storage.from('recordings').remove(audioPaths);
-    }
+    const [grammarResult, avgPronunciation] = await Promise.all([
+      analyzeGrammar(transcript, language_id, anthropicKey),
+      avgPronunciationPromise,
+    ]);
 
     // Persist summary onto the conversation
     await supabase
@@ -296,7 +173,6 @@ Deno.serve(async (req: Request) => {
       fluency_notes: grammarResult.fluency_notes ?? '',
       corrections: grammarResult.corrections ?? [],
       vocab_to_learn: grammarResult.vocab_to_learn ?? [],
-      pronunciation: pronunciationResults,
       avg_pronunciation: avgPronunciation,
     };
 

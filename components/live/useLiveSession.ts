@@ -10,16 +10,11 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, FlatList } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
-import {
-  bytesToBase64,
-  LiveClient,
-  LiveState,
-  pcmToWav,
-  uploadLiveSegment,
-} from '../../lib/liveClient';
+import { bytesToBase64, LiveClient, LiveState, pcmToWav } from '../../lib/liveClient';
 import { supabase } from '../../lib/supabase';
 import { logError } from '../../lib/sentry';
-import { LanguageId, LiveAudioSegment, LiveTurn } from '../../lib/types';
+import { scoreUtterance } from '../../lib/pronunciationScoring';
+import { LanguageId, LiveTurn, PronounceApiResponse } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import {
   AccentId,
@@ -56,6 +51,9 @@ export function useLiveSession() {
   const turnsRef = useRef<LiveTurn[]>([]);
   const lastErrorMsgRef = useRef<string>('');
   const isPausedRef = useRef(false);
+  // Chấm phát âm Azure (unscripted) ngay khi từng câu nói xong, key = sort_order của turn —
+  // map sang message_id sau khi lưu messages (xem onUserUtterance + endSession bước 3).
+  const pronunciationScoresRef = useRef<Map<number, PronounceApiResponse>>(new Map());
   const { startRecording, stopRecording } = useAudioRecorder();
 
   function togglePause() {
@@ -163,6 +161,7 @@ export function useLiveSession() {
     setElapsedSec(0);
     setIsPaused(false);
     isPausedRef.current = false;
+    pronunciationScoresRef.current.clear();
 
     const client = new LiveClient({
       onStateChange: (s) => {
@@ -235,6 +234,13 @@ export function useLiveSession() {
       },
       onError: (msg) => {
         lastErrorMsgRef.current = msg;
+      },
+      onUserUtterance: (pcm, _text, order) => {
+        if (!user) return;
+        // Fire-and-forget — không await trong message loop của LiveClient.
+        scoreUtterance(user.id, pcm, languageId, accent).then((score) => {
+          if (score) pronunciationScoresRef.current.set(order, score);
+        });
       },
     });
 
@@ -338,36 +344,45 @@ export function useLiveSession() {
         (savedMessages ?? []).map((m: { id: string; sort_order: number }) => [m.sort_order, m.id]),
       );
 
-      // 3. Upload user audio segments + build segment list for review
-      setSavingMsg('Lưu audio...');
-      const audioSegments: LiveAudioSegment[] = [];
-
-      for (const seg of rawUserSegments) {
-        if (seg.pcm.length === 0 || !seg.text) continue;
-        const messageId = messageIdByOrder.get(seg.order);
+      // 3. Lưu pronunciation_attempts từ điểm đã chấm trong lúc phiên diễn ra (xem
+      // onUserUtterance) — không gọi lại Azure, chỉ map order → message_id vừa lưu ở bước 2.
+      setSavingMsg('Lưu điểm phát âm...');
+      const attemptRows = [];
+      for (const [order, score] of pronunciationScoresRef.current.entries()) {
+        const messageId = messageIdByOrder.get(order);
         if (!messageId) continue;
-
-        try {
-          const storagePath = await uploadLiveSegment(user.id, conversationId, seg.order, seg.pcm);
-          audioSegments.push({
-            message_id: messageId,
-            audio_storage_path: storagePath,
-            text: seg.text,
-            sort_order: seg.order,
-          });
-        } catch (uploadErr) {
-          console.warn('[Live] audio upload failed for segment', seg.order, uploadErr);
-        }
+        const turnText = finalTurns.find((t) => t.sort_order === order && t.role === 'user')?.text;
+        attemptRows.push({
+          user_id: user.id,
+          language_id: languageId,
+          message_id: messageId,
+          recognized_text: turnText ?? score.transcript,
+          overall_score: score.overall_score,
+          accuracy_score: score.clarity,
+          fluency_score: score.fluency,
+          completeness_score: null,
+          word_scores: score.flagged_words.map((fw) => ({
+            word: fw.word,
+            score: 0,
+            error_type: fw.tip,
+          })),
+        });
+      }
+      if (attemptRows.length > 0) {
+        const { error: attemptsErr } = await supabase
+          .from('pronunciation_attempts')
+          .insert(attemptRows);
+        if (attemptsErr) console.warn('[Live] pronunciation_attempts insert error:', attemptsErr);
       }
 
-      // 4. Call /session-review
+      // 4. Call /session-review — chỉ tổng hợp avg_pronunciation + phân tích ngữ pháp,
+      // không chấm audio nữa (đã chấm xong ở bước 3).
       setSavingMsg('Đang phân tích...');
       const { error: reviewErr } = await supabase.functions.invoke('session-review', {
         body: {
           conversation_id: conversationId,
           language_id: languageId,
           transcript: finalTurns.map((t) => ({ role: t.role, text: t.text })),
-          user_segments: audioSegments,
         },
       });
 

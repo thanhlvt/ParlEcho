@@ -13,16 +13,18 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   AudioPlayer,
   createAudioPlayer,
-  RecordingPresets,
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
-  useAudioRecorder,
 } from 'expo-audio';
+import { ExpoAudioStreamModule, useAudioRecorder } from '@siteed/audio-studio';
+import { LegacyEventEmitter } from 'expo-modules-core';
+import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from '../../lib/supabase';
 import { useTheme } from '../../providers/ThemeProvider';
 import { SavedItem, PronounceApiResponse } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { compareWords } from '../../lib/wordDiff';
+import { bytesToBase64, concatUint8Arrays, pcmToWav } from '../../lib/audioFormat';
 import { ScorePanel } from '../practice/ScorePanel';
 import { WordHighlight } from '../practice/WordHighlight';
 import { clearActiveAudio, registerActiveAudio, stopActiveAudio } from '../../lib/audioPlayback';
@@ -45,16 +47,26 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
   const [isPlayingUser, setIsPlayingUser] = useState(false);
   const [pronounceResult, setPronounceResult] = useState<PronounceApiResponse | null>(null);
 
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const {
+    startRecording: startCapture,
+    stopRecording: stopCapture,
+    isRecording: isCapturing,
+  } = useAudioRecorder();
   const userSoundRef = useRef<AudioPlayer | null>(null);
   // Mirrors isPlayingUser synchronously — React state batching means a rapid second
   // tap in the same tick would otherwise still read the stale value.
   const isPlayingUserRef = useRef(false);
+  // Mic streaming (giống Live/Kid) — gom PCM chunk rồi đóng WAV khi dừng ghi, thay vì ghi
+  // m4a/AAC (Azure Pronunciation Assessment chỉ nhận PCM WAV 16kHz/16-bit/mono).
+  const audioEmitter = useRef(new LegacyEventEmitter(ExpoAudioStreamModule));
+  const audioDataSubRef = useRef<{ remove: () => void } | null>(null);
+  const pcmChunksRef = useRef<Uint8Array[]>([]);
 
   useEffect(() => {
     return () => {
       userSoundRef.current?.pause();
       userSoundRef.current?.remove();
+      audioDataSubRef.current?.remove();
     };
   }, []);
 
@@ -75,8 +87,15 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
         playsInSilentMode: true,
       });
 
-      await recorder.prepareToRecordAsync();
-      recorder.record();
+      pcmChunksRef.current = [];
+      audioDataSubRef.current = audioEmitter.current.addListener('AudioData', (event: any) => {
+        if (event?.encoded) {
+          const bytes = Uint8Array.from(atob(event.encoded), (c) => c.charCodeAt(0));
+          pcmChunksRef.current.push(bytes);
+        }
+      });
+
+      await startCapture({ sampleRate: 16000, channels: 1, encoding: 'pcm_16bit', interval: 100 });
       setIsRecording(true);
       setPronounceResult(null);
       setRecordedUri(null);
@@ -88,21 +107,30 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
 
   async function stopRecording() {
     if (!item || !user) return;
-    if (!recorder.isRecording) return;
+    if (!isCapturing) return;
 
     setIsRecording(false);
     setIsProcessing(true);
 
     try {
-      await recorder.stop();
+      await stopCapture();
+      audioDataSubRef.current?.remove();
+      audioDataSubRef.current = null;
       await setAudioModeAsync({ allowsRecording: false });
 
-      const uri = recorder.uri;
-      if (!uri) throw new Error('Không lấy được file ghi âm');
-      setRecordedUri(uri);
+      const pcm = concatUint8Arrays(pcmChunksRef.current);
+      if (pcm.length === 0) throw new Error('Không ghi được âm thanh');
+      const wavBytes = pcmToWav(pcm, 16000, 16);
+
+      // Lưu file cục bộ để người dùng nghe lại
+      const localUri = `${FileSystem.cacheDirectory}notebook-${item.id}-${Date.now()}.wav`;
+      await FileSystem.writeAsStringAsync(localUri, bytesToBase64(wavBytes), {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      setRecordedUri(localUri);
 
       // Upload to supabase storage
-      const storagePath = await uploadRecording(uri);
+      const storagePath = await uploadRecording(wavBytes);
 
       // Resolve a valid scenario_line_id or message_id to satisfy check and foreign key constraints
       let scenarioLineId = null;
@@ -167,7 +195,7 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
           audio_storage_path: storagePath,
           reference_text: item.content,
           language_id: item.language_id,
-          audio_mime_type: 'audio/mp4',
+          audio_mime_type: 'audio/wav',
           scenario_line_id: scenarioLineId,
           message_id: messageId,
         },
@@ -183,26 +211,12 @@ export const PronouncePracticeModal: React.FC<PronouncePracticeModalProps> = ({
     }
   }
 
-  async function uploadRecording(uri: string): Promise<string> {
+  async function uploadRecording(wavBytes: Uint8Array): Promise<string> {
     if (!user) throw new Error('User is not authenticated');
-    const fileName = `${user.id}/review-${Date.now()}.m4a`;
-    let arrayBuffer: ArrayBuffer;
-    try {
-      arrayBuffer = await fetch(uri).then((r) => r.arrayBuffer());
-    } catch {
-      arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', uri, true);
-        xhr.responseType = 'arraybuffer';
-        xhr.onload = () => resolve(xhr.response as ArrayBuffer);
-        xhr.onerror = () => reject(new Error('Không đọc được file ghi âm'));
-        xhr.send();
-      });
-    }
-
+    const fileName = `${user.id}/review-${Date.now()}.wav`;
     const { error } = await supabase.storage
       .from('recordings')
-      .upload(fileName, arrayBuffer, { contentType: 'audio/mp4' });
+      .upload(fileName, wavBytes.buffer as ArrayBuffer, { contentType: 'audio/wav' });
 
     if (error) throw new Error(error.message);
     return fileName;

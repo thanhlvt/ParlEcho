@@ -42,9 +42,11 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
 
 ## Components (`components/`)
 
-- `practice/`: `LineCard`, `ScorePanel` (chấm điểm holistic giống session-review:
-  clarity/fluency/completeness + flagged_words kèm tip + transcript, chỉ
-  hiển thị, không có nút lưu), `WordHighlight` (tô màu câu mẫu theo
+- `practice/`: `LineCard`, `ScorePanel` (hiển thị kết quả `pronounce` — Azure
+  Pronunciation Assessment: clarity/fluency/completeness + flagged_words
+  kèm tip + transcript, chỉ hiển thị, không có nút lưu; `completeness` có
+  thể `null` khi unscripted nhưng Practice luôn scripted nên thực tế luôn
+  có giá trị), `WordHighlight` (tô màu câu mẫu theo
   `lib/wordDiff.ts#compareWords` — so transcript với câu mẫu để biết từ nào
   bị nói thiếu/sai).
 - `chat/`: `ChatBubble`, `CorrectionRow`.
@@ -82,8 +84,11 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
   - `ScreenTimeBadge` (bộ đếm góc màn hình phải + toast cảnh báo còn 2
     phút, đặt ở `(kid)/_layout.tsx`).
   - `useMissionSession`: state machine cho Guided Conversation — tải
-    mission/steps/companion, mở `LiveClient`, theo dõi turn timeout/step
-    advance/off-topic, gọi `/session-review` chấm phát âm, chấm sao + lưu
+    mission/steps/companion, mở `LiveClient` (truyền `onUserUtterance` để
+    chấm phát âm Azure ngay từng câu nói qua `lib/pronunciationScoring.ts`,
+    xem dưới), theo dõi turn timeout/step advance/off-topic, cuối phiên
+    insert `pronunciation_attempts` từ điểm đã chấm rồi gọi `/session-review`
+    (chỉ tổng hợp + phân tích ngữ pháp, không chấm audio nữa), chấm sao + lưu
     `mission_results` (dùng để hiện sao ở `missions.tsx`) + mở sticker +
     thưởng biscuit (`lib/biscuits.ts`) + Lucky Wheel khi tròn 3 sao
     (costume KHÔNG mở qua đây — mua bằng biscuit ở `costumes.tsx`), lưu
@@ -91,10 +96,12 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
     khi hết giờ chơi.
   - `useExplorationSession`: state machine cho Image Exploration Mission —
     trẻ tự chọn 1 ảnh trong danh sách đã duyệt (`exploration_images`),
-    resize/nén bằng `expo-image-manipulator`, mở `LiveClient` rồi gọi
-    `sendImageTurn()`, gọi `/session-review` rồi tự lưu
-    `vocab_to_learn`/`corrections` vào `saved_items` (Kid Mode chưa có UI
-    tap-to-save), lưu `conversations.mode='kid_exploration'`; chấm sao theo
+    resize/nén bằng `expo-image-manipulator`, mở `LiveClient` (cũng truyền
+    `onUserUtterance` chấm phát âm Azure ngay từng câu nói) rồi gọi
+    `sendImageTurn()`, cuối phiên insert `pronunciation_attempts` rồi gọi
+    `/session-review` rồi tự lưu `vocab_to_learn`/`corrections` vào
+    `saved_items` (Kid Mode chưa có UI tap-to-save), lưu
+    `conversations.mode='kid_exploration'`; chấm sao theo
     `avg_pronunciation` (không có bước/hint), lưu `exploration_results`
     (theo `exploration_image_id` đã chọn — dùng để hiện sao ở lưới chọn
     ảnh) + thưởng biscuit + Lucky Wheel giống `useMissionSession`. Tự kết thúc
@@ -110,7 +117,17 @@ ThemeProvider > RouteGuard > Slot`. `RouteGuard` chỉ chặn chiều
 - `types.ts`: types khớp `schema.sql`.
 - `audioPlayback.ts`: singleton chống phát audio chồng lấp (xem quy tắc dưới).
 - `audioCache.ts`: quản lý file audio local (cleanup folder `live/`).
-- `liveClient.ts`: WebSocket client cho Gemini Live API.
+- `liveClient.ts`: WebSocket client cho Gemini Live API. Có callback
+  `onUserUtterance(pcm, text, order)` bắn ngay khi 1 lượt user chốt xong
+  (text không rỗng) — dùng để chấm phát âm Azure trong lúc phiên đang diễn
+  ra, xem `pronunciationScoring.ts`.
+- `pronunciationScoring.ts`: `scoreUtterance(userId, pcm, languageId, accent?)`
+  — helper dùng chung cho Live/Kid Mode, upload WAV tạm + gọi
+  `/pronounce` với `score_only:true` (unscripted, không ghi DB), trả `null`
+  nếu lỗi để không làm gãy phiên đang chạy. 3 hook Live/Mission/Exploration
+  đều gọi hàm này từ `onUserUtterance`, gom điểm vào `Map` theo `order`, rồi
+  insert `pronunciation_attempts` cuối phiên sau khi map được `order` sang
+  `message_id`.
 - `pin.ts`: `hashPin()` — SHA-256 mã PIN phụ huynh qua `expo-crypto`.
 - `biscuits.ts`: `awardBiscuits()`, `spinLuckyWheel()`, `purchaseCostume()`
   — gọi các RPC atomic (`increment_biscuits`, `purchase_costume`), xem
@@ -138,6 +155,16 @@ remainingSeconds, limitReached, showWarning }` — chỉ bọc nhánh `(kid)`.
 
 ## Quy tắc nghiệp vụ phía app
 
+- **Mọi nơi ghi âm để chấm phát âm (Practice, Notebook, Live, Kid Mode) đều
+  PHẢI ra WAV PCM 16kHz/16-bit/mono** — Azure Pronunciation Assessment
+  (`/pronounce`) không decode được m4a/AAC trong Deno. Dùng
+  `@siteed/audio-studio` (`useAudioRecorder` + `LegacyEventEmitter`
+  `'AudioData'` event, KHÔNG dùng `expo-audio`'s `useAudioRecorder`/
+  `RecordingPresets` để ghi) gom PCM chunk rồi `lib/audioFormat.ts#pcmToWav`
+  khi dừng ghi. `expo-audio` vẫn dùng cho phần **playback**
+  (`AudioPlayer`/`createAudioPlayer`) và xin quyền mic
+  (`requestRecordingPermissionsAsync`) — chỉ phần capture đổi sang
+  audio-studio.
 - **Audio không được phát chồng lấp**: trước khi tạo `AudioPlayer` hoặc gọi
   `expo-speech` mới, PHẢI gọi `stopActiveAudio()` từ `lib/audioPlayback.ts`
   trước, sau đó `registerActiveAudio(player, onStop)` (hoặc

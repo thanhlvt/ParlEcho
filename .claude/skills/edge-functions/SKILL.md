@@ -13,22 +13,52 @@ convention RN của app).
 
 - **`chat`**: gọi Claude API (`claude-sonnet-4-6`) — trả reply + translation
   + corrections + hints cho chat tự do (adult).
-- **`pronounce`**: gửi audio + reference text cho Gemini để chấm clarity/
-  fluency holistic + flagged_words kèm tip (cùng cơ chế `scorePronunciation`
-  với `session-review`), Gemini cũng trả `transcript` (STT thô). Riêng
-  `completeness` (không có ở session-review, vì luyện theo câu mẫu cố định ở
-  `scenario_lines`) KHÔNG lấy điểm tự chấm của LLM — đã thử và LLM vẫn cho
-  100 khi học viên cố ý nói thiếu câu — mà tính cục bộ bằng word alignment
-  (Levenshtein ở mức từ, có backtrack — `alignWords`/`computeCompletenessScore`)
-  giữa `transcript` và `reference_text`. KHÔNG so khớp theo vị trí cố định
-  (index): khi 1 từ ref bị tách/gộp khác số từ so với transcript (ví dụ "the
-  intercom" nghe thành "zincall"), so theo vị trí sẽ làm lệch chỉ số và đánh
-  sai toàn bộ phần còn lại của câu — alignment cho phép xoá/chèn để tự đồng
-  bộ lại sau lỗi cục bộ. `overall_score` = trung bình clarity/fluency/
-  completeness. `transcript` cũng được trả về trong response để client tô
-  màu câu mẫu theo từng từ (xem `lib/wordDiff.ts#compareWords` — bản JS
-  song song với Levenshtein cục bộ ở đây, vì Edge Function (Deno) không
-  import được `lib/` của app RN).
+- **`pronounce`**: chấm phát âm bằng **Azure Pronunciation Assessment**
+  (`microsoft-cognitiveservices-speech-sdk` qua `npm:` specifier, wrapper ở
+  `_shared/azurePronunciation.ts#assessPronunciation`) — chỉ nhận audio
+  `audio/wav` (PCM 16kHz/16-bit/mono, strip 44-byte header cố định trước khi
+  đưa vào SDK; m4a/AAC bị chặn 400 vì Deno không decode được). Có
+  `reference_text` → **scripted** (Practice/Notebook, luyện theo câu mẫu cố
+  định ở `scenario_lines`); không có → **unscripted** qua `score_only:true`
+  (Live/Kid chấm theo từng câu nói tự do — xem `lib/pronunciationScoring.ts`,
+  không ghi DB, chỉ trả điểm). `clarity`/`fluency` GỘP từ
+  `accuracy`/`fluency`/`prosody` thô của Azure
+  (`mergeClarityFluency` — xem comment trong `azurePronunciation.ts` giải
+  thích lý do gộp); `ja-JP` không có prosody nên giữ nguyên accuracy/fluency
+  thô. `completeness` (chỉ scripted) lấy thẳng `CompletenessScore` của Azure
+  (tự so khớp transcript với `reference_text`, kể cả khi từ bị tách/gộp khác
+  số từ) — **KHÔNG** tự tính bằng Levenshtein/word-alignment cục bộ như
+  trước (đã bỏ hẳn `alignWords`/`computeCompletenessScore`/`levenshtein`
+  trong `pronounce/index.ts`, vì lo ngại ban đầu là dành cho model tự chấm
+  — LLM (Gemini) — không áp dụng cho Azure vì đây là thuật toán đo lường,
+  không phải model tự đánh giá). **Lưu ý quan trọng:** Azure LUÔN trả 1 số
+  cho `CompletenessScore` — khi unscripted (không có `reference_text`) Azure
+  tự trả `100` (coi như "đủ" vì không có gì để so khớp), KHÔNG trả thiếu
+  field/null — `pronounce/index.ts` PHẢI tự ép `completeness = null` khi
+  không có `reference_text`, không dùng thẳng giá trị Azure trả về (đã verify
+  bằng test thật). `overall_score` = trung bình clarity/fluency/completeness khi scripted;
+  = clarity khi unscripted (khớp hành vi cũ của `session-review`, tránh lệch
+  ngưỡng sao 70/85 đã tune ở Kid Mode). `flagged_words` map từ mã lỗi Azure
+  (`ErrorType`) sang tip tiếng Việt (`ERROR_TIP_MAP`/`buildTip`/`pickFlaggedWords`
+  trong `azurePronunciation.ts`) — Azure không tự sinh tip như Gemini trước
+  đây; riêng `Mispronunciation` được làm chi tiết hơn bằng phoneme-level: mỗi
+  từ trả về `phonemes[]` (IPA, set `phonemeAlphabet='IPA'` — mặc định SDK là
+  SAPI) kèm `bestGuess` suy từ `NBestPhonemes` (**nằm bên trong**
+  `PronunciationAssessment` của phoneme, KHÔNG ngang hàng với `Phoneme` —
+  dễ nhầm, đã từng bug ở đây) khi có ứng viên khác với độ tin cậy cao hơn
+  chính nó; tip dạng "Phát âm chưa chuẩn: /ð/ nghe như /z/ — luyện lại âm
+  này." Các mã lỗi khác (Omission/Insertion/UnexpectedBreak/MissingBreak/
+  Monotone) không liên quan tới phoneme cụ thể, vẫn dùng tip tĩnh trong
+  `ERROR_TIP_MAP`. `transcript` trả về trong response để client tô màu câu
+  mẫu theo từng từ (xem `lib/wordDiff.ts#compareWords` — vẫn có Levenshtein
+  riêng cho mục đích tô màu UI ở phía app RN, KHÔNG liên quan tới
+  completeness; Edge Function (Deno) không import được `lib/` của app RN
+  nên 2 nơi độc lập, không cần đồng bộ với nhau). **Real-time pacing bắt
+  buộc:** `assessPronunciation`
+  ghi PCM vào `PushAudioInputStream` theo chunk ~100ms + delay — đẩy cả
+  buffer 1 lần làm Azure kẹt ở `speech.hypothesis`, không bao giờ trả
+  `speech.phrase` cuối (đã verify bằng spike, tái hiện 2 lần) — không tự ý
+  đổi cách ghi này.
 - **`tts`**: sinh audio mẫu cho `scenario_lines`.
 - **`live-token`**: tạo ephemeral token cho Gemini Live WebSocket + dựng
   system prompt (kể cả `buildKidExplorationPrompt` cho Image Exploration —
@@ -46,10 +76,16 @@ convention RN của app).
   để client tự kết thúc phiên (thay vì chỉ chờ Gemini đóng socket — không đáng
   tin). Tên các tool ở prompt PHẢI khớp `functionDeclarations` trong
   `lib/liveClient.ts` (guided → mark/off-topic; exploration → end_activity).
-- **`session-review`**: tóm tắt sau buổi Live — `avg_pronunciation`,
-  `fluency`, `vocab_to_learn`, `corrections`. Dùng cho cả Live tự do
-  (adult) và Kid Mode (Guided Conversation + Image Exploration đều gọi lại
-  function này để lấy `avg_pronunciation` tính sao).
+- **`session-review`**: tóm tắt sau buổi Live — KHÔNG tự chấm phát âm
+  (đã chấm xong theo từng câu nói lúc phiên đang diễn ra, xem `pronounce`
+  `score_only` + `lib/pronunciationScoring.ts`). Chỉ làm 2 việc: (a) Claude
+  phân tích ngữ pháp/từ vựng (`analyzeGrammar`, không đổi), (b) **tổng hợp**
+  `avg_pronunciation` = trung bình `accuracy_score` từ `pronunciation_attempts`
+  join qua `message_id` (query `messages` role=`user` của conversation, rồi
+  `pronunciation_attempts.message_id IN (...)`) — client phải insert
+  `pronunciation_attempts` xong **trước** khi gọi function này. Dùng cho cả
+  Live tự do (adult) và Kid Mode (Guided Conversation + Image Exploration
+  đều gọi lại function này để lấy `avg_pronunciation` tính sao).
 - **`image-moderation`**: Gemini (`gemini-2.5-flash`, tái dùng
   `GOOGLE_GENAI_API_KEY` đang dùng cho chat/STT/Live) hỏi ảnh có an toàn
   cho trẻ em không, trả JSON `{is_safe, reason}` lưu vào
@@ -57,13 +93,17 @@ convention RN của app).
 
 ## Quy tắc nghiệp vụ
 
-- **`pronounce` và `session-review` dùng cùng cơ chế chấm phát âm**: gửi
-  audio + câu mẫu cho Gemini chấm holistic (clarity, fluency, flagged_words),
-  không tự transcribe/so khớp text cục bộ. Cả hai cùng ghi vào
-  `pronunciation_attempts` với format giống nhau (`accuracy_score`=clarity,
-  `completeness_score`=null, `word_scores[].error_type` là tip cải thiện chứ
-  không phải mã loại lỗi) — đổi format ở 1 function thì phải đổi cả 2 và
-  UI đọc bảng này (`components/practice/ScorePanel.tsx`,
+- **`pronounce` là nơi DUY NHẤT gọi Azure để chấm phát âm** — `session-review`
+  không tải/chấm audio nữa, chỉ tổng hợp `avg_pronunciation` từ
+  `pronunciation_attempts` đã có sẵn. Format ghi `pronunciation_attempts`
+  giống nhau ở cả 2 đường (`pronounce` ghi trực tiếp khi có
+  `scenario_line_id`/`message_id` lúc gọi; Live/Kid insert từ client sau khi
+  có `message_id`, dùng điểm trả về từ `score_only`): `accuracy_score`=clarity,
+  `completeness_score`=null khi unscripted, `word_scores[].error_type` là tip
+  cải thiện tiếng Việt chứ không phải mã lỗi Azure thô — đổi format thì phải
+  đổi cả `pronounce`, `lib/pronunciationScoring.ts`, 3 hook insert
+  (`useLiveSession`/`useMissionSession`/`useExplorationSession`), và UI đọc
+  bảng này (`components/practice/ScorePanel.tsx`,
   `app/(app)/live/review/[conversationId].tsx`,
   `app/(kid)/parent/session/[conversationId].tsx`).
 - **`/chat` lọc corrections**: chỉ giữ correction nếu cụm từ lỗi thực sự
@@ -78,6 +118,11 @@ convention RN của app).
   tái dùng thẳng `GOOGLE_GENAI_API_KEY`, không cần secret/API riêng. Nếu
   JSON trả về không parse được, mặc định `is_safe: false` (an toàn là
   chặn duyệt, không tự ý approve khi không chắc).
+- **`pronounce` cần secret riêng `AZURE_SPEECH_KEY` + `AZURE_SPEECH_REGION`**
+  (`npx supabase secrets set ...`, xem `.env.example`) — khác các function
+  khác đều tái dùng `GOOGLE_GENAI_API_KEY`/`ANTHROPIC_API_KEY` sẵn có.
+  `AZURE_SPEECH_REGION` là region của Azure Speech resource (vd
+  `southeastasia`), không phải URL.
 - **Tool-call protocol (`live-token` ↔ `LiveClient`)**: tiến trình bước/lạc
   đề báo qua FUNCTION CALL `mark_step_complete`/`report_off_topic` — không
   thêm heuristic phía client để suy đoán, vì sẽ lệch với system prompt khi

@@ -31,7 +31,26 @@ Dùng checklist này khi review thay đổi liên quan các vùng nhạy cảm d
 
 ## Edge Functions
 
-- [ ] `pronounce` không gọi LLM để chấm điểm — chỉ Levenshtein cục bộ.
+- [ ] `pronounce` chấm điểm bằng Azure Pronunciation Assessment
+      (`_shared/azurePronunciation.ts`), KHÔNG gọi LLM để chấm. `completeness`
+      lấy thẳng `CompletenessScore` của Azure — KHÔNG tự tính lại bằng
+      Levenshtein/word-alignment cục bộ (đã bỏ, lý do "model tự chấm không
+      đáng tin" chỉ áp dụng cho LLM như Gemini trước đây, không áp dụng cho
+      thuật toán đo lường của Azure).
+- [ ] `pronounce/index.ts` phải tự ép `completeness = null` khi không có
+      `reference_text` (unscripted) — Azure LUÔN trả về 1 số (mặc định `100`
+      khi unscripted), KHÔNG trả null/thiếu field, nên không thể dùng thẳng
+      giá trị Azure trả về để suy ra có/không có reference_text.
+- [ ] `assessPronunciation` ghi PCM vào push stream theo chunk ~100ms + delay
+      — KHÔNG đẩy cả buffer 1 lần (Azure sẽ kẹt ở `speech.hypothesis`, không
+      bao giờ trả kết quả cuối).
+- [ ] Audio gửi cho `pronounce` luôn là `audio/wav` PCM 16kHz/16-bit/mono —
+      không thêm call site gửi m4a/AAC (Deno không decode được, bị chặn 400).
+- [ ] `session-review` KHÔNG tự chấm phát âm — chỉ tổng hợp
+      `avg_pronunciation` từ `pronunciation_attempts` đã insert sẵn theo
+      `message_id`. Live/Kid phải insert `pronunciation_attempts` từ client
+      (dùng kết quả `pronounce score_only` theo từng câu nói) TRƯỚC khi gọi
+      `session-review`, không phải sau.
 - [ ] `/chat` corrections chỉ giữ lại nếu cụm từ lỗi xuất hiện thật trong
       message gần nhất của user.
 - [ ] Tool-call (`mark_step_complete`/`report_off_topic`) là nguồn duy nhất

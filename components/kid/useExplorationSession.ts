@@ -19,15 +19,15 @@ import {
   LiveClient,
   LiveState,
   pcmToWav,
-  uploadLiveSegment,
 } from '../../lib/liveClient';
 import { supabase } from '../../lib/supabase';
+import { scoreUtterance } from '../../lib/pronunciationScoring';
 import {
   Companion as CompanionType,
   Correction,
   ExplorationImage,
-  LiveAudioSegment,
   LiveTurn,
+  PronounceApiResponse,
   SessionReviewApiResponse,
 } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
@@ -109,6 +109,9 @@ export function useExplorationSession() {
   const audioQueueRef = useRef<AudioBufferQueueSourceNode | null>(null);
   const audioEmitter = useRef(new LegacyEventEmitter(ExpoAudioStreamModule));
   const { startRecording, stopRecording } = useAudioRecorder();
+  // Chấm phát âm Azure (unscripted) ngay khi từng câu nói xong, key = sort_order của turn —
+  // map sang message_id sau khi lưu messages (xem onUserUtterance + endSession).
+  const pronunciationScoresRef = useRef<Map<number, PronounceApiResponse>>(new Map());
 
   const setReaction = useCallback((expr: CompanionExpression, durationMs: number) => {
     setExpression(expr);
@@ -289,6 +292,7 @@ export function useExplorationSession() {
     setTimeUp(false);
     setIsPaused(false);
     isPausedRef.current = false;
+    pronunciationScoresRef.current.clear();
 
     const client = new LiveClient({
       onStateChange: (s: LiveState) => {
@@ -382,6 +386,14 @@ export function useExplorationSession() {
       },
       onError: (msg) => {
         console.warn('[ExplorationSession] error', msg);
+      },
+      onUserUtterance: (pcm, _text, order) => {
+        if (!user) return;
+        const languageId = profile?.active_language_id ?? 'en';
+        // Fire-and-forget — không await trong message loop của LiveClient.
+        scoreUtterance(user.id, pcm, languageId).then((score) => {
+          if (score) pronunciationScoresRef.current.set(order, score);
+        });
       },
     });
 
@@ -480,22 +492,37 @@ export function useExplorationSession() {
         (savedMessages ?? []).map((m: { id: string; sort_order: number }) => [m.sort_order, m.id]),
       );
 
-      const audioSegments: LiveAudioSegment[] = [];
-      for (const seg of rawUserSegments) {
-        if (seg.pcm.length === 0 || !seg.text) continue;
-        const messageId = messageIdByOrder.get(seg.order);
+      const languageId = profile?.active_language_id ?? 'en';
+
+      // Lưu pronunciation_attempts từ điểm đã chấm trong lúc phiên diễn ra (xem
+      // onUserUtterance) — không gọi lại Azure, chỉ map order → message_id vừa lưu.
+      const attemptRows = [];
+      for (const [order, score] of pronunciationScoresRef.current.entries()) {
+        const messageId = messageIdByOrder.get(order);
         if (!messageId) continue;
-        try {
-          const storagePath = await uploadLiveSegment(user.id, conversationId, seg.order, seg.pcm);
-          audioSegments.push({
-            message_id: messageId,
-            audio_storage_path: storagePath,
-            text: seg.text,
-            sort_order: seg.order,
-          });
-        } catch (uploadErr) {
-          console.warn('[ExplorationSession] audio upload failed', seg.order, uploadErr);
-        }
+        const turnText = finalTurns.find((t) => t.sort_order === order && t.role === 'user')?.text;
+        attemptRows.push({
+          user_id: user.id,
+          language_id: languageId,
+          message_id: messageId,
+          recognized_text: turnText ?? score.transcript,
+          overall_score: score.overall_score,
+          accuracy_score: score.clarity,
+          fluency_score: score.fluency,
+          completeness_score: null,
+          word_scores: score.flagged_words.map((fw) => ({
+            word: fw.word,
+            score: 0,
+            error_type: fw.tip,
+          })),
+        });
+      }
+      if (attemptRows.length > 0) {
+        const { error: attemptsErr } = await supabase
+          .from('pronunciation_attempts')
+          .insert(attemptRows);
+        if (attemptsErr)
+          console.warn('[ExplorationSession] pronunciation_attempts insert error:', attemptsErr);
       }
 
       await supabase
@@ -510,9 +537,8 @@ export function useExplorationSession() {
           {
             body: {
               conversation_id: conversationId,
-              language_id: profile?.active_language_id ?? 'en',
+              language_id: languageId,
               transcript: finalTurns.map((t) => ({ role: t.role, text: t.text })),
-              user_segments: audioSegments,
             },
           },
         );

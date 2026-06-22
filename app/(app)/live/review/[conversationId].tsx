@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -22,7 +22,7 @@ import {
   registerActiveAudio,
   stopActiveAudio,
 } from '../../../../lib/audioPlayback';
-import { getScoreColor } from '../../../../lib/scoring';
+import { dedupeFlaggedWordsAcross, getScoreColor } from '../../../../lib/scoring';
 
 type ConversationWithReview = Conversation & {
   overall_feedback?: string;
@@ -51,6 +51,20 @@ export default function ReviewScreen() {
   // in the same tick would otherwise still read the stale value and start a new
   // player instead of toggling playback off.
   const playingIdRef = useRef<string | null>(null);
+
+  // Bỏ gợi ý sửa (word + tip) đã hiện ở lượt nói TRƯỚC trong cùng phiên — tránh lặp lại y
+  // nguyên 1 lời khuyên nhiều lần khi cùng lỗi xảy ra ở nhiều lượt (xem dedupeFlaggedWordsAcross).
+  const displayAttemptByMessageId = useMemo(() => {
+    const userMsgs = messages.filter((m) => m.role === 'user');
+    const lists = userMsgs.map((m) => attemptByMessageId.get(m.id)?.word_scores ?? []);
+    const deduped = dedupeFlaggedWordsAcross(lists, (ws) => `${ws.word}|||${ws.error_type ?? ''}`);
+    const out = new Map(attemptByMessageId);
+    userMsgs.forEach((m, i) => {
+      const original = attemptByMessageId.get(m.id);
+      if (original) out.set(m.id, { ...original, word_scores: deduped[i] });
+    });
+    return out;
+  }, [messages, attemptByMessageId]);
 
   const fetchData = useCallback(async () => {
     const [convRes, msgRes] = await Promise.all([
@@ -343,7 +357,7 @@ export default function ReviewScreen() {
                 </View>
                 <Text style={styles.transcriptText}>{m.text}</Text>
                 {m.role === 'user' && m.audio_url ? (
-                  <PronunciationDetail attempt={attemptByMessageId.get(m.id)} />
+                  <PronunciationDetail attempt={displayAttemptByMessageId.get(m.id)} />
                 ) : null}
               </View>
             ))}
@@ -361,9 +375,11 @@ export default function ReviewScreen() {
   );
 }
 
-// Bảng pronunciation_attempts dùng chung cho /pronounce và /session-review —
-// cả hai chấm điểm holistic bằng Gemini, error_type trong word_scores là TIP
-// cải thiện (không phải mã loại lỗi) và score luôn = 0.
+// Bảng pronunciation_attempts: điểm chấm bằng Azure Pronunciation Assessment (qua
+// /pronounce, kể cả chấm theo từng câu nói ở Live — xem lib/pronunciationScoring.ts).
+// error_type trong word_scores là TIP cải thiện tiếng Việt (map tĩnh từ mã lỗi Azure,
+// xem ERROR_TIP_MAP trong supabase/functions/_shared/azurePronunciation.ts), không phải
+// mã lỗi thô; score luôn = 0 (không dùng).
 function PronunciationDetail({ attempt }: { attempt: PronunciationAttempt | undefined }) {
   const { colors } = useTheme();
   const styles = getStyles(colors);

@@ -1,4 +1,4 @@
-import { buildWavHeader, pcmToWav, bytesToBase64 } from './audioFormat';
+import { buildWavHeader, pcmToWav, bytesToBase64, concatUint8Arrays } from './audioFormat';
 
 function readAscii(bytes: Uint8Array, offset: number, length: number): string {
   return String.fromCharCode(...bytes.subarray(offset, offset + length));
@@ -47,6 +47,26 @@ describe('pcmToWav', () => {
   it('handles empty PCM input', () => {
     const wav = pcmToWav(new Uint8Array(0));
     expect(wav.byteLength).toBe(44);
+  });
+});
+
+describe('concatUint8Arrays', () => {
+  it('concatenates multiple chunks in order', () => {
+    const result = concatUint8Arrays([
+      new Uint8Array([1, 2]),
+      new Uint8Array([3]),
+      new Uint8Array([4, 5, 6]),
+    ]);
+    expect(result).toEqual(new Uint8Array([1, 2, 3, 4, 5, 6]));
+  });
+
+  it('handles an empty array list', () => {
+    expect(concatUint8Arrays([])).toEqual(new Uint8Array(0));
+  });
+
+  it('handles chunks that include empty arrays', () => {
+    const result = concatUint8Arrays([new Uint8Array([1]), new Uint8Array(0), new Uint8Array([2])]);
+    expect(result).toEqual(new Uint8Array([1, 2]));
   });
 });
 

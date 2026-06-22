@@ -77,7 +77,7 @@ function alignWords(refWords: string[], hypWords: string[]): (string | null)[] {
   return aligned;
 }
 
-// So khớp câu mẫu (reference) với transcript Gemini nghe được bằng word alignment —
+// So khớp câu mẫu (reference) với transcript Azure nghe được bằng word alignment —
 // dùng để highlight câu mẫu: từ nào bị nói thiếu/khác quá nhiều sẽ bị đánh dấu lỗi.
 export function compareWords(reference: string, transcript: string): WordScore[] {
   const refWords = normalizeWords(reference);

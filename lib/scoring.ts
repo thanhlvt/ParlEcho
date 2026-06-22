@@ -48,3 +48,20 @@ export function calculateExplorationStars(params: {
   const starExcellent = avgPronunciation !== null && avgPronunciation >= excellentThreshold;
   return 1 + (starGood ? 1 : 0) + (starExcellent ? 1 : 0);
 }
+
+// Lọc bỏ gợi ý sửa (word + nội dung tip) đã hiện ở 1 danh sách TRƯỚC trong cùng chuỗi —
+// tránh lặp lại y nguyên 1 lời khuyên nhiều lần khi xem nhiều câu/lượt liên tiếp (vd. Practice
+// nhiều dòng, Live/Kid review nhiều lượt nói). `itemLists` phải theo đúng thứ tự hiển thị trên
+// màn hình; giữ nguyên lần xuất hiện ĐẦU TIÊN, bỏ các lần lặp lại sau (cùng word VÀ cùng tip —
+// cùng word nhưng tip khác do lỗi khác lần này vẫn được giữ).
+export function dedupeFlaggedWordsAcross<T>(itemLists: T[][], getKey: (item: T) => string): T[][] {
+  const seen = new Set<string>();
+  return itemLists.map((list) =>
+    list.filter((item) => {
+      const key = getKey(item).toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }),
+  );
+}
